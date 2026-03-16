@@ -118,8 +118,13 @@
                 </button>
             </div>
 
-            <div id="user-info" class="text-xs text-indigo-200 font-mono hidden md:block">
-                מזהה מורה: <span id="display-uid">מתחבר...</span>
+            <div id="user-info" class="hidden md:flex items-center gap-2">
+                <div class="text-xs text-indigo-200 font-mono">
+                    מזהה מורה: <span id="display-uid">לא הוגדר</span>
+                </div>
+                <button id="change-teacher-btn" class="text-xs bg-indigo-600 border border-indigo-400 px-2 py-1 rounded-md hover:bg-indigo-500">
+                    החלפת מורה
+                </button>
             </div>
         </div>
     </header>
@@ -271,6 +276,23 @@
         </div>
     </div>
 
+    <div id="teacher-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 space-y-5">
+            <div>
+                <h3 class="text-xl font-bold text-slate-800">בחירת מזהה מורה</h3>
+                <p class="text-slate-500 text-sm mt-1">כל המפות יישמרו תחת מזהה זה בלבד.</p>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">מזהה מורה</label>
+                <input type="text" id="teacher-id-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="למשל: mora-rina">
+            </div>
+            <div class="flex gap-3">
+                <button id="teacher-cancel-btn" class="flex-grow bg-slate-100 text-slate-700 py-3 rounded-xl font-bold">ביטול</button>
+                <button id="teacher-save-btn" class="flex-grow bg-indigo-600 text-white py-3 rounded-xl font-bold">שמירה</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl transform translate-y-32 opacity-0 transition-all duration-500 z-[100] flex items-center gap-3">
         <i data-lucide="info" class="w-5 h-5 text-indigo-400"></i>
         <span id="toast-msg">הודעה</span>
@@ -283,7 +305,7 @@
 
         const hasFirebaseConfig = typeof __firebase_config !== 'undefined' && __firebase_config;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const localProjectsKey = `map-archive-projects-${appId}`;
+        const teacherIdStorageKey = `map-archive-teacher-id-${appId}`;
 
         let auth = null;
         let db = null;
@@ -297,6 +319,7 @@
         }
 
         let currentUser = null;
+        let teacherId = '';
         let projects = [];
         let currentProject = {
             id: null,
@@ -325,6 +348,8 @@
         const modeToggle = document.getElementById('mode-toggle');
         const projectSettingsModal = document.getElementById('project-settings-modal');
         const toast = document.getElementById('toast');
+        const teacherModal = document.getElementById('teacher-modal');
+        const teacherIdInput = document.getElementById('teacher-id-input');
 
         lucide.createIcons();
 
@@ -340,9 +365,42 @@
             document.getElementById('editor-tools').classList.toggle('hidden', view !== 'editor');
         };
 
+        const normalizeTeacherId = (value) => value.trim().toLowerCase();
+
+        const updateTeacherInfo = () => {
+            document.getElementById('display-uid').innerText = teacherId || 'לא הוגדר';
+        };
+
+        const getLocalProjectsKey = () => `map-archive-projects-${appId}-${teacherId}`;
+
+        const getTeacherProjectsCollection = () => {
+            return collection(db, 'artifacts', appId, 'teachers', teacherId, 'projects');
+        };
+
+        const getTeacherProjectDoc = (projectId) => {
+            return doc(db, 'artifacts', appId, 'teachers', teacherId, 'projects', projectId);
+        };
+
+        const openTeacherModal = (canCancel = false) => {
+            teacherIdInput.value = teacherId;
+            document.getElementById('teacher-cancel-btn').classList.toggle('hidden', !canCancel);
+            teacherModal.classList.remove('hidden');
+        };
+
+        const applyTeacherId = (rawValue) => {
+            const nextTeacherId = normalizeTeacherId(rawValue);
+            if (!nextTeacherId) return false;
+            teacherId = nextTeacherId;
+            localStorage.setItem(teacherIdStorageKey, teacherId);
+            updateTeacherInfo();
+            teacherModal.classList.add('hidden');
+            return true;
+        };
+
         const readLocalProjects = () => {
+            if (!teacherId) return [];
             try {
-                const raw = localStorage.getItem(localProjectsKey);
+                const raw = localStorage.getItem(getLocalProjectsKey());
                 return raw ? JSON.parse(raw) : [];
             } catch (err) {
                 console.error("Local storage read failed:", err);
@@ -351,7 +409,8 @@
         };
 
         const writeLocalProjects = (items) => {
-            localStorage.setItem(localProjectsKey, JSON.stringify(items));
+            if (!teacherId) return;
+            localStorage.setItem(getLocalProjectsKey(), JSON.stringify(items));
         };
 
         const getLocalUid = () => {
@@ -388,11 +447,40 @@
             lucide.createIcons();
         };
 
+        const fetchProjects = () => {
+            if (!currentUser || !teacherId) return;
+
+            if (!hasFirebaseConfig) {
+                projects = readLocalProjects();
+                renderProjectsGrid();
+                return;
+            }
+
+            if (projectsUnsubscribe) projectsUnsubscribe();
+            const projectsRef = getTeacherProjectsCollection();
+            projectsUnsubscribe = onSnapshot(projectsRef, (snapshot) => {
+                projects = snapshot.docs.map((projectDoc) => ({ id: projectDoc.id, ...projectDoc.data() }));
+                renderProjectsGrid();
+            }, (err) => {
+                console.error("Firestore error:", err);
+                showToast("שגיאה בטעינת הארכיון");
+            });
+        };
+
         const initAuth = async () => {
+            const savedTeacherId = normalizeTeacherId(localStorage.getItem(teacherIdStorageKey) || '');
+            if (savedTeacherId) {
+                teacherId = savedTeacherId;
+            }
+            updateTeacherInfo();
+
+            if (!teacherId) {
+                openTeacherModal(false);
+            }
+
             if (!hasFirebaseConfig) {
                 currentUser = { uid: getLocalUid() };
-                document.getElementById('display-uid').innerText = `${currentUser.uid} (local)`;
-                fetchProjects();
+                if (teacherId) fetchProjects();
                 showToast("מצב מקומי פעיל. שמירה תתבצע בדפדפן זה.");
                 return;
             }
@@ -408,31 +496,10 @@
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     currentUser = user;
-                    document.getElementById('display-uid').innerText = user.uid;
-                    fetchProjects();
+                    if (teacherId) fetchProjects();
                 }
             });
         }
-
-        const fetchProjects = () => {
-            if (!currentUser) return;
-
-            if (!hasFirebaseConfig) {
-                projects = readLocalProjects();
-                renderProjectsGrid();
-                return;
-            }
-
-            if (projectsUnsubscribe) projectsUnsubscribe();
-            const projectsRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'projects');
-            projectsUnsubscribe = onSnapshot(projectsRef, (snapshot) => {
-                projects = snapshot.docs.map((projectDoc) => ({ id: projectDoc.id, ...projectDoc.data() }));
-                renderProjectsGrid();
-            }, (err) => {
-                console.error("Firestore error:", err);
-                showToast("שגיאה בטעינת הארכיון");
-            });
-        };
 
         const renderProjectsGrid = () => {
             const grid = document.getElementById('projects-grid');
@@ -476,7 +543,7 @@
                     if (!confirm("האם למחוק את הפעילות הזו מהארכיון?")) return;
 
                     if (hasFirebaseConfig) {
-                        await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'projects', p.id));
+                        await deleteDoc(getTeacherProjectDoc(p.id));
                     } else {
                         projects = projects.filter((project) => project.id !== p.id);
                         writeLocalProjects(projects);
@@ -528,6 +595,11 @@
 
         document.getElementById('save-project-btn').onclick = async () => {
             if (!currentUser) return;
+            if (!teacherId) {
+                openTeacherModal(false);
+                showToast("צריך לבחור מזהה מורה לפני שמירה.");
+                return;
+            }
             if (!currentProject.image) {
                 showToast("צריך להעלות תמונה לפני שמירה");
                 return;
@@ -538,6 +610,8 @@
                 const payload = {
                     ...currentProject,
                     id,
+                    teacherId,
+                    ownerUid: currentUser.uid,
                     updatedAt: new Date().toISOString()
                 };
                 const next = projects.filter((project) => project.id !== id);
@@ -551,12 +625,14 @@
             }
 
             const docRef = currentProject.id ?
-                doc(db, 'artifacts', appId, 'users', currentUser.uid, 'projects', currentProject.id) :
-                doc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'projects'));
+                getTeacherProjectDoc(currentProject.id) :
+                doc(getTeacherProjectsCollection());
 
             await setDoc(docRef, {
                 ...currentProject,
                 id: docRef.id,
+                teacherId,
+                ownerUid: currentUser.uid,
                 updatedAt: new Date()
             });
             currentProject.id = docRef.id;
@@ -565,6 +641,33 @@
 
         document.getElementById('exit-editor').onclick = () => setView('dashboard');
         document.getElementById('logo-home').onclick = () => setView('dashboard');
+        document.getElementById('change-teacher-btn').onclick = () => openTeacherModal(true);
+
+        const saveTeacherFromInput = () => {
+            if (!applyTeacherId(teacherIdInput.value)) {
+                showToast("יש להזין מזהה מורה תקין.");
+                return;
+            }
+            currentProject = { id: null, name: "פעילות חדשה", image: null, pins: [], isEscapeRoom: false, lockCode: '', mode: 'edit', studentProgress: {} };
+            projects = [];
+            renderProjectsGrid();
+            setView('dashboard');
+            fetchProjects();
+            showToast(`הארכיון נטען עבור ${teacherId}`);
+        };
+
+        document.getElementById('teacher-save-btn').onclick = saveTeacherFromInput;
+        teacherIdInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') saveTeacherFromInput();
+        });
+
+        document.getElementById('teacher-cancel-btn').onclick = () => {
+            if (!teacherId) {
+                showToast("חובה לבחור מזהה מורה.");
+                return;
+            }
+            teacherModal.classList.add('hidden');
+        };
 
         const startDrag = (e, pin) => {
             if (currentProject.mode !== 'edit') return;
