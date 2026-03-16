@@ -315,13 +315,15 @@
         <span id="toast-msg">הודעה</span>
     </div>
 
+    <script src="/firebase-config.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, collection, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const hasFirebaseConfig = typeof __firebase_config !== 'undefined' && __firebase_config;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = (typeof window !== 'undefined' && window.FIREBASE_CONFIG) ? window.FIREBASE_CONFIG : null;
+        const hasFirebaseConfig = !!(firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId);
+        const appId = (typeof window !== 'undefined' && window.APP_ID) ? window.APP_ID : 'interactive-map';
         const teacherIdStorageKey = `map-archive-teacher-id-${appId}`;
 
         let auth = null;
@@ -329,7 +331,6 @@
         let projectsUnsubscribe = null;
 
         if (hasFirebaseConfig) {
-            const firebaseConfig = JSON.parse(__firebase_config);
             const app = initializeApp(firebaseConfig);
             auth = getAuth(app);
             db = getFirestore(app);
@@ -504,10 +505,11 @@
                 return;
             }
 
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token).catch(() => signInAnonymously(auth));
-            } else {
+            try {
                 await signInAnonymously(auth);
+            } catch (err) {
+                console.error("Auth error:", err);
+                showToast("שגיאת התחברות ל-Firebase. ודאו ש-Anonymous Auth פעיל.");
             }
         };
 

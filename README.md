@@ -1,73 +1,64 @@
-# React + TypeScript + Vite
+# Interactive Map App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Local Run
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev -- --host 127.0.0.1 --port 5174
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Open: `http://127.0.0.1:5174`
+
+## Cloud Save Between Browsers (Firebase)
+
+To let a teacher see maps from another browser/device, enable Firebase cloud mode.
+
+### 1. Create Firebase resources
+
+1. Open Firebase Console and create/select a project.
+2. Add a **Web App** and copy its Firebase config object.
+3. In **Authentication** -> **Sign-in method**, enable **Anonymous**.
+4. In **Firestore Database**, create a database (production or test mode).
+
+### 2. Configure this project
+
+Edit `public/firebase-config.js`:
 
 ```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+window.APP_ID = "interactive-map";
+window.FIREBASE_CONFIG = {
+  apiKey: "...",
+  authDomain: "...",
+  projectId: "...",
+  storageBucket: "...",
+  messagingSenderId: "...",
+  appId: "..."
+};
+```
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+If `window.FIREBASE_CONFIG` stays `null`, the app works in local-only mode (`localStorage`).
+
+### 3. Firestore security rules (minimum working setup)
+
+```text
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /artifacts/{appId}/teachers/{teacherId}/projects/{projectId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
+
+### 4. Data path used by the app
+
+`artifacts/{appId}/teachers/{teacherId}/projects/{projectId}`
+
+`teacherId` is selected in the app UI (the "מזהה מורה" flow).
+
+## Build
+
+```bash
+npm run build
 ```
