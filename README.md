@@ -1,6 +1,6 @@
-# Interactive Map App
+# Interactive Map App (Supabase)
 
-## Local Run
+## Run Locally
 
 ```bash
 npm install
@@ -9,53 +9,91 @@ npm run dev -- --host 127.0.0.1 --port 5174
 
 Open: `http://127.0.0.1:5174`
 
-## Cloud Save Between Browsers (Firebase)
+## Enable Cloud Save (Supabase)
 
-To let a teacher see maps from another browser/device, enable Firebase cloud mode.
+This app stores maps by `teacherId` so the same teacher can open maps from another browser.
 
-### 1. Create Firebase resources
+### 1. Create Supabase project
 
-1. Open Firebase Console and create/select a project.
-2. Add a **Web App** and copy its Firebase config object.
-3. In **Authentication** -> **Sign-in method**, enable **Anonymous**.
-4. In **Firestore Database**, create a database (production or test mode).
+1. Open https://supabase.com/dashboard
+2. Create a new project.
+3. In **Settings -> API**, copy:
+   - `Project URL`
+   - `anon public` key
 
-### 2. Configure this project
+### 2. Configure this app
 
-Edit `public/firebase-config.js`:
+Edit `public/supabase-config.js`:
 
 ```js
 window.APP_ID = "interactive-map";
-window.FIREBASE_CONFIG = {
-  apiKey: "...",
-  authDomain: "...",
-  projectId: "...",
-  storageBucket: "...",
-  messagingSenderId: "...",
-  appId: "..."
-};
+window.SUPABASE_PROJECTS_TABLE = "teacher_projects";
+window.SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co";
+window.SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
 ```
 
-If `window.FIREBASE_CONFIG` stays `null`, the app works in local-only mode (`localStorage`).
+If URL/key are empty, app falls back to local browser storage.
 
-### 3. Firestore security rules (minimum working setup)
+### 3. Create table in Supabase SQL Editor
 
-```text
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /artifacts/{appId}/teachers/{teacherId}/projects/{projectId} {
-      allow read, write: if request.auth != null;
-    }
-  }
-}
+```sql
+create table if not exists public.teacher_projects (
+  id text primary key,
+  app_id text not null,
+  teacher_id text not null,
+  payload jsonb not null,
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists teacher_projects_app_teacher_updated_idx
+  on public.teacher_projects (app_id, teacher_id, updated_at desc);
 ```
 
-### 4. Data path used by the app
+### 4. Enable RLS + policies (simple mode)
 
-`artifacts/{appId}/teachers/{teacherId}/projects/{projectId}`
+```sql
+alter table public.teacher_projects enable row level security;
 
-`teacherId` is selected in the app UI (the "מזהה מורה" flow).
+drop policy if exists teacher_projects_select on public.teacher_projects;
+drop policy if exists teacher_projects_insert on public.teacher_projects;
+drop policy if exists teacher_projects_update on public.teacher_projects;
+drop policy if exists teacher_projects_delete on public.teacher_projects;
+
+create policy teacher_projects_select
+on public.teacher_projects
+for select
+to anon, authenticated
+using (true);
+
+create policy teacher_projects_insert
+on public.teacher_projects
+for insert
+to anon, authenticated
+with check (true);
+
+create policy teacher_projects_update
+on public.teacher_projects
+for update
+to anon, authenticated
+using (true)
+with check (true);
+
+create policy teacher_projects_delete
+on public.teacher_projects
+for delete
+to anon, authenticated
+using (true);
+```
+
+Note: this is intentionally permissive to keep setup simple. For production, add stricter per-teacher auth rules.
+
+### 5. Test
+
+1. Run app.
+2. Enter a teacher ID (e.g. `mora-rina`).
+3. Create + save map.
+4. Open another browser and enter the same teacher ID.
+5. The map should appear.
 
 ## Build
 

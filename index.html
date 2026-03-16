@@ -315,25 +315,21 @@
         <span id="toast-msg">הודעה</span>
     </div>
 
-    <script src="/firebase-config.js"></script>
+    <script src="/supabase-config.js"></script>
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, collection, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-        const firebaseConfig = (typeof window !== 'undefined' && window.FIREBASE_CONFIG) ? window.FIREBASE_CONFIG : null;
-        const hasFirebaseConfig = !!(firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId);
+        const supabaseUrl = (typeof window !== 'undefined' && window.SUPABASE_URL) ? window.SUPABASE_URL : '';
+        const supabaseAnonKey = (typeof window !== 'undefined' && window.SUPABASE_ANON_KEY) ? window.SUPABASE_ANON_KEY : '';
+        const hasSupabaseConfig = !!(supabaseUrl && supabaseAnonKey);
         const appId = (typeof window !== 'undefined' && window.APP_ID) ? window.APP_ID : 'interactive-map';
+        const supabaseProjectsTable = (typeof window !== 'undefined' && window.SUPABASE_PROJECTS_TABLE) ? window.SUPABASE_PROJECTS_TABLE : 'teacher_projects';
         const teacherIdStorageKey = `map-archive-teacher-id-${appId}`;
 
-        let auth = null;
-        let db = null;
-        let projectsUnsubscribe = null;
+        let supabase = null;
 
-        if (hasFirebaseConfig) {
-            const app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
+        if (hasSupabaseConfig) {
+            supabase = createClient(supabaseUrl, supabaseAnonKey);
         }
 
         let currentUser = null;
@@ -393,12 +389,13 @@
 
         const getLocalProjectsKey = () => `map-archive-projects-${appId}-${teacherId}`;
 
-        const getTeacherProjectsCollection = () => {
-            return collection(db, 'artifacts', appId, 'teachers', teacherId, 'projects');
-        };
-
-        const getTeacherProjectDoc = (projectId) => {
-            return doc(db, 'artifacts', appId, 'teachers', teacherId, 'projects', projectId);
+        const mapRowToProject = (row) => {
+            const payload = row.payload || {};
+            return {
+                ...payload,
+                id: row.id,
+                updatedAt: row.updated_at || payload.updatedAt
+            };
         };
 
         const openTeacherModal = (canCancel = false) => {
@@ -467,24 +464,30 @@
             lucide.createIcons();
         };
 
-        const fetchProjects = () => {
+        const fetchProjects = async () => {
             if (!currentUser || !teacherId) return;
 
-            if (!hasFirebaseConfig) {
+            if (!hasSupabaseConfig) {
                 projects = readLocalProjects();
                 renderProjectsGrid();
                 return;
             }
 
-            if (projectsUnsubscribe) projectsUnsubscribe();
-            const projectsRef = getTeacherProjectsCollection();
-            projectsUnsubscribe = onSnapshot(projectsRef, (snapshot) => {
-                projects = snapshot.docs.map((projectDoc) => ({ id: projectDoc.id, ...projectDoc.data() }));
-                renderProjectsGrid();
-            }, (err) => {
-                console.error("Firestore error:", err);
-                showToast("שגיאה בטעינת הארכיון");
-            });
+            const { data, error } = await supabase
+                .from(supabaseProjectsTable)
+                .select('id, payload, updated_at')
+                .eq('app_id', appId)
+                .eq('teacher_id', teacherId)
+                .order('updated_at', { ascending: false });
+
+            if (error) {
+                console.error("Supabase error:", error);
+                showToast("שגיאה בטעינת הארכיון מהענן");
+                return;
+            }
+
+            projects = (data || []).map(mapRowToProject);
+            renderProjectsGrid();
         };
 
         const initAuth = async () => {
@@ -498,29 +501,17 @@
                 openTeacherModal(false);
             }
 
-            if (!hasFirebaseConfig) {
-                currentUser = { uid: getLocalUid() };
+            currentUser = { uid: getLocalUid() };
+
+            if (!hasSupabaseConfig) {
                 if (teacherId) fetchProjects();
                 showToast("מצב מקומי פעיל. שמירה תתבצע בדפדפן זה.");
                 return;
             }
 
-            try {
-                await signInAnonymously(auth);
-            } catch (err) {
-                console.error("Auth error:", err);
-                showToast("שגיאת התחברות ל-Firebase. ודאו ש-Anonymous Auth פעיל.");
-            }
+            showToast("מצב ענן פעיל. שמירה מתבצעת ב-Supabase.");
+            if (teacherId) fetchProjects();
         };
-
-        if (hasFirebaseConfig) {
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    currentUser = user;
-                    if (teacherId) fetchProjects();
-                }
-            });
-        }
 
         const renderProjectsGrid = () => {
             const grid = document.getElementById('projects-grid');
@@ -563,8 +554,19 @@
                     e.stopPropagation();
                     if (!confirm("האם למחוק את הפעילות הזו מהארכיון?")) return;
 
-                    if (hasFirebaseConfig) {
-                        await deleteDoc(getTeacherProjectDoc(p.id));
+                    if (hasSupabaseConfig) {
+                        const { error } = await supabase
+                            .from(supabaseProjectsTable)
+                            .delete()
+                            .eq('id', p.id)
+                            .eq('app_id', appId)
+                            .eq('teacher_id', teacherId);
+                        if (error) {
+                            console.error("Supabase delete error:", error);
+                            showToast("שגיאה במחיקת הפעילות מהענן");
+                            return;
+                        }
+                        await fetchProjects();
                     } else {
                         projects = projects.filter((project) => project.id !== p.id);
                         writeLocalProjects(projects);
@@ -626,7 +628,7 @@
                 return;
             }
 
-            if (!hasFirebaseConfig) {
+            if (!hasSupabaseConfig) {
                 const id = currentProject.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
                 const payload = {
                     ...currentProject,
@@ -645,19 +647,34 @@
                 return;
             }
 
-            const docRef = currentProject.id ?
-                getTeacherProjectDoc(currentProject.id) :
-                doc(getTeacherProjectsCollection());
-
-            await setDoc(docRef, {
+            const id = currentProject.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+            const payload = {
                 ...currentProject,
-                id: docRef.id,
+                id,
                 teacherId,
                 ownerUid: currentUser.uid,
-                updatedAt: new Date()
-            });
-            currentProject.id = docRef.id;
-            showToast("נשמר בארכיון האישי!");
+                updatedAt: new Date().toISOString()
+            };
+
+            const { error } = await supabase
+                .from(supabaseProjectsTable)
+                .upsert({
+                    id,
+                    app_id: appId,
+                    teacher_id: teacherId,
+                    payload,
+                    updated_at: payload.updatedAt
+                }, { onConflict: 'id' });
+
+            if (error) {
+                console.error("Supabase upsert error:", error);
+                showToast("שגיאה בשמירה לענן");
+                return;
+            }
+
+            currentProject.id = id;
+            await fetchProjects();
+            showToast("נשמר בענן!");
         };
 
         const openSaveMapModal = () => {
