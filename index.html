@@ -1,0 +1,887 @@
+﻿<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ארכיון המפות שלי - כלי למורה</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700&display=swap');
+
+        body {
+            font-family: 'Assistant', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .map-container {
+            position: relative;
+            display: inline-block;
+            cursor: crosshair;
+        }
+
+        .pin {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            transition: transform 0.2s;
+            touch-action: none;
+        }
+
+        .pin:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+
+        .pin.dragging {
+            opacity: 0.8;
+            cursor: grabbing;
+            transform: translate(-50%, -50%) scale(1.3);
+            z-index: 50;
+        }
+
+        .pulse {
+            animation: pulse-animation 2s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% { box-shadow: 0 0 0 0px rgba(59, 130, 246, 0.7); }
+            100% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
+        }
+
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .correct-pin {
+            background-color: #10b981 !important;
+            animation: none !important;
+        }
+
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4f46e5;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <header class="bg-indigo-700 text-white shadow-lg p-4 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3 cursor-pointer" id="logo-home">
+                <div class="bg-white p-2 rounded-lg text-indigo-700">
+                    <i data-lucide="library" class="w-6 h-6"></i>
+                </div>
+                <h1 class="text-xl font-bold tracking-tight">ארכיון המפות שלי</h1>
+            </div>
+
+            <div id="editor-tools" class="hidden flex items-center gap-3">
+                <div id="student-stats" class="hidden flex items-center gap-4 bg-indigo-800 px-4 py-2 rounded-full">
+                    <div class="text-sm font-bold">התקדמות: <span id="progress-text">0/0</span></div>
+                    <div class="w-24 bg-indigo-950 rounded-full h-1.5">
+                        <div id="progress-bar" class="bg-green-400 h-1.5 rounded-full transition-all" style="width: 0%"></div>
+                    </div>
+                    <button id="lock-button" class="hidden bg-yellow-400 text-indigo-900 px-3 py-1 rounded-md font-bold flex items-center gap-1 hover:bg-yellow-300">
+                        <i data-lucide="lock" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <button id="mode-toggle" class="bg-indigo-600 border border-indigo-400 px-4 py-2 rounded-lg font-semibold hover:bg-indigo-500 transition-all flex items-center gap-2">
+                    <i data-lucide="eye" id="mode-icon"></i>
+                    <span id="mode-text">תצוגת תלמיד</span>
+                </button>
+
+                <button id="settings-btn" class="bg-indigo-600 border border-indigo-400 p-2 rounded-lg hover:bg-indigo-500 transition-all" title="הגדרות">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                </button>
+
+                <button id="save-project-btn" class="bg-green-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-600 transition-all flex items-center gap-2 shadow-sm">
+                    <i data-lucide="save" class="w-5 h-5"></i>
+                    שמור
+                </button>
+
+                <button id="export-btn" class="bg-indigo-600 border border-indigo-400 p-2 rounded-lg hover:bg-indigo-500 transition-all" title="ייצוא לקובץ">
+                    <i data-lucide="download" class="w-5 h-5"></i>
+                </button>
+
+                <button id="exit-editor" class="text-indigo-100 hover:text-white px-2">
+                    <i data-lucide="log-out"></i>
+                </button>
+            </div>
+
+            <div id="user-info" class="text-xs text-indigo-200 font-mono hidden md:block">
+                מזהה מורה: <span id="display-uid">מתחבר...</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow p-6 max-w-7xl mx-auto w-full">
+        <div id="dashboard-view" class="space-y-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">שלום, מורה! 👋</h2>
+                    <p class="text-slate-500">כאן תוכל לנהל את כל הפעילויות האינטראקטיביות שיצרת.</p>
+                </div>
+                <button id="new-project-btn" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-md">
+                    <i data-lucide="plus-circle"></i>
+                    יצירת מפה חדשה
+                </button>
+            </div>
+
+            <div id="projects-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="col-span-full py-20 flex flex-col items-center justify-center text-slate-400 gap-4" id="empty-state">
+                    <div class="loader"></div>
+                    <p>טוען את הארכיון האישי...</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="editor-view" class="hidden space-y-6">
+            <div id="upload-zone" class="w-full max-w-2xl mx-auto bg-white border-4 border-dashed border-slate-200 rounded-3xl p-16 text-center hover:border-indigo-400 cursor-pointer transition-all">
+                <input type="file" id="file-input" class="hidden" accept="image/*">
+                <div class="flex flex-col items-center gap-5">
+                    <div class="bg-indigo-50 p-6 rounded-full text-indigo-600">
+                        <i data-lucide="image-plus" class="w-12 h-12"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-700">העלו תמונה או מפה לפעילות</h3>
+                        <p class="text-slate-500">לחצו כאן או גררו קובץ פנימה</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="canvas-area" class="hidden flex flex-col items-center">
+                <div class="mb-4 bg-indigo-50 text-indigo-700 px-6 py-2 rounded-full text-sm font-semibold border border-indigo-100" id="instruction-text">
+                    לחצו על המפה כדי להוסיף פעילות | גררו נקודה קיימת כדי להזיז אותה
+                </div>
+
+                <div id="map-wrapper" class="map-container shadow-2xl rounded-2xl overflow-hidden border-8 border-white bg-white select-none">
+                    <img id="main-image" src="" alt="Map" class="max-w-full h-auto pointer-events-none">
+                    <div id="pins-layer" class="absolute inset-0 pointer-events-auto"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="project-settings-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+            <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                <i data-lucide="settings" class="text-indigo-600"></i> הגדרות פעילות
+            </h3>
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">שם הפעילות</label>
+                    <input type="text" id="project-name-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="למשל: הכרת מפת ישראל">
+                </div>
+                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+                    <div class="flex flex-col">
+                        <span class="font-bold text-slate-700 text-sm">מצב חדר בריחה</span>
+                        <span class="text-xs text-slate-500">חשיפת קוד דרך השאלות</span>
+                    </div>
+                    <input type="checkbox" id="escape-mode-toggle" class="w-6 h-6 accent-indigo-600">
+                </div>
+                <div id="escape-settings" class="hidden space-y-2 animate-in fade-in slide-in-from-top-2">
+                    <label class="block text-xs font-bold text-indigo-600">קוד המנעול הסופי</label>
+                    <input type="text" id="escape-code" class="w-full border rounded-lg p-2 text-center font-mono tracking-widest" placeholder="1234">
+                </div>
+                <div class="pt-4 flex gap-3">
+                    <button onclick="closeSettings()" class="flex-grow bg-slate-100 text-slate-700 py-3 rounded-xl font-bold">ביטול</button>
+                    <button onclick="applySettings()" class="flex-grow bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-indigo-200 shadow-lg">אישור</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pin-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="bg-indigo-600 p-4 text-white flex justify-between items-center">
+                <h3 class="font-bold" id="pin-modal-title">עריכת נקודה</h3>
+                <button onclick="closePinModal()" class="hover:bg-indigo-500 p-1 rounded transition-colors"><i data-lucide="x"></i></button>
+            </div>
+
+            <div class="p-6 overflow-y-auto flex-grow flex flex-col gap-5">
+                <div id="type-selector">
+                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">סוג פעילות</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button onclick="setPinType('info')" class="type-btn border rounded-xl p-3 text-xs flex flex-col items-center gap-2 transition-all" data-type="info"><i data-lucide="info" class="w-5 h-5"></i> מידע</button>
+                        <button onclick="setPinType('open')" class="type-btn border rounded-xl p-3 text-xs flex flex-col items-center gap-2 transition-all" data-type="open"><i data-lucide="help-circle" class="w-5 h-5"></i> שאלה</button>
+                        <button onclick="setPinType('mcq')" class="type-btn border rounded-xl p-3 text-xs flex flex-col items-center gap-2 transition-all" data-type="mcq"><i data-lucide="list" class="w-5 h-5"></i> אמריקאית</button>
+                        <button onclick="setPinType('boolean')" class="type-btn border rounded-xl p-3 text-xs flex flex-col items-center gap-2 transition-all" data-type="boolean"><i data-lucide="check-square" class="w-5 h-5"></i> נכון/לא</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">תוכן המשימה</label>
+                    <textarea id="pin-content" rows="4" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="כתבו כאן את השאלה או המידע לתלמיד..."></textarea>
+                </div>
+
+                <div id="mcq-options" class="hidden space-y-2">
+                    <label class="block text-xs font-bold text-slate-400 uppercase">אפשרויות (סמנו את הנכונה):</label>
+                    <div id="mcq-list" class="space-y-3"></div>
+                </div>
+
+                <div id="boolean-options" class="hidden">
+                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">התשובה הנכונה:</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer bg-slate-50 p-3 rounded-lg flex-grow border border-transparent hover:border-slate-200">
+                            <input type="radio" name="bool-correct" value="true" class="w-4 h-4 accent-indigo-600"> נכון
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer bg-slate-50 p-3 rounded-lg flex-grow border border-transparent hover:border-slate-200">
+                            <input type="radio" name="bool-correct" value="false" class="w-4 h-4 accent-indigo-600"> לא נכון
+                        </label>
+                    </div>
+                </div>
+
+                <div id="student-interaction" class="hidden mt-2 p-6 bg-slate-50 rounded-2xl border border-slate-200 shadow-inner">
+                    <div id="student-quiz-area" class="space-y-4"></div>
+                    <div id="student-feedback" class="mt-4 hidden p-4 rounded-xl text-center font-bold animate-pulse"></div>
+                </div>
+
+                <div id="edit-controls" class="flex justify-between mt-4">
+                    <button id="delete-pin" class="text-red-500 font-bold flex items-center gap-1 hover:text-red-700 transition-colors">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i> מחק נקודה
+                    </button>
+                    <button onclick="savePin()" class="bg-indigo-600 text-white px-10 py-3 rounded-xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700">שמור</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="lock-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-10 text-center space-y-6">
+            <div class="mx-auto w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600 shadow-inner">
+                <i data-lucide="lock" class="w-10 h-10"></i>
+            </div>
+            <div>
+                <h3 class="text-2xl font-bold text-slate-800">מנעול הקוד</h3>
+                <p class="text-slate-500">הכניסו את הקוד שאספתם מכל הנקודות</p>
+            </div>
+            <input type="text" id="final-code-input" class="w-full border-4 border-slate-100 rounded-2xl p-4 text-center text-4xl font-mono tracking-widest outline-none focus:border-indigo-600 transition-all" maxlength="6" placeholder="----">
+            <button onclick="checkFinalCode()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold text-lg shadow-xl shadow-indigo-100 active:scale-95 transition-all">פתח מנעול</button>
+            <button onclick="document.getElementById('lock-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-semibold text-sm">חזרה למפה</button>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl transform translate-y-32 opacity-0 transition-all duration-500 z-[100] flex items-center gap-3">
+        <i data-lucide="info" class="w-5 h-5 text-indigo-400"></i>
+        <span id="toast-msg">הודעה</span>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, collection, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const hasFirebaseConfig = typeof __firebase_config !== 'undefined' && __firebase_config;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const localProjectsKey = `map-archive-projects-${appId}`;
+
+        let auth = null;
+        let db = null;
+        let projectsUnsubscribe = null;
+
+        if (hasFirebaseConfig) {
+            const firebaseConfig = JSON.parse(__firebase_config);
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        }
+
+        let currentUser = null;
+        let projects = [];
+        let currentProject = {
+            id: null,
+            name: "פעילות חדשה",
+            image: null,
+            pins: [],
+            isEscapeRoom: false,
+            lockCode: '',
+            mode: 'edit',
+            studentProgress: {}
+        };
+        let currentEditingPinId = null;
+        let currentPinType = 'info';
+
+        let draggingPin = null;
+        let dragStartX;
+        let dragStartY;
+        let hasMovedDuringDrag = false;
+
+        const uploadZone = document.getElementById('upload-zone');
+        const fileInput = document.getElementById('file-input');
+        const mainImage = document.getElementById('main-image');
+        const pinsLayer = document.getElementById('pins-layer');
+        const mapWrapper = document.getElementById('map-wrapper');
+        const pinModal = document.getElementById('pin-modal');
+        const modeToggle = document.getElementById('mode-toggle');
+        const projectSettingsModal = document.getElementById('project-settings-modal');
+        const toast = document.getElementById('toast');
+
+        lucide.createIcons();
+
+        const showToast = (msg) => {
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('translate-y-32', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-32', 'opacity-0'), 3000);
+        };
+
+        const setView = (view) => {
+            document.getElementById('dashboard-view').classList.toggle('hidden', view !== 'dashboard');
+            document.getElementById('editor-view').classList.toggle('hidden', view !== 'editor');
+            document.getElementById('editor-tools').classList.toggle('hidden', view !== 'editor');
+        };
+
+        const readLocalProjects = () => {
+            try {
+                const raw = localStorage.getItem(localProjectsKey);
+                return raw ? JSON.parse(raw) : [];
+            } catch (err) {
+                console.error("Local storage read failed:", err);
+                return [];
+            }
+        };
+
+        const writeLocalProjects = (items) => {
+            localStorage.setItem(localProjectsKey, JSON.stringify(items));
+        };
+
+        const getLocalUid = () => {
+            const key = `map-archive-local-user-${appId}`;
+            const existing = localStorage.getItem(key);
+            if (existing) return existing;
+            const generated = `local-${Math.random().toString(36).slice(2, 10)}`;
+            localStorage.setItem(key, generated);
+            return generated;
+        };
+
+        const updateLockButtonVisibility = () => {
+            const show = currentProject.mode === 'student' && currentProject.isEscapeRoom;
+            document.getElementById('lock-button').classList.toggle('hidden', !show);
+        };
+
+        const syncModeUI = () => {
+            const studentMode = currentProject.mode === 'student';
+            document.getElementById('student-stats').classList.toggle('hidden', !studentMode);
+            const btnText = document.getElementById('mode-text');
+            const btnIcon = document.getElementById('mode-icon');
+
+            if (studentMode) {
+                btnText.innerText = 'מצב עריכה';
+                btnIcon.setAttribute('data-lucide', 'pencil');
+                document.getElementById('instruction-text').innerText = currentProject.isEscapeRoom ? "השיגו את כל הקוד כדי לפתוח את המנעול!" : "גלו את כל הנקודות במפה";
+            } else {
+                btnText.innerText = 'תצוגת תלמיד';
+                btnIcon.setAttribute('data-lucide', 'eye');
+                document.getElementById('instruction-text').innerText = "לחצו על המפה כדי להוסיף פעילות | גררו נקודה קיימת כדי להזיז אותה";
+            }
+
+            updateLockButtonVisibility();
+            lucide.createIcons();
+        };
+
+        const initAuth = async () => {
+            if (!hasFirebaseConfig) {
+                currentUser = { uid: getLocalUid() };
+                document.getElementById('display-uid').innerText = `${currentUser.uid} (local)`;
+                fetchProjects();
+                showToast("מצב מקומי פעיל. שמירה תתבצע בדפדפן זה.");
+                return;
+            }
+
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token).catch(() => signInAnonymously(auth));
+            } else {
+                await signInAnonymously(auth);
+            }
+        };
+
+        if (hasFirebaseConfig) {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    currentUser = user;
+                    document.getElementById('display-uid').innerText = user.uid;
+                    fetchProjects();
+                }
+            });
+        }
+
+        const fetchProjects = () => {
+            if (!currentUser) return;
+
+            if (!hasFirebaseConfig) {
+                projects = readLocalProjects();
+                renderProjectsGrid();
+                return;
+            }
+
+            if (projectsUnsubscribe) projectsUnsubscribe();
+            const projectsRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'projects');
+            projectsUnsubscribe = onSnapshot(projectsRef, (snapshot) => {
+                projects = snapshot.docs.map((projectDoc) => ({ id: projectDoc.id, ...projectDoc.data() }));
+                renderProjectsGrid();
+            }, (err) => {
+                console.error("Firestore error:", err);
+                showToast("שגיאה בטעינת הארכיון");
+            });
+        };
+
+        const renderProjectsGrid = () => {
+            const grid = document.getElementById('projects-grid');
+            grid.innerHTML = '';
+
+            if (projects.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-10 flex flex-col items-center text-slate-400">
+                    <i data-lucide="folder-open" class="w-12 h-12 mb-2"></i>
+                    <p>אין עדיין פרויקטים בארכיון.</p>
+                </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            projects.forEach((p) => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between h-48";
+                card.innerHTML = `
+                    <div class="flex flex-col gap-2">
+                        <div class="flex justify-between items-start">
+                            <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">${p.isEscapeRoom ? 'חדר בריחה' : 'פעילות רגילה'}</span>
+                            <button class="delete-proj text-slate-300 hover:text-red-500 p-1" data-id="${p.id}">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800 line-clamp-2">${p.name}</h3>
+                        <p class="text-xs text-slate-400">מספר נקודות: ${p.pins ? p.pins.length : 0}</p>
+                    </div>
+                    <div class="flex items-center text-indigo-600 font-bold text-sm gap-1 group-hover:gap-2 transition-all">
+                        פתיחת עריכה <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    </div>
+                `;
+
+                card.onclick = (e) => {
+                    if (e.target.closest('.delete-proj')) return;
+                    openProject(p);
+                };
+
+                card.querySelector('.delete-proj').onclick = async (e) => {
+                    e.stopPropagation();
+                    if (!confirm("האם למחוק את הפעילות הזו מהארכיון?")) return;
+
+                    if (hasFirebaseConfig) {
+                        await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'projects', p.id));
+                    } else {
+                        projects = projects.filter((project) => project.id !== p.id);
+                        writeLocalProjects(projects);
+                        renderProjectsGrid();
+                    }
+                    showToast("הפעילות נמחקה");
+                };
+
+                grid.appendChild(card);
+            });
+            lucide.createIcons();
+        };
+
+        document.getElementById('new-project-btn').onclick = () => {
+            currentProject = { id: null, name: "פעילות חדשה", image: null, pins: [], isEscapeRoom: false, lockCode: '', mode: 'edit', studentProgress: {} };
+            renderPins();
+            syncModeUI();
+            mainImage.src = '';
+            uploadZone.classList.remove('hidden');
+            document.getElementById('canvas-area').classList.add('hidden');
+            setView('editor');
+        };
+
+        const openProject = (project) => {
+            currentProject = { ...project, mode: 'edit', studentProgress: {} };
+            syncModeUI();
+            mainImage.src = project.image;
+            uploadZone.classList.add('hidden');
+            document.getElementById('canvas-area').classList.remove('hidden');
+            renderPins();
+            setView('editor');
+        };
+
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    currentProject.image = ev.target.result;
+                    mainImage.src = ev.target.result;
+                    uploadZone.classList.add('hidden');
+                    document.getElementById('canvas-area').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        uploadZone.onclick = () => fileInput.click();
+
+        document.getElementById('save-project-btn').onclick = async () => {
+            if (!currentUser) return;
+            if (!currentProject.image) {
+                showToast("צריך להעלות תמונה לפני שמירה");
+                return;
+            }
+
+            if (!hasFirebaseConfig) {
+                const id = currentProject.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+                const payload = {
+                    ...currentProject,
+                    id,
+                    updatedAt: new Date().toISOString()
+                };
+                const next = projects.filter((project) => project.id !== id);
+                next.unshift(payload);
+                projects = next;
+                writeLocalProjects(next);
+                currentProject.id = id;
+                renderProjectsGrid();
+                showToast("נשמר בארכיון המקומי!");
+                return;
+            }
+
+            const docRef = currentProject.id ?
+                doc(db, 'artifacts', appId, 'users', currentUser.uid, 'projects', currentProject.id) :
+                doc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'projects'));
+
+            await setDoc(docRef, {
+                ...currentProject,
+                id: docRef.id,
+                updatedAt: new Date()
+            });
+            currentProject.id = docRef.id;
+            showToast("נשמר בארכיון האישי!");
+        };
+
+        document.getElementById('exit-editor').onclick = () => setView('dashboard');
+        document.getElementById('logo-home').onclick = () => setView('dashboard');
+
+        const startDrag = (e, pin) => {
+            if (currentProject.mode !== 'edit') return;
+            e.preventDefault();
+            e.stopPropagation();
+            draggingPin = pin;
+            hasMovedDuringDrag = false;
+
+            const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+
+            dragStartX = clientX;
+            dragStartY = clientY;
+
+            const pinElements = pinsLayer.querySelectorAll('.pin');
+            pinElements.forEach((el) => {
+                if (el.dataset.id === String(pin.id)) el.classList.add('dragging');
+            });
+        };
+
+        const moveDrag = (e) => {
+            if (!draggingPin || currentProject.mode !== 'edit') return;
+            if (e.cancelable) e.preventDefault();
+
+            const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+            if (Math.abs(clientX - dragStartX) > 5 || Math.abs(clientY - dragStartY) > 5) {
+                hasMovedDuringDrag = true;
+            }
+
+            const rect = mapWrapper.getBoundingClientRect();
+            let x = ((clientX - rect.left) / rect.width) * 100;
+            let y = ((clientY - rect.top) / rect.height) * 100;
+
+            x = Math.max(0, Math.min(100, x));
+            y = Math.max(0, Math.min(100, y));
+
+            draggingPin.x = x;
+            draggingPin.y = y;
+
+            const pinElements = pinsLayer.querySelectorAll('.pin');
+            pinElements.forEach((el) => {
+                if (el.dataset.id === String(draggingPin.id)) {
+                    el.style.left = `${x}%`;
+                    el.style.top = `${y}%`;
+                }
+            });
+        };
+
+        const endDrag = () => {
+            if (!draggingPin) return;
+
+            const id = draggingPin.id;
+            draggingPin = null;
+
+            const pinElements = pinsLayer.querySelectorAll('.pin');
+            pinElements.forEach((el) => el.classList.remove('dragging'));
+
+            if (!hasMovedDuringDrag) {
+                openPinModal(id);
+            } else {
+                renderPins();
+            }
+        };
+
+        window.addEventListener('mousemove', moveDrag);
+        window.addEventListener('mouseup', endDrag);
+        window.addEventListener('touchmove', moveDrag, { passive: false });
+        window.addEventListener('touchend', endDrag);
+
+        mapWrapper.onclick = (e) => {
+            if (currentProject.mode !== 'edit' || (e.target !== mainImage && e.target !== pinsLayer)) return;
+            if (draggingPin) return;
+
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+            const newPin = {
+                id: Date.now(),
+                x,
+                y,
+                type: 'info',
+                content: '',
+                options: ['', '', '', ''],
+                correctIdx: 0,
+                correctBool: true
+            };
+            currentProject.pins.push(newPin);
+            renderPins();
+            openPinModal(newPin.id);
+        };
+
+        const renderPins = () => {
+            pinsLayer.innerHTML = '';
+            currentProject.pins.forEach((pin) => {
+                const isSolved = currentProject.studentProgress[pin.id];
+                const pinEl = document.createElement('div');
+                pinEl.className = `pin w-10 h-10 rounded-full flex items-center justify-center border-4 border-white shadow-xl ${currentProject.mode === 'student' && !isSolved ? 'pulse' : ''} ${isSolved ? 'correct-pin' : ''}`;
+                pinEl.dataset.id = pin.id;
+
+                const colors = { info: 'bg-blue-500', open: 'bg-amber-500', mcq: 'bg-purple-500', boolean: 'bg-emerald-500' };
+                pinEl.classList.add(colors[pin.type] || 'bg-indigo-500');
+                pinEl.style.left = `${pin.x}%`;
+                pinEl.style.top = `${pin.y}%`;
+
+                const icons = { info: 'info', open: 'help-circle', mcq: 'list', boolean: 'check-square' };
+                pinEl.innerHTML = `<i data-lucide="${isSolved ? 'check' : icons[pin.type]}" class="w-5 h-5 text-white"></i>`;
+
+                if (currentProject.mode === 'edit') {
+                    pinEl.addEventListener('mousedown', (e) => startDrag(e, pin));
+                    pinEl.addEventListener('touchstart', (e) => startDrag(e, pin));
+                } else {
+                    pinEl.onclick = (e) => {
+                        e.stopPropagation();
+                        openStudentModal(pin.id);
+                    };
+                }
+
+                pinsLayer.appendChild(pinEl);
+            });
+            lucide.createIcons();
+            updateProgress();
+            updateLockButtonVisibility();
+        };
+
+        const updateProgress = () => {
+            const count = currentProject.pins.length;
+            const solved = Object.values(currentProject.studentProgress).filter((v) => v).length;
+            document.getElementById('progress-text').innerText = `${solved}/${count}`;
+            document.getElementById('progress-bar').style.width = count ? `${(solved / count) * 100}%` : '0%';
+        };
+
+        window.setPinType = (type) => {
+            currentPinType = type;
+            document.querySelectorAll('.type-btn').forEach((btn) => {
+                const active = btn.dataset.type === type;
+                btn.className = `type-btn border rounded-xl p-3 text-xs flex flex-col items-center gap-2 transition-all ${active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-500 border-slate-100 hover:bg-slate-50'}`;
+            });
+            document.getElementById('mcq-options').classList.toggle('hidden', type !== 'mcq');
+            document.getElementById('boolean-options').classList.toggle('hidden', type !== 'boolean');
+        };
+
+        const openPinModal = (id) => {
+            currentEditingPinId = id;
+            const pin = currentProject.pins.find((item) => item.id === id);
+            document.getElementById('pin-modal-title').innerText = "עריכת נקודה";
+            document.getElementById('pin-content').value = pin.content;
+            setPinType(pin.type);
+
+            const mcqList = document.getElementById('mcq-list');
+            mcqList.innerHTML = '';
+            pin.options.forEach((opt, i) => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-100';
+                div.innerHTML = `<input type="radio" name="mcq-correct" value="${i}" ${pin.correctIdx == i ? 'checked' : ''} class="w-4 h-4 accent-indigo-600">
+                                <input type="text" class="mcq-input w-full bg-transparent outline-none text-sm" value="${opt}" placeholder="אופציה ${i + 1}">`;
+                mcqList.appendChild(div);
+            });
+
+            const boolInput = document.querySelector(`input[name="bool-correct"][value="${pin.correctBool}"]`);
+            if (boolInput) boolInput.checked = true;
+
+            document.getElementById('type-selector').classList.remove('hidden');
+            document.getElementById('edit-controls').classList.remove('hidden');
+            document.getElementById('student-interaction').classList.add('hidden');
+            document.getElementById('pin-content').disabled = false;
+            pinModal.classList.remove('hidden');
+        };
+
+        const typeLabels = { info: 'מידע', open: 'שאלה', mcq: 'רב ברירה', boolean: 'נכון/לא נכון' };
+
+        const openStudentModal = (id) => {
+            const pin = currentProject.pins.find((item) => item.id === id);
+            document.getElementById('pin-modal-title').innerText = typeLabels[pin.type];
+            document.getElementById('pin-content').value = pin.content;
+            document.getElementById('pin-content').disabled = true;
+            document.getElementById('type-selector').classList.add('hidden');
+            document.getElementById('edit-controls').classList.add('hidden');
+            document.getElementById('mcq-options').classList.add('hidden');
+            document.getElementById('boolean-options').classList.add('hidden');
+            document.getElementById('student-interaction').classList.remove('hidden');
+
+            setupStudentUI(pin);
+            pinModal.classList.remove('hidden');
+        };
+
+        const setupStudentUI = (pin) => {
+            const area = document.getElementById('student-quiz-area');
+            const feedback = document.getElementById('student-feedback');
+            feedback.classList.add('hidden');
+            area.innerHTML = '';
+
+            const markSolved = () => {
+                currentProject.studentProgress[pin.id] = true;
+                feedback.classList.remove('hidden', 'bg-red-100', 'text-red-700');
+                feedback.classList.add('bg-green-100', 'text-green-700');
+
+                let msg = pin.type === 'info' ? "המידע נקרא." : "מעולה! עניתם נכון.";
+                if (currentProject.isEscapeRoom && currentProject.lockCode) {
+                    const idx = currentProject.pins.indexOf(pin);
+                    const digit = currentProject.lockCode[idx % currentProject.lockCode.length];
+                    msg += ` הספרה שגיליתם: ${digit}`;
+                }
+                feedback.innerText = msg;
+                renderPins();
+            };
+
+            if (pin.type === 'info') {
+                area.innerHTML = `<button id="btn-done" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold">הבנתי, אפשר להמשיך</button>`;
+                document.getElementById('btn-done').onclick = markSolved;
+            } else if (pin.type === 'mcq') {
+                pin.options.forEach((opt, i) => {
+                    if (!opt) return;
+                    const btn = document.createElement('button');
+                    btn.className = "w-full text-right p-4 border-2 border-slate-200 rounded-2xl hover:bg-indigo-50 hover:border-indigo-200 transition-all font-semibold";
+                    btn.innerText = opt;
+                    btn.onclick = () => (i == pin.correctIdx) ? markSolved() : showWrong(feedback);
+                    area.appendChild(btn);
+                });
+            } else if (pin.type === 'boolean') {
+                const choices = [{ t: 'נכון', v: true }, { t: 'לא נכון', v: false }];
+                choices.forEach((choice) => {
+                    const btn = document.createElement('button');
+                    btn.className = "w-full p-4 border-2 border-slate-200 rounded-2xl hover:bg-indigo-50 transition-all font-bold";
+                    btn.innerText = choice.t;
+                    btn.onclick = () => (choice.v == (pin.correctBool == "true" || pin.correctBool === true)) ? markSolved() : showWrong(feedback);
+                    area.appendChild(btn);
+                });
+            } else if (pin.type === 'open') {
+                area.innerHTML = `<textarea id='ans-txt' class='w-full border-2 border-slate-200 rounded-xl p-3 mb-3' placeholder='הקלידו כאן...'></textarea>
+                                 <button id='btn-submit' class='w-full bg-indigo-600 text-white py-3 rounded-xl font-bold'>שלח תשובה</button>`;
+                document.getElementById('btn-submit').onclick = markSolved;
+            }
+        };
+
+        const showWrong = (feedback) => {
+            feedback.classList.remove('hidden', 'bg-green-100', 'text-green-700');
+            feedback.classList.add('bg-red-100', 'text-red-700');
+            feedback.innerText = "לא בדיוק, כדאי לנסות שוב!";
+        };
+
+        window.savePin = () => {
+            const pin = currentProject.pins.find((item) => item.id === currentEditingPinId);
+            pin.type = currentPinType;
+            pin.content = document.getElementById('pin-content').value;
+            if (pin.type === 'mcq') {
+                pin.options = Array.from(document.querySelectorAll('.mcq-input')).map((input) => input.value);
+                pin.correctIdx = document.querySelector('input[name="mcq-correct"]:checked')?.value || 0;
+            }
+            if (pin.type === 'boolean') {
+                pin.correctBool = document.querySelector('input[name="bool-correct"][value="true"]').checked ? "true" : "false";
+            }
+            renderPins();
+            closePinModal();
+        };
+
+        document.getElementById('delete-pin').onclick = () => {
+            currentProject.pins = currentProject.pins.filter((pin) => pin.id !== currentEditingPinId);
+            renderPins();
+            closePinModal();
+        };
+
+        window.closePinModal = () => pinModal.classList.add('hidden');
+
+        document.getElementById('settings-btn').onclick = () => {
+            document.getElementById('project-name-input').value = currentProject.name;
+            document.getElementById('escape-mode-toggle').checked = currentProject.isEscapeRoom;
+            document.getElementById('escape-code').value = currentProject.lockCode || '';
+            document.getElementById('escape-settings').classList.toggle('hidden', !currentProject.isEscapeRoom);
+            projectSettingsModal.classList.remove('hidden');
+        };
+
+        document.getElementById('escape-mode-toggle').onchange = (e) => {
+            document.getElementById('escape-settings').classList.toggle('hidden', !e.target.checked);
+        };
+
+        window.closeSettings = () => projectSettingsModal.classList.add('hidden');
+        window.applySettings = () => {
+            currentProject.name = document.getElementById('project-name-input').value || "פעילות חדשה";
+            currentProject.isEscapeRoom = document.getElementById('escape-mode-toggle').checked;
+            currentProject.lockCode = document.getElementById('escape-code').value;
+            closeSettings();
+            syncModeUI();
+            showToast("ההגדרות עודכנו");
+        };
+
+        modeToggle.onclick = () => {
+            currentProject.mode = currentProject.mode === 'edit' ? 'student' : 'edit';
+            currentProject.studentProgress = {};
+            syncModeUI();
+            renderPins();
+        };
+
+        document.getElementById('export-btn').onclick = () => {
+            const data = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentProject));
+            const dl = document.createElement('a');
+            dl.setAttribute("href", data);
+            dl.setAttribute("download", `${currentProject.name || 'project'}.json`);
+            dl.click();
+        };
+
+        document.getElementById('lock-button').onclick = () => {
+            document.getElementById('lock-modal').classList.remove('hidden');
+        };
+
+        window.checkFinalCode = () => {
+            const val = document.getElementById('final-code-input').value;
+            if (val === currentProject.lockCode) {
+                showToast("🏆 כל הכבוד! הצלחתם לפתוח את המנעול!");
+                document.getElementById('lock-modal').classList.add('hidden');
+            } else {
+                showToast("קוד שגוי, נסו שוב.");
+            }
+        };
+
+        initAuth();
+    </script>
+</body>
+</html>
