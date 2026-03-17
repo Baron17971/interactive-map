@@ -440,6 +440,7 @@
         #pin-modal > div,
         #teacher-modal > div,
         #save-map-modal > div,
+        #student-export-meta-modal > div,
         #teacher-help-modal > div,
         #student-instruction-modal > div,
         #lock-modal > div {
@@ -1077,6 +1078,29 @@
         </div>
     </div>
 
+    <div id="student-export-meta-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 space-y-5">
+            <div>
+                <h3 class="text-xl font-bold text-slate-800">פרטי תלמיד לייצוא PDF</h3>
+                <p class="text-slate-500 text-sm mt-1">הזינו שם תלמיד/ה וכיתה לדוח.</p>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">שם תלמיד/ה</label>
+                    <input type="text" id="student-export-name-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="למשל: יעל כהן">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">כיתה</label>
+                    <input type="text" id="student-export-class-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder='למשל: ו"2'>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button id="student-export-meta-cancel-btn" class="flex-grow bg-slate-100 text-slate-700 py-3 rounded-xl font-bold">ביטול</button>
+                <button id="student-export-meta-confirm-btn" class="flex-grow bg-indigo-600 text-white py-3 rounded-xl font-bold">המשך לייצוא</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl transform translate-y-32 opacity-0 transition-all duration-500 z-[100] flex items-center gap-3">
         <i data-lucide="info" class="w-5 h-5 text-indigo-400"></i>
         <span id="toast-msg">הודעה</span>
@@ -1166,9 +1190,15 @@
         const creatorSchoolInput = document.getElementById('creator-school-input');
         const activityModeButtons = Array.from(document.querySelectorAll('.activity-mode-btn'));
         const teacherHelpModal = document.getElementById('teacher-help-modal');
+        const studentExportMetaModal = document.getElementById('student-export-meta-modal');
+        const studentExportNameInput = document.getElementById('student-export-name-input');
+        const studentExportClassInput = document.getElementById('student-export-class-input');
+        const studentExportMetaCancelBtn = document.getElementById('student-export-meta-cancel-btn');
+        const studentExportMetaConfirmBtn = document.getElementById('student-export-meta-confirm-btn');
         const brandLogo = document.getElementById('brand-logo');
         let saveMapModalMode = 'saveAs';
         let projectSettingsFlow = 'settings';
+        let studentExportMetaResolver = null;
 
         lucide.createIcons();
 
@@ -1221,6 +1251,21 @@
             };
             localStorage.setItem(key, JSON.stringify(payload));
         };
+
+        const closeStudentExportMetaModal = (result = null) => {
+            studentExportMetaModal.classList.add('hidden');
+            const resolver = studentExportMetaResolver;
+            studentExportMetaResolver = null;
+            if (resolver) resolver(result);
+        };
+
+        const requestStudentMeta = (defaults = { name: '', className: '' }) => new Promise((resolve) => {
+            studentExportMetaResolver = resolve;
+            studentExportNameInput.value = defaults.name || '';
+            studentExportClassInput.value = defaults.className || '';
+            studentExportMetaModal.classList.remove('hidden');
+            setTimeout(() => studentExportNameInput.focus(), 20);
+        });
 
         const updateStudentExportButtonVisibility = () => {
             const editorVisible = !document.getElementById('editor-view').classList.contains('hidden');
@@ -1358,16 +1403,10 @@
             }
 
             const meta = readStudentMeta();
-            const nameInput = window.prompt("שם תלמיד/ה לדוח PDF:", meta.name || '');
-            if (nameInput === null) return;
-            const studentName = normalizeOptionalText(nameInput);
-            if (!studentName) {
-                showToast("יש להזין שם תלמיד/ה לפני ייצוא PDF.");
-                return;
-            }
-            const classInput = window.prompt("כיתה לדוח PDF:", meta.className || '');
-            if (classInput === null) return;
-            const studentClass = normalizeOptionalText(classInput);
+            const studentMeta = await requestStudentMeta(meta);
+            if (!studentMeta) return;
+            const studentName = normalizeOptionalText(studentMeta.name);
+            const studentClass = normalizeOptionalText(studentMeta.className);
             writeStudentMeta({ name: studentName, className: studentClass });
 
             const questions = (currentProject.pins || []).filter((pin) => pin.type !== 'info');
@@ -2201,6 +2240,37 @@
             }
         };
 
+        const confirmStudentExportMeta = () => {
+            const name = normalizeOptionalText(studentExportNameInput.value);
+            if (!name) {
+                showToast("יש להזין שם תלמיד/ה.");
+                studentExportNameInput.focus();
+                return;
+            }
+            closeStudentExportMetaModal({
+                name,
+                className: normalizeOptionalText(studentExportClassInput.value)
+            });
+        };
+
+        studentExportMetaCancelBtn.onclick = () => closeStudentExportMetaModal(null);
+        studentExportMetaConfirmBtn.onclick = confirmStudentExportMeta;
+        studentExportMetaModal.addEventListener('click', (e) => {
+            if (e.target === studentExportMetaModal) {
+                closeStudentExportMetaModal(null);
+            }
+        });
+        studentExportNameInput.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            studentExportClassInput.focus();
+        });
+        studentExportClassInput.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            confirmStudentExportMeta();
+        });
+
         document.getElementById('save-map-cancel-btn').onclick = () => {
             saveMapModal.classList.add('hidden');
         };
@@ -2244,11 +2314,13 @@
         document.getElementById('exit-editor').onclick = () => {
             closeTeacherHelpModal();
             closeStudentInstructionModal();
+            closeStudentExportMetaModal(null);
             setView('dashboard');
         };
         document.getElementById('logo-home').onclick = () => {
             closeTeacherHelpModal();
             closeStudentInstructionModal();
+            closeStudentExportMetaModal(null);
             setView('dashboard');
         };
         document.getElementById('teacher-credit-pill').onclick = () => {
