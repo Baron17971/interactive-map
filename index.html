@@ -7,6 +7,7 @@
     <link rel="icon" type="image/svg+xml" href="/favicon-question.svg?v=1">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
         (() => {
             const params = new URLSearchParams(window.location.search);
@@ -247,6 +248,29 @@
             background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(255, 255, 255, 0.14));
             border-color: rgba(255, 200, 106, 0.45);
             color: #fffaf0;
+        }
+
+        #share-student-btn,
+        #student-export-btn {
+            width: auto;
+            min-width: 118px;
+            padding-inline: 14px;
+            gap: 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+        }
+
+        #teacher-help-btn {
+            width: auto;
+            min-width: 86px;
+            padding-inline: 14px;
+            gap: 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
         }
 
         #user-info {
@@ -615,8 +639,7 @@
         body.student-view-active #toolbar-setup-group,
         body.student-view-active #toolbar-publish-group,
         body.student-view-active #student-stats,
-        body.student-view-active #exit-editor,
-        body.student-view-active #user-info {
+        body.student-view-active #exit-editor {
             display: none !important;
         }
 
@@ -731,8 +754,7 @@
             <div id="editor-tools" class="hidden">
                 <div id="toolbar-setup-group" class="toolbar-group">
                     <button id="teacher-help-btn" class="toolbar-icon-btn toolbar-action-btn" title="הנחיות למורה" aria-label="הנחיות למורה">
-                        <i data-lucide="circle-help" class="w-5 h-5"></i>
-                        <span class="sr-only">הנחיות למורה</span>
+                        <span>הנחיות</span>
                     </button>
                     <button id="settings-btn" class="toolbar-icon-btn toolbar-action-btn" title="הגדרות פעילות" aria-label="הגדרות פעילות">
                         <i data-lucide="settings" class="w-5 h-5"></i>
@@ -756,9 +778,11 @@
                         <i data-lucide="eye" id="mode-icon" class="w-5 h-5"></i>
                         <span id="mode-text" class="sr-only">תצוגת תלמיד</span>
                     </button>
-                    <button id="share-student-btn" class="toolbar-icon-btn toolbar-link-btn" title="קישור תלמיד" aria-label="קישור תלמיד">
-                        <i data-lucide="link-2" class="w-5 h-5"></i>
-                        <span class="sr-only">קישור תלמיד</span>
+                    <button id="share-student-btn" class="toolbar-icon-btn toolbar-link-btn" title="קישור לתלמיד" aria-label="קישור לתלמיד">
+                        <span>קישור לתלמיד</span>
+                    </button>
+                    <button id="student-export-btn" class="toolbar-icon-btn toolbar-link-btn hidden" title="ייצוא PDF" aria-label="ייצוא PDF">
+                        <span>ייצוא PDF</span>
                     </button>
                     <div id="student-stats" class="hidden flex items-center gap-4 bg-indigo-800 px-4 py-2 rounded-full">
                         <div class="text-sm font-bold">התקדמות: <span id="progress-text">0/0</span></div>
@@ -1095,6 +1119,7 @@
             lockCode: '',
             mode: 'edit',
             studentProgress: {},
+            studentAnswers: {},
             studentInstruction: DEFAULT_STUDENT_INSTRUCTION,
             teacherName: teacherProfile.teacherName,
             className: teacherProfile.className,
@@ -1119,6 +1144,7 @@
         const pinModal = document.getElementById('pin-modal');
         const modeToggle = document.getElementById('mode-toggle');
         const shareStudentBtn = document.getElementById('share-student-btn');
+        const studentExportBtn = document.getElementById('student-export-btn');
         const saveAsNewBtn = document.getElementById('save-as-new-btn');
         const saveProjectLabel = document.getElementById('save-project-label');
         const projectSettingsModal = document.getElementById('project-settings-modal');
@@ -1160,6 +1186,79 @@
             document.documentElement.classList.remove('shared-student-boot');
         };
 
+        const getStudentSessionStorageKey = () => {
+            if (!isReadOnlyStudentLink || !teacherId || !currentProject.id) return '';
+            return `map-archive-student-session-${appId}-${teacherId}-${currentProject.id}`;
+        };
+
+        const getStudentMetaStorageKey = () => {
+            const base = getStudentSessionStorageKey();
+            return base ? `${base}-meta` : '';
+        };
+
+        const readStudentMeta = () => {
+            const key = getStudentMetaStorageKey();
+            if (!key) return { name: '', className: '' };
+            try {
+                const raw = localStorage.getItem(key);
+                if (!raw) return { name: '', className: '' };
+                const parsed = JSON.parse(raw);
+                return {
+                    name: normalizeOptionalText(parsed?.name),
+                    className: normalizeOptionalText(parsed?.className)
+                };
+            } catch {
+                return { name: '', className: '' };
+            }
+        };
+
+        const writeStudentMeta = (value) => {
+            const key = getStudentMetaStorageKey();
+            if (!key) return;
+            const payload = {
+                name: normalizeOptionalText(value?.name),
+                className: normalizeOptionalText(value?.className)
+            };
+            localStorage.setItem(key, JSON.stringify(payload));
+        };
+
+        const updateStudentExportButtonVisibility = () => {
+            const editorVisible = !document.getElementById('editor-view').classList.contains('hidden');
+            const show = editorVisible && isReadOnlyStudentLink && currentProject.mode === 'student' && !!currentProject.id;
+            studentExportBtn.classList.toggle('hidden', !show);
+        };
+
+        const restoreStudentSession = () => {
+            const key = getStudentSessionStorageKey();
+            if (!key) return;
+            try {
+                const raw = localStorage.getItem(key);
+                if (!raw) return;
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') {
+                    currentProject.studentProgress = parsed.studentProgress && typeof parsed.studentProgress === 'object'
+                        ? parsed.studentProgress
+                        : {};
+                    currentProject.studentAnswers = parsed.studentAnswers && typeof parsed.studentAnswers === 'object'
+                        ? parsed.studentAnswers
+                        : {};
+                }
+            } catch (err) {
+                console.error("Student session read failed:", err);
+            }
+        };
+
+        const persistStudentSession = () => {
+            const key = getStudentSessionStorageKey();
+            if (!key) return;
+            const payload = {
+                studentProgress: currentProject.studentProgress || {},
+                studentAnswers: currentProject.studentAnswers || {},
+                updatedAt: new Date().toISOString()
+            };
+            localStorage.setItem(key, JSON.stringify(payload));
+        };
+
         const setView = (view) => {
             document.getElementById('dashboard-view').classList.toggle('hidden', view !== 'dashboard');
             document.getElementById('editor-view').classList.toggle('hidden', view !== 'editor');
@@ -1169,11 +1268,188 @@
             const studentInEditor = view === 'editor' && currentProject.mode === 'student';
             document.body.classList.toggle('student-view-active', studentInEditor);
             updateCreatorCredit();
+            updateStudentExportButtonVisibility();
         };
 
         const normalizeTeacherId = (value) => value.trim().toLowerCase();
 
         const normalizeOptionalText = (value) => (typeof value === 'string' ? value.trim() : '');
+
+        const normalizeStudentAnswerEntry = (entry) => {
+            if (typeof entry === 'string') {
+                return { answer: entry, isCorrect: null, savedAt: null };
+            }
+            if (!entry || typeof entry !== 'object') {
+                return { answer: '', isCorrect: null, savedAt: null };
+            }
+            return {
+                answer: normalizeOptionalText(entry.answer),
+                isCorrect: typeof entry.isCorrect === 'boolean' ? entry.isCorrect : null,
+                savedAt: typeof entry.savedAt === 'string' ? entry.savedAt : null
+            };
+        };
+
+        const saveStudentAnswer = (pin, answer, isCorrect = null) => {
+            if (!pin) return;
+            currentProject.studentAnswers = currentProject.studentAnswers || {};
+            currentProject.studentAnswers[pin.id] = {
+                pinId: pin.id,
+                type: pin.type,
+                prompt: normalizeOptionalText(pin.content),
+                answer: normalizeOptionalText(answer),
+                isCorrect: typeof isCorrect === 'boolean' ? isCorrect : null,
+                savedAt: new Date().toISOString()
+            };
+            persistStudentSession();
+        };
+
+        const getPinTypeLabel = (type) => ({
+            open: 'שאלה פתוחה',
+            mcq: 'שאלה אמריקאית',
+            boolean: 'נכון / לא נכון'
+        }[type] || 'שאלה');
+
+        const escapeHtml = (value) => String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+
+        const toFileSafeName = (value, fallback = 'mapi') => {
+            const cleaned = normalizeOptionalText(value)
+                .replace(/[^\w\u0590-\u05FF-]+/g, '_')
+                .slice(0, 40);
+            return cleaned || fallback;
+        };
+
+        const downloadStudentAnswers = async () => {
+            if (!currentProject.id) {
+                showToast("אין פעילות פתוחה לייצוא PDF.");
+                return;
+            }
+            if (typeof window.html2pdf !== 'function') {
+                showToast("ספריית PDF לא נטענה. נסו שוב בעוד רגע.");
+                return;
+            }
+
+            const meta = readStudentMeta();
+            const nameInput = window.prompt("שם תלמיד/ה לדוח PDF:", meta.name || '');
+            if (nameInput === null) return;
+            const studentName = normalizeOptionalText(nameInput);
+            if (!studentName) {
+                showToast("יש להזין שם תלמיד/ה לפני ייצוא PDF.");
+                return;
+            }
+            const classInput = window.prompt("כיתה לדוח PDF:", meta.className || '');
+            if (classInput === null) return;
+            const studentClass = normalizeOptionalText(classInput);
+            writeStudentMeta({ name: studentName, className: studentClass });
+
+            const questions = (currentProject.pins || []).filter((pin) => pin.type !== 'info');
+            const answers = questions.map((pin, index) => {
+                const entry = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]);
+                const answerText = entry.answer || 'לא ניתנה תשובה';
+                const statusText = entry.isCorrect === true
+                    ? 'נכונה'
+                    : entry.isCorrect === false
+                        ? 'לא נכונה'
+                        : entry.answer
+                            ? 'נשמרה תשובה'
+                            : 'ללא תשובה';
+                return {
+                    index: index + 1,
+                    pinId: pin.id,
+                    type: pin.type,
+                    prompt: normalizeOptionalText(pin.content),
+                    answer: answerText,
+                    isCorrect: entry.isCorrect,
+                    savedAt: entry.savedAt,
+                    statusText
+                };
+            });
+            if (!answers.length) {
+                showToast("אין שאלות בפעילות זו לייצוא.");
+                return;
+            }
+
+            const answeredCount = answers.filter((item) => item.answer !== 'לא ניתנה תשובה').length;
+            const generatedAt = new Date().toLocaleString('he-IL');
+            const teacherLine = [
+                normalizeOptionalText(currentProject.teacherName),
+                normalizeOptionalText(currentProject.className),
+                normalizeOptionalText(currentProject.schoolName)
+            ].filter(Boolean).join(' | ');
+            const questionBlocks = answers.map((item) => `
+                <div style="border:1px solid #d7e3e1;border-radius:10px;padding:10px 12px;margin-top:8px;">
+                    <div style="font-weight:700;color:#0f3e3a;">${item.index}. ${escapeHtml(getPinTypeLabel(item.type))}</div>
+                    <div style="margin-top:4px;white-space:pre-wrap;">${escapeHtml(item.prompt || 'ללא טקסט שאלה')}</div>
+                    <div style="margin-top:8px;font-weight:700;">תשובת תלמיד:</div>
+                    <div style="white-space:pre-wrap;">${escapeHtml(item.answer)}</div>
+                    <div style="margin-top:6px;font-size:12px;color:#4f6e6b;">סטטוס: ${escapeHtml(item.statusText)}</div>
+                </div>
+            `).join('');
+
+            const report = document.createElement('div');
+            report.dir = 'rtl';
+            report.style.position = 'fixed';
+            report.style.top = '16px';
+            report.style.right = '16px';
+            report.style.width = '760px';
+            report.style.maxWidth = 'calc(100vw - 32px)';
+            report.style.maxHeight = 'calc(100vh - 32px)';
+            report.style.overflow = 'auto';
+            report.style.background = '#ffffff';
+            report.style.color = '#111827';
+            report.style.padding = '24px';
+            report.style.fontFamily = "'Heebo','Assistant',sans-serif";
+            report.style.boxShadow = '0 8px 24px rgba(0,0,0,0.18)';
+            report.style.zIndex = '9999';
+            report.innerHTML = `
+                <h1 style="margin:0 0 8px;font-size:24px;color:#0f3e3a;">דוח תשובות תלמיד</h1>
+                <div style="font-size:14px;line-height:1.65;">
+                    <div><strong>פעילות:</strong> ${escapeHtml(currentProject.name || 'ללא שם')}</div>
+                    <div><strong>שם תלמיד/ה:</strong> ${escapeHtml(studentName)}</div>
+                    <div><strong>כיתה:</strong> ${escapeHtml(studentClass || 'לא צוין')}</div>
+                    <div><strong>יוצר/ת הפעילות:</strong> ${escapeHtml(teacherLine || 'לא צוין')}</div>
+                    <div><strong>תאריך ייצוא:</strong> ${escapeHtml(generatedAt)}</div>
+                    <div><strong>שאלות שנענו:</strong> ${answeredCount} מתוך ${answers.length}</div>
+                </div>
+                <hr style="border:none;border-top:1px solid #d7e3e1;margin:14px 0 10px;">
+                ${questionBlocks}
+            `;
+            document.body.appendChild(report);
+
+            const fileName = `${toFileSafeName(currentProject.name, 'mapi')}-${toFileSafeName(studentName, 'student')}-answers.pdf`;
+            try {
+                showToast("מכין PDF, נא להמתין...");
+                if (document.fonts && document.fonts.ready) {
+                    await document.fonts.ready;
+                }
+                await window.html2pdf()
+                    .set({
+                        margin: [8, 8, 8, 8],
+                        filename: fileName,
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: {
+                            scale: 2,
+                            useCORS: true,
+                            backgroundColor: '#ffffff',
+                            scrollX: 0,
+                            scrollY: 0,
+                            windowWidth: report.scrollWidth,
+                            windowHeight: report.scrollHeight
+                        },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                        pagebreak: { mode: ['css', 'legacy'] }
+                    })
+                    .from(report)
+                    .save();
+                showToast("קובץ PDF ירד למכשיר. אפשר לשלוח למורה.");
+            } finally {
+                report.remove();
+            }
+        };
 
         const normalizeCreatorProfile = (value) => ({
             teacherName: normalizeOptionalText(value?.teacherName),
@@ -1348,6 +1624,8 @@
                 'share-student-btn'
             ];
             ids.forEach((id) => document.getElementById(id).classList.remove('hidden'));
+            studentExportBtn.classList.add('hidden');
+            updateStudentExportButtonVisibility();
         };
 
         const applyReadOnlyStudentUI = () => {
@@ -1361,6 +1639,7 @@
             document.getElementById('share-student-btn').classList.add('hidden');
             document.getElementById('export-btn').classList.add('hidden');
             document.getElementById('exit-editor').classList.add('hidden');
+            updateStudentExportButtonVisibility();
         };
 
         const buildStudentShareUrl = (projectId) => {
@@ -1520,6 +1799,7 @@
 
             updateLockButtonVisibility();
             updateCreatorCredit();
+            updateStudentExportButtonVisibility();
             lucide.createIcons();
         };
 
@@ -1683,9 +1963,13 @@
                 className: normalizeOptionalText(project.className || teacherProfile.className),
                 schoolName: normalizeOptionalText(project.schoolName || teacherProfile.schoolName),
                 mode: forceStudent ? 'student' : 'edit',
-                studentProgress: {}
+                studentProgress: {},
+                studentAnswers: {}
             };
             isReadOnlyStudentLink = readOnly;
+            if (isReadOnlyStudentLink && currentProject.mode === 'student') {
+                restoreStudentSession();
+            }
             updateSaveActionsUI();
             syncModeUI();
             mainImage.src = project.image;
@@ -1731,10 +2015,17 @@
                 return;
             }
 
+            const storageReadyProject = {
+                ...currentProject,
+                mode: 'edit',
+                studentProgress: {},
+                studentAnswers: {}
+            };
+
             if (!hasSupabaseConfig) {
                 const id = (!forceNew && currentProject.id) || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
                 const payload = {
-                    ...currentProject,
+                    ...storageReadyProject,
                     id,
                     teacherId,
                     ownerUid: currentUser.uid,
@@ -1752,7 +2043,7 @@
             }
 
             const id = (!forceNew && currentProject.id) || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
-            let projectForCloud = currentProject;
+            let projectForCloud = storageReadyProject;
             try {
                 projectForCloud = await prepareProjectForCloudSave(currentProject);
             } catch (prepError) {
@@ -1858,6 +2149,19 @@
                 showToast(hasSupabaseConfig ? "קישור תלמיד הועתק ללוח." : "הקישור הועתק. במצב מקומי הוא יעבוד רק בדפדפן זה.");
             } else {
                 showToast("לא הצלחתי להעתיק אוטומטית. העתיקי ידנית מהשורת כתובת.");
+            }
+        };
+
+        studentExportBtn.onclick = async () => {
+            if (currentProject.mode !== 'student') {
+                showToast("ייצוא PDF זמין במצב תלמיד.");
+                return;
+            }
+            try {
+                await downloadStudentAnswers();
+            } catch (err) {
+                console.error("Student PDF export failed:", err);
+                showToast("ייצוא PDF נכשל. נסו שוב.");
             }
         };
 
@@ -2144,47 +2448,149 @@
                 feedback.classList.add('bg-green-100', 'text-green-700');
 
                 let msg = pin.type === 'info' ? "המידע נקרא." : "מעולה! עניתם נכון.";
+                if (pin.type === 'open') {
+                    msg = "התשובה נשמרה.";
+                }
                 if (currentProject.isEscapeRoom && currentProject.lockCode) {
                     const idx = currentProject.pins.indexOf(pin);
                     const symbol = currentProject.lockCode[idx % currentProject.lockCode.length];
                     msg += ` התו שגיליתם: ${symbol}`;
                 }
                 feedback.innerText = msg;
+                persistStudentSession();
                 renderPins();
             };
 
             if (pin.type === 'info') {
                 area.innerHTML = `<button id="btn-done" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold">הבנתי, אפשר להמשיך</button>`;
-                document.getElementById('btn-done').onclick = markSolved;
+                document.getElementById('btn-done').onclick = () => {
+                    saveStudentAnswer(pin, 'המידע נקרא');
+                    markSolved();
+                };
             } else if (pin.type === 'mcq') {
+                const savedEntry = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]);
+                const optionButtons = [];
+                let selectedIdx = null;
+                const setOptionState = (button, active) => {
+                    button.className = active
+                        ? "w-full text-right p-4 border-2 border-teal-500 bg-teal-50 rounded-2xl transition-all font-semibold"
+                        : "w-full text-right p-4 border-2 border-slate-200 rounded-2xl hover:bg-indigo-50 hover:border-indigo-200 transition-all font-semibold";
+                };
+
                 pin.options.forEach((opt, i) => {
                     if (!opt) return;
                     const btn = document.createElement('button');
-                    btn.className = "w-full text-right p-4 border-2 border-slate-200 rounded-2xl hover:bg-indigo-50 hover:border-indigo-200 transition-all font-semibold";
+                    btn.type = 'button';
                     btn.innerText = opt;
-                    btn.onclick = () => (i == pin.correctIdx) ? markSolved() : showWrong(feedback);
+                    setOptionState(btn, false);
+                    btn.onclick = () => {
+                        selectedIdx = i;
+                        optionButtons.forEach((entry) => setOptionState(entry.btn, entry.index === i));
+                    };
+                    optionButtons.push({ btn, index: i, text: opt });
                     area.appendChild(btn);
                 });
+
+                if (savedEntry.answer) {
+                    const savedBtn = optionButtons.find((entry) => entry.text === savedEntry.answer);
+                    if (savedBtn) {
+                        selectedIdx = savedBtn.index;
+                        optionButtons.forEach((entry) => setOptionState(entry.btn, entry.index === savedBtn.index));
+                    }
+                }
+
+                const saveBtn = document.createElement('button');
+                saveBtn.type = 'button';
+                saveBtn.className = "w-full bg-indigo-600 text-white py-3 rounded-xl font-bold mt-3";
+                saveBtn.innerText = "שמור תשובה";
+                saveBtn.onclick = () => {
+                    if (selectedIdx === null) {
+                        showWrong(feedback, "נא לבחור תשובה לפני שמירה.");
+                        return;
+                    }
+                    const selected = optionButtons.find((entry) => entry.index === selectedIdx);
+                    const isCorrect = String(selectedIdx) === String(pin.correctIdx);
+                    saveStudentAnswer(pin, selected?.text || '', isCorrect);
+                    if (isCorrect) {
+                        markSolved();
+                        return;
+                    }
+                    showWrong(feedback, "התשובה נשמרה. אפשר לנסות שוב.");
+                };
+                area.appendChild(saveBtn);
             } else if (pin.type === 'boolean') {
+                const savedEntry = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]);
                 const choices = [{ t: 'נכון', v: true }, { t: 'לא נכון', v: false }];
+                const choiceButtons = [];
+                let selectedValue = null;
+                const setChoiceState = (button, active) => {
+                    button.className = active
+                        ? "w-full p-4 border-2 border-teal-500 bg-teal-50 rounded-2xl transition-all font-bold"
+                        : "w-full p-4 border-2 border-slate-200 rounded-2xl hover:bg-indigo-50 transition-all font-bold";
+                };
+
                 choices.forEach((choice) => {
                     const btn = document.createElement('button');
-                    btn.className = "w-full p-4 border-2 border-slate-200 rounded-2xl hover:bg-indigo-50 transition-all font-bold";
+                    btn.type = 'button';
                     btn.innerText = choice.t;
-                    btn.onclick = () => (choice.v == (pin.correctBool == "true" || pin.correctBool === true)) ? markSolved() : showWrong(feedback);
+                    setChoiceState(btn, false);
+                    btn.onclick = () => {
+                        selectedValue = choice.v;
+                        choiceButtons.forEach((entry) => setChoiceState(entry.btn, entry.value === choice.v));
+                    };
+                    choiceButtons.push({ btn, value: choice.v, text: choice.t });
                     area.appendChild(btn);
                 });
+
+                if (savedEntry.answer) {
+                    const savedBtn = choiceButtons.find((entry) => entry.text === savedEntry.answer);
+                    if (savedBtn) {
+                        selectedValue = savedBtn.value;
+                        choiceButtons.forEach((entry) => setChoiceState(entry.btn, entry.value === savedBtn.value));
+                    }
+                }
+
+                const saveBtn = document.createElement('button');
+                saveBtn.type = 'button';
+                saveBtn.className = "w-full bg-indigo-600 text-white py-3 rounded-xl font-bold mt-3";
+                saveBtn.innerText = "שמור תשובה";
+                saveBtn.onclick = () => {
+                    if (selectedValue === null) {
+                        showWrong(feedback, "נא לבחור תשובה לפני שמירה.");
+                        return;
+                    }
+                    const selected = choiceButtons.find((entry) => entry.value === selectedValue);
+                    const isCorrect = selectedValue == (pin.correctBool == "true" || pin.correctBool === true);
+                    saveStudentAnswer(pin, selected?.text || '', isCorrect);
+                    if (isCorrect) {
+                        markSolved();
+                        return;
+                    }
+                    showWrong(feedback, "התשובה נשמרה. אפשר לנסות שוב.");
+                };
+                area.appendChild(saveBtn);
             } else if (pin.type === 'open') {
+                const existingAnswer = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]).answer;
                 area.innerHTML = `<textarea id='ans-txt' class='w-full border-2 border-slate-200 rounded-xl p-3 mb-3' placeholder='הקלידו כאן...'></textarea>
-                                 <button id='btn-submit' class='w-full bg-indigo-600 text-white py-3 rounded-xl font-bold'>שלח תשובה</button>`;
-                document.getElementById('btn-submit').onclick = markSolved;
+                                 <button id='btn-submit' class='w-full bg-indigo-600 text-white py-3 rounded-xl font-bold'>שמור תשובה</button>`;
+                const answerInput = document.getElementById('ans-txt');
+                answerInput.value = existingAnswer;
+                document.getElementById('btn-submit').onclick = () => {
+                    const answerText = answerInput.value.trim();
+                    if (!answerText) {
+                        showWrong(feedback, "נא לכתוב תשובה לפני שמירה.");
+                        return;
+                    }
+                    saveStudentAnswer(pin, answerText);
+                    markSolved();
+                };
             }
         };
 
-        const showWrong = (feedback) => {
+        const showWrong = (feedback, message = "לא בדיוק, כדאי לנסות שוב!") => {
             feedback.classList.remove('hidden', 'bg-green-100', 'text-green-700');
             feedback.classList.add('bg-red-100', 'text-red-700');
-            feedback.innerText = "לא בדיוק, כדאי לנסות שוב!";
+            feedback.innerText = message;
         };
 
         window.savePin = () => {
@@ -2271,6 +2677,7 @@
             }
             currentProject.mode = currentProject.mode === 'edit' ? 'student' : 'edit';
             currentProject.studentProgress = {};
+            currentProject.studentAnswers = {};
             syncModeUI();
             renderPins();
             if (currentProject.mode === 'student') {
