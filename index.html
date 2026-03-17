@@ -1323,6 +1323,30 @@
             return cleaned || fallback;
         };
 
+        const openPdfPrintFallback = (reportHtml, docTitle) => {
+            const popup = window.open('', '_blank');
+            if (!popup) {
+                showToast("הדפדפן חסם חלון חדש. אפשרו popups ונסו שוב.");
+                return;
+            }
+            popup.document.open();
+            popup.document.write(`<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHtml(docTitle)}</title>
+  <style>
+    body { margin: 0; padding: 18px; font-family: 'Heebo','Assistant',sans-serif; color: #111827; background: #ffffff; }
+    @media print { body { padding: 0; } }
+  </style>
+</head>
+<body>${reportHtml}</body>
+</html>`);
+            popup.document.close();
+            popup.focus();
+            setTimeout(() => popup.print(), 350);
+        };
+
         const downloadStudentAnswers = async () => {
             if (!currentProject.id) {
                 showToast("אין פעילות פתוחה לייצוא PDF.");
@@ -1393,12 +1417,12 @@
             const report = document.createElement('div');
             report.dir = 'rtl';
             report.style.position = 'fixed';
-            report.style.top = '16px';
-            report.style.right = '16px';
+            report.style.top = '8px';
+            report.style.left = '8px';
             report.style.width = '760px';
-            report.style.maxWidth = 'calc(100vw - 32px)';
-            report.style.maxHeight = 'calc(100vh - 32px)';
-            report.style.overflow = 'auto';
+            report.style.maxWidth = 'none';
+            report.style.maxHeight = 'none';
+            report.style.overflow = 'visible';
             report.style.background = '#ffffff';
             report.style.color = '#111827';
             report.style.padding = '24px';
@@ -1421,31 +1445,43 @@
             document.body.appendChild(report);
 
             const fileName = `${toFileSafeName(currentProject.name, 'mapi')}-${toFileSafeName(studentName, 'student')}-answers.pdf`;
+            const reportHtml = report.outerHTML;
             try {
                 showToast("מכין PDF, נא להמתין...");
                 if (document.fonts && document.fonts.ready) {
                     await document.fonts.ready;
                 }
-                await window.html2pdf()
-                    .set({
-                        margin: [8, 8, 8, 8],
-                        filename: fileName,
-                        image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: {
-                            scale: 2,
-                            useCORS: true,
-                            backgroundColor: '#ffffff',
-                            scrollX: 0,
-                            scrollY: 0,
-                            windowWidth: report.scrollWidth,
-                            windowHeight: report.scrollHeight
-                        },
-                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                        pagebreak: { mode: ['css', 'legacy'] }
-                    })
-                    .from(report)
-                    .save();
-                showToast("קובץ PDF ירד למכשיר. אפשר לשלוח למורה.");
+                const options = {
+                    margin: [8, 8, 8, 8],
+                    filename: fileName,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: {
+                        scale: 2,
+                        useCORS: true,
+                        backgroundColor: '#ffffff',
+                        scrollX: 0,
+                        scrollY: 0
+                    },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    pagebreak: { mode: ['css', 'legacy'] }
+                };
+                const worker = window.html2pdf().set(options).from(report).toPdf();
+                const pdf = await worker.get('pdf');
+                const blob = pdf.output('blob');
+                if (!blob || blob.size < 3200) {
+                    throw new Error(`Generated PDF too small: ${blob ? blob.size : 0} bytes`);
+                }
+                const url = URL.createObjectURL(blob);
+                const anchor = document.createElement('a');
+                anchor.href = url;
+                anchor.download = fileName;
+                anchor.click();
+                setTimeout(() => URL.revokeObjectURL(url), 1500);
+                showToast("קובץ PDF ירד למכשיר.");
+            } catch (err) {
+                console.error("PDF export blank/fail, using print fallback:", err);
+                showToast("נפתחת תצוגת הדפסה חלופית ל-PDF.");
+                openPdfPrintFallback(reportHtml, fileName.replace('.pdf', ''));
             } finally {
                 report.remove();
             }
