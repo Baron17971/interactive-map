@@ -814,7 +814,7 @@
         <div id="dashboard-view" class="space-y-8">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-800">שלום, מורה! 👋</h2>
+                    <h2 id="dashboard-greeting" class="text-2xl font-bold text-slate-800">שלום, מורה! 👋</h2>
                     <p class="text-slate-500">כאן תוכל לנהל את כל הפעילויות האינטראקטיביות שיצרת.</p>
                 </div>
                 <button id="new-project-btn" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-md">
@@ -1575,8 +1575,23 @@
                 : `מזהה מורה: ${teacherId || 'לא הוגדר'}`;
         };
 
+        const extractFirstName = (fullName) => {
+            const normalized = normalizeOptionalText(fullName).replace(/\s+/g, ' ');
+            if (!normalized) return '';
+            return normalized.split(' ')[0];
+        };
+
+        const updateDashboardGreeting = () => {
+            const greetingEl = document.getElementById('dashboard-greeting');
+            if (!greetingEl) return;
+            const knownName = normalizeOptionalText(teacherProfile.teacherName || currentProject.teacherName);
+            const firstName = extractFirstName(knownName);
+            greetingEl.innerText = firstName ? `שלום, ${firstName}! 👋` : 'שלום, מורה! 👋';
+        };
+
         const updateTeacherInfo = () => {
             updateCreatorCredit();
+            updateDashboardGreeting();
         };
 
         const updateSaveActionsUI = () => {
