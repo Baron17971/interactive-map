@@ -3,11 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ארכיון המפות שלי - כלי למורה</title>
+    <title>MAPI - תמונה אחת, אלף מילים</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon-question.svg?v=1">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        (() => {
+            const params = new URLSearchParams(window.location.search);
+            const isStudentLink =
+                (params.get('view') || '').trim().toLowerCase() === 'student' &&
+                (params.get('teacher') || '').trim() &&
+                (params.get('project') || '').trim();
+            if (isStudentLink) {
+                document.documentElement.classList.add('shared-student-boot');
+            }
+        })();
+    </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&family=Assistant:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&family=Assistant:wght@400;600;700&family=Varela+Round&display=swap');
 
         :root {
             --bg-soft: #f2f7f6;
@@ -40,21 +53,97 @@
             min-height: 100vh;
         }
 
+        #student-boot-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 130;
+            align-items: center;
+            justify-content: center;
+            background: rgba(7, 25, 24, 0.58);
+            backdrop-filter: blur(6px);
+        }
+
+        #student-boot-overlay > div {
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid var(--line-soft);
+            border-radius: 18px;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #0f5f59;
+            font-weight: 800;
+            box-shadow: 0 16px 34px rgba(8, 41, 39, 0.22);
+        }
+
+        #student-boot-spinner {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid rgba(20, 153, 143, 0.25);
+            border-top-color: #14998f;
+            animation: spin 0.9s linear infinite;
+        }
+
+        html.shared-student-boot #dashboard-view,
+        html.shared-student-boot #editor-view,
+        html.shared-student-boot #editor-tools,
+        html.shared-student-boot #user-info {
+            display: none !important;
+        }
+
+        html.shared-student-boot #student-boot-overlay {
+            display: flex;
+        }
+
         #app-header {
             background: linear-gradient(135deg, rgba(18, 50, 48, 0.95), rgba(20, 72, 68, 0.92));
             border-bottom: 1px solid rgba(255, 255, 255, 0.16);
             backdrop-filter: blur(12px);
         }
 
-        #logo-home h1 {
-            letter-spacing: 0.01em;
-            font-weight: 800;
+        #logo-home {
+            min-width: 0;
+            display: flex;
+            align-items: flex-end;
+            gap: 14px;
+            z-index: 2;
         }
 
-        #logo-home > div {
-            background: linear-gradient(135deg, var(--brand-300), var(--accent-500));
-            color: #0f2f2d;
-            box-shadow: 0 6px 18px rgba(15, 118, 110, 0.35);
+        #brand-logo {
+            display: block;
+            height: 56px;
+            width: auto;
+            max-width: 320px;
+            object-fit: contain;
+        }
+
+        #brand-title-fallback {
+            display: none;
+            letter-spacing: 0.01em;
+            font-weight: 800;
+            color: #f0e7d5;
+        }
+
+        #brand-tagline {
+            color: #f0e7d5;
+            font-family: 'Varela Round', 'Assistant', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 400;
+            letter-spacing: 0.005em;
+            white-space: nowrap;
+            line-height: 1.1;
+            margin-bottom: 6px;
+            text-shadow: 0 3px 10px rgba(8, 24, 23, 0.36);
+        }
+
+        #logo-home.logo-fallback #brand-logo {
+            display: none;
+        }
+
+        #logo-home.logo-fallback #brand-title-fallback {
+            display: block;
         }
 
         #user-info > div {
@@ -63,34 +152,71 @@
             border: 1px solid rgba(255, 255, 255, 0.24);
             border-radius: 12px;
             color: rgba(255, 255, 255, 0.9);
+            max-width: 420px;
         }
 
-        #user-info button,
+        #editor-tools {
+            display: none;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+            flex-wrap: nowrap;
+            flex: 1;
+            min-width: 0;
+            margin-inline: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        #editor-tools::-webkit-scrollbar {
+            display: none;
+        }
+
+        #editor-tools:not(.hidden) {
+            display: flex;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 6px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.06);
+            flex-shrink: 0;
+        }
+
+        .toolbar-icon-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            transition: all 0.22s ease;
+        }
+
+        .toolbar-action-btn,
         #mode-toggle,
         #share-student-btn,
         #teacher-help-btn,
         #settings-btn,
-        #export-btn,
         #exit-editor {
-            border: 1px solid rgba(255, 255, 255, 0.25);
             background: rgba(255, 255, 255, 0.12);
             color: #f6fffd;
-            border-radius: 12px;
-            transition: all 0.22s ease;
         }
 
-        #user-info button:hover,
-        #mode-toggle:hover,
-        #share-student-btn:hover,
-        #teacher-help-btn:hover,
-        #settings-btn:hover,
-        #export-btn:hover,
-        #exit-editor:hover {
+        .toolbar-icon-btn:hover {
             transform: translateY(-1px);
             background: rgba(255, 255, 255, 0.2);
         }
 
-        #save-project-btn,
+        .toolbar-save-btn,
+        .toolbar-save-as-btn,
         #new-project-btn,
         #teacher-save-btn,
         #save-map-confirm-btn,
@@ -101,7 +227,8 @@
             box-shadow: 0 10px 22px rgba(15, 118, 110, 0.28);
         }
 
-        #save-project-btn:hover,
+        .toolbar-save-btn:hover,
+        .toolbar-save-as-btn:hover,
         #new-project-btn:hover,
         #teacher-save-btn:hover,
         #save-map-confirm-btn:hover,
@@ -110,16 +237,35 @@
             box-shadow: 0 12px 26px rgba(15, 118, 110, 0.35);
         }
 
-        #share-student-btn {
+        .toolbar-save-as-btn {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.9), rgba(217, 119, 6, 0.9));
+            border-color: rgba(140, 82, 12, 0.3);
+            box-shadow: 0 10px 22px rgba(180, 109, 22, 0.28);
+        }
+
+        .toolbar-link-btn {
             background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(255, 255, 255, 0.14));
             border-color: rgba(255, 200, 106, 0.45);
             color: #fffaf0;
         }
 
-        #teacher-help-btn {
-            background: linear-gradient(135deg, rgba(108, 207, 194, 0.24), rgba(255, 255, 255, 0.12));
-            border-color: rgba(148, 234, 223, 0.4);
-            color: #f3fffd;
+        #user-info {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-credit-pill #display-uid {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 340px;
+        }
+
+        .user-credit-pill {
+            cursor: pointer;
         }
 
         #dashboard-view > div:first-child {
@@ -213,8 +359,37 @@
         }
 
         #map-wrapper {
-            border-color: rgba(255, 255, 255, 0.9);
+            border-color: rgba(20, 72, 68, 0.92);
             box-shadow: 0 24px 46px rgba(15, 53, 49, 0.24);
+        }
+
+        #main-image[src=""] ~ #map-watermark {
+            display: none;
+        }
+
+        #map-watermark {
+            position: absolute;
+            left: 12px;
+            bottom: 12px;
+            z-index: 2;
+            pointer-events: none;
+            padding: 6px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(20, 72, 68, 0.32);
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(3px);
+            box-shadow: 0 10px 20px rgba(11, 42, 39, 0.2);
+        }
+
+        #map-watermark img {
+            display: block;
+            width: auto;
+            height: 30px;
+            opacity: 0.98;
+        }
+
+        #pins-layer {
+            z-index: 3;
         }
 
         .map-container {
@@ -357,6 +532,19 @@
             box-shadow: 0 8px 16px rgba(15, 118, 110, 0.24);
         }
 
+        #escape-settings {
+            min-height: 88px;
+        }
+
+        #escape-settings.escape-disabled {
+            opacity: 0.6;
+        }
+
+        #escape-settings.escape-disabled #escape-code {
+            background: #f3f4f6 !important;
+            cursor: not-allowed;
+        }
+
         #student-instruction-text {
             white-space: pre-line;
             line-height: 1.75;
@@ -449,6 +637,35 @@
             padding-bottom: 14px !important;
         }
 
+        body.student-view-active #toolbar-setup-group,
+        body.student-view-active #toolbar-publish-group,
+        body.student-view-active #student-stats,
+        body.student-view-active #exit-editor,
+        body.student-view-active #user-info {
+            display: none !important;
+        }
+
+        body.student-view-active #editor-tools {
+            justify-content: center;
+            margin-inline: 0;
+        }
+
+        body.student-view-active #toolbar-view-group {
+            border-color: transparent;
+            background: transparent;
+            padding: 0;
+        }
+
+        body.student-view-active #share-student-btn {
+            display: none !important;
+        }
+
+        body.student-view-active #mode-toggle {
+            width: 46px;
+            height: 46px;
+            justify-content: center;
+        }
+
         body.student-view-active #editor-view {
             gap: 8px;
         }
@@ -466,8 +683,22 @@
                 padding: 12px;
             }
 
-            #logo-home h1 {
-                font-size: 1rem;
+            #logo-home {
+                gap: 8px;
+            }
+
+            #brand-logo {
+                height: 40px;
+                max-width: 210px;
+            }
+
+            #brand-title-fallback {
+                font-size: 0.95rem;
+            }
+
+            #brand-tagline {
+                font-size: 1.08rem;
+                margin-bottom: 4px;
             }
 
             #new-project-btn {
@@ -477,6 +708,18 @@
 
             #upload-zone {
                 padding: 36px 20px;
+            }
+
+            #editor-tools {
+                width: 100%;
+                justify-content: flex-start;
+                overflow-x: auto;
+            }
+
+            .toolbar-group {
+                width: auto;
+                justify-content: flex-start;
+                flex-wrap: nowrap;
             }
 
             body.student-view-active main {
@@ -495,65 +738,73 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
+    <div id="student-boot-overlay">
+        <div>
+            <span id="student-boot-spinner"></span>
+            טוען פעילות לתלמיד...
+        </div>
+    </div>
+
     <header id="app-header" class="text-white shadow-lg p-4 sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div class="max-w-7xl mx-auto flex flex-wrap md:flex-nowrap justify-between items-center gap-3">
             <div class="flex items-center gap-3 cursor-pointer" id="logo-home">
-                <div class="bg-white p-2 rounded-lg text-indigo-700">
-                    <i data-lucide="library" class="w-6 h-6"></i>
-                </div>
-                <h1 class="text-xl font-bold tracking-tight">ארכיון המפות שלי</h1>
+                <img id="brand-logo" src="/mapi-logo-light.png" alt="MAPI - תמונה אחת, אלף מילים" loading="eager" decoding="async">
+                <h1 id="brand-title-fallback" class="text-xl font-bold tracking-tight">MAPI</h1>
+                <span id="brand-tagline">תמונה אחת, אלף מילים</span>
             </div>
 
-            <div id="editor-tools" class="hidden flex items-center gap-3">
-                <div id="student-stats" class="hidden flex items-center gap-4 bg-indigo-800 px-4 py-2 rounded-full">
-                    <div class="text-sm font-bold">התקדמות: <span id="progress-text">0/0</span></div>
-                    <div class="w-24 bg-indigo-950 rounded-full h-1.5">
-                        <div id="progress-bar" class="bg-green-400 h-1.5 rounded-full transition-all" style="width: 0%"></div>
-                    </div>
-                    <button id="lock-button" class="hidden bg-yellow-400 text-indigo-900 px-3 py-1 rounded-md font-bold flex items-center gap-1 hover:bg-yellow-300">
-                        <i data-lucide="lock" class="w-4 h-4"></i>
+            <div id="editor-tools" class="hidden">
+                <div id="toolbar-setup-group" class="toolbar-group">
+                    <button id="teacher-help-btn" class="toolbar-icon-btn toolbar-action-btn" title="הנחיות למורה" aria-label="הנחיות למורה">
+                        <i data-lucide="circle-help" class="w-5 h-5"></i>
+                        <span class="sr-only">הנחיות למורה</span>
+                    </button>
+                    <button id="settings-btn" class="toolbar-icon-btn toolbar-action-btn" title="הגדרות פעילות" aria-label="הגדרות פעילות">
+                        <i data-lucide="settings" class="w-5 h-5"></i>
+                        <span class="sr-only">הגדרות פעילות</span>
                     </button>
                 </div>
 
-                <button id="mode-toggle" class="bg-indigo-600 border border-indigo-400 px-4 py-2 rounded-lg font-semibold hover:bg-indigo-500 transition-all flex items-center gap-2">
-                    <i data-lucide="eye" id="mode-icon"></i>
-                    <span id="mode-text">תצוגת תלמיד</span>
-                </button>
+                <div id="toolbar-publish-group" class="toolbar-group">
+                    <button id="save-project-btn" class="toolbar-icon-btn toolbar-save-btn" title="שמור שינויים" aria-label="שמור שינויים">
+                        <i data-lucide="save" class="w-5 h-5"></i>
+                        <span id="save-project-label" class="sr-only">שמור שינויים</span>
+                    </button>
+                    <button id="save-as-new-btn" class="toolbar-icon-btn toolbar-save-as-btn" title="שמור בשם (יצירת פעילות חדשה)" aria-label="שמור בשם">
+                        <i data-lucide="copy" class="w-5 h-5"></i>
+                        <span class="sr-only">שמור בשם</span>
+                    </button>
+                </div>
 
-                <button id="settings-btn" class="bg-indigo-600 border border-indigo-400 p-2 rounded-lg hover:bg-indigo-500 transition-all" title="הגדרות">
-                    <i data-lucide="settings" class="w-5 h-5"></i>
-                </button>
+                <div id="toolbar-view-group" class="toolbar-group">
+                    <button id="mode-toggle" class="toolbar-icon-btn toolbar-action-btn" title="תצוגת תלמיד" aria-label="תצוגת תלמיד">
+                        <i data-lucide="eye" id="mode-icon" class="w-5 h-5"></i>
+                        <span id="mode-text" class="sr-only">תצוגת תלמיד</span>
+                    </button>
+                    <button id="share-student-btn" class="toolbar-icon-btn toolbar-link-btn" title="קישור תלמיד" aria-label="קישור תלמיד">
+                        <i data-lucide="link-2" class="w-5 h-5"></i>
+                        <span class="sr-only">קישור תלמיד</span>
+                    </button>
+                    <div id="student-stats" class="hidden flex items-center gap-4 bg-indigo-800 px-4 py-2 rounded-full">
+                        <div class="text-sm font-bold">התקדמות: <span id="progress-text">0/0</span></div>
+                        <div class="w-24 bg-indigo-950 rounded-full h-1.5">
+                            <div id="progress-bar" class="bg-green-400 h-1.5 rounded-full transition-all" style="width: 0%"></div>
+                        </div>
+                        <button id="lock-button" class="hidden bg-yellow-400 text-indigo-900 px-3 py-1 rounded-md font-bold flex items-center gap-1 hover:bg-yellow-300">
+                            <i data-lucide="lock" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
 
-                <button id="teacher-help-btn" class="px-4 py-2 rounded-lg font-bold transition-all flex items-center gap-2" title="הנחיות למורה">
-                    <i data-lucide="circle-help" class="w-5 h-5"></i>
-                    הנחיות
-                </button>
-
-                <button id="save-project-btn" class="bg-green-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-600 transition-all flex items-center gap-2 shadow-sm">
-                    <i data-lucide="save" class="w-5 h-5"></i>
-                    שמור
-                </button>
-
-                <button id="share-student-btn" class="px-4 py-2 rounded-lg font-bold transition-all flex items-center gap-2" title="העתקת קישור לתלמיד">
-                    <i data-lucide="link-2" class="w-5 h-5"></i>
-                    קישור תלמיד
-                </button>
-
-                <button id="export-btn" class="bg-indigo-600 border border-indigo-400 p-2 rounded-lg hover:bg-indigo-500 transition-all" title="ייצוא לקובץ">
-                    <i data-lucide="download" class="w-5 h-5"></i>
-                </button>
-
-                <button id="exit-editor" class="text-indigo-100 hover:text-white px-2">
-                    <i data-lucide="log-out"></i>
-                </button>
+                <button id="export-btn" class="hidden" aria-hidden="true" tabindex="-1"></button>
             </div>
 
             <div id="user-info" class="hidden md:flex items-center gap-2">
-                <div class="text-xs text-indigo-200">
+                <div id="teacher-credit-pill" class="text-xs text-indigo-200 user-credit-pill" title="לחצו להחלפת מורה">
                     <span id="display-uid">מזהה מורה: לא הוגדר</span>
                 </div>
-                <button id="change-teacher-btn" class="text-xs bg-indigo-600 border border-indigo-400 px-2 py-1 rounded-md hover:bg-indigo-500">
-                    החלפת מורה
+                <button id="exit-editor" class="toolbar-icon-btn toolbar-action-btn hidden" title="חזרה לארכיון" aria-label="חזרה לארכיון">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
                 </button>
             </div>
         </div>
@@ -599,8 +850,11 @@
                     לחצו על המפה כדי להוסיף פעילות | גררו נקודה קיימת כדי להזיז אותה
                 </div>
 
-                <div id="map-wrapper" class="map-container shadow-2xl rounded-2xl overflow-hidden border-8 border-white bg-white select-none">
+                <div id="map-wrapper" class="map-container shadow-2xl rounded-2xl overflow-hidden border-8 bg-white select-none">
                     <img id="main-image" src="" alt="Map" class="max-w-full h-auto pointer-events-none">
+                    <div id="map-watermark" aria-hidden="true">
+                        <img src="/mapi-logo-light.png" alt="">
+                    </div>
                     <div id="pins-layer" class="absolute inset-0 pointer-events-auto"></div>
                 </div>
             </div>
@@ -608,35 +862,34 @@
     </main>
 
     <div id="project-settings-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
-            <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
-                <i data-lucide="settings" class="text-indigo-600"></i> הגדרות פעילות
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-4 md:p-7 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold mb-5 flex items-center gap-2">
+                <i data-lucide="settings" class="text-indigo-600"></i>
+                <span id="project-settings-title-text">הגדרות פעילות</span>
             </h3>
-            <div class="space-y-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">שם הפעילות</label>
                     <input type="text" id="project-name-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="למשל: הכרת מפת ישראל">
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2">הנחיית פתיחה לתלמידים</label>
-                    <textarea id="student-instruction-input" rows="3" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="כתבו כאן הנחיה קצרה לתלמידים..."></textarea>
-                    <p class="text-xs text-slate-500 mt-2">ההנחיה מוצגת כחלון קופץ בפתיחת המפה במצב תלמיד.</p>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div class="sm:col-span-2">
-                        <label class="block text-sm font-bold text-slate-700 mb-2">שם המורה</label>
-                        <input type="text" id="creator-name-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="למשל: רינה לוי">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2">כיתה</label>
-                        <input type="text" id="creator-class-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder='למשל: ה"2'>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2">בית ספר</label>
-                        <input type="text" id="creator-school-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="למשל: נופים">
-                    </div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">שם המורה</label>
+                    <input type="text" id="creator-name-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="למשל: רינה לוי">
                 </div>
                 <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">כיתה</label>
+                    <input type="text" id="creator-class-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder='למשל: ה"2'>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">בית ספר</label>
+                    <input type="text" id="creator-school-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="למשל: נופים">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">הנחיית פתיחה לתלמידים</label>
+                    <textarea id="student-instruction-input" rows="2" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="כתבו כאן הנחיה קצרה לתלמידים..."></textarea>
+                    <p class="text-xs text-slate-500 mt-2">ההנחיה מוצגת כחלון קופץ בפתיחת המפה במצב תלמיד.</p>
+                </div>
+                <div class="md:col-span-2">
                     <label class="block text-sm font-bold text-slate-700 mb-2">סוג פעילות</label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="activity-mode-selector">
                         <button type="button" class="activity-mode-btn activity-mode-btn-idle" data-mode="regular">
@@ -649,13 +902,14 @@
                         </button>
                     </div>
                 </div>
-                <div id="escape-settings" class="hidden space-y-2 animate-in fade-in slide-in-from-top-2">
+                <div id="escape-settings" class="md:col-span-2 space-y-2">
                     <label class="block text-xs font-bold text-indigo-600">קוד המנעול הסופי</label>
-                    <input type="text" id="escape-code" class="w-full border rounded-lg p-2 text-center font-mono tracking-widest" placeholder="1234">
+                    <input type="text" id="escape-code" class="w-full border rounded-lg p-2 text-center font-mono tracking-normal" placeholder="למשל: GEO-7A">
+                    <p class="text-xs text-slate-500">הקוד יכול לכלול אותיות ומספרים בכל אורך.</p>
                 </div>
-                <div class="pt-4 flex gap-3">
+                <div class="md:col-span-2 pt-2 flex gap-3">
                     <button onclick="closeSettings()" class="flex-grow bg-slate-100 text-slate-700 py-3 rounded-xl font-bold">ביטול</button>
-                    <button onclick="applySettings()" class="flex-grow bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-indigo-200 shadow-lg">אישור</button>
+                    <button id="project-settings-apply-btn" onclick="applySettings()" class="flex-grow bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-indigo-200 shadow-lg">אישור</button>
                 </div>
             </div>
         </div>
@@ -725,7 +979,7 @@
                 <h3 class="text-2xl font-bold text-slate-800">מנעול הקוד</h3>
                 <p class="text-slate-500">הכניסו את הקוד שאספתם מכל הנקודות</p>
             </div>
-            <input type="text" id="final-code-input" class="w-full border-4 border-slate-100 rounded-2xl p-4 text-center text-4xl font-mono tracking-widest outline-none focus:border-indigo-600 transition-all" maxlength="6" placeholder="----">
+            <input type="text" id="final-code-input" class="w-full border-4 border-slate-100 rounded-2xl p-4 text-center text-2xl md:text-4xl font-mono tracking-normal outline-none focus:border-indigo-600 transition-all" placeholder="הקלידו קוד">
             <button onclick="checkFinalCode()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold text-lg shadow-xl shadow-indigo-100 active:scale-95 transition-all">פתח מנעול</button>
             <button onclick="document.getElementById('lock-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-semibold text-sm">חזרה למפה</button>
         </div>
@@ -772,7 +1026,8 @@
                 <div class="teacher-guide-item">
                     <h4>שמירה ופרסום</h4>
                     <ul>
-                        <li>שמירה: לחצי על שמור, הזיני שם מפה, והפעילות תישמר בארכיון האישי.</li>
+                        <li>שמור שינויים: שומר עדכונים לפעילות שכבר קיימת בארכיון.</li>
+                        <li>שמור בשם: יוצר פעילות חדשה, נפתח חלון הגדרות ואז חלון שמירה בשם.</li>
                         <li>פרסום: אחרי שמירה, לחצי על קישור תלמיד כדי להעתיק קישור צפייה בלבד.</li>
                         <li>ייצוא: אפשר להוריד את הפעילות כקובץ JSON לגיבוי/שיתוף נוסף.</li>
                     </ul>
@@ -812,8 +1067,8 @@
     <div id="save-map-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 space-y-5">
             <div>
-                <h3 class="text-xl font-bold text-slate-800">שמירת מפה</h3>
-                <p class="text-slate-500 text-sm mt-1">הזיני שם למפה לפני שמירה בארכיון.</p>
+                <h3 id="save-map-modal-title" class="text-xl font-bold text-slate-800">שמירת מפה</h3>
+                <p id="save-map-modal-subtitle" class="text-slate-500 text-sm mt-1">הזיני שם למפה לפני שמירה בארכיון.</p>
             </div>
             <div>
                 <label class="block text-sm font-bold text-slate-700 mb-2">שם המפה</label>
@@ -892,12 +1147,19 @@
         const pinModal = document.getElementById('pin-modal');
         const modeToggle = document.getElementById('mode-toggle');
         const shareStudentBtn = document.getElementById('share-student-btn');
+        const saveAsNewBtn = document.getElementById('save-as-new-btn');
+        const saveProjectLabel = document.getElementById('save-project-label');
         const projectSettingsModal = document.getElementById('project-settings-modal');
+        const projectSettingsTitleText = document.getElementById('project-settings-title-text');
+        const projectSettingsApplyBtn = document.getElementById('project-settings-apply-btn');
         const toast = document.getElementById('toast');
         const teacherModal = document.getElementById('teacher-modal');
         const teacherIdInput = document.getElementById('teacher-id-input');
         const saveMapModal = document.getElementById('save-map-modal');
         const saveMapNameInput = document.getElementById('save-map-name-input');
+        const saveMapModalTitle = document.getElementById('save-map-modal-title');
+        const saveMapModalSubtitle = document.getElementById('save-map-modal-subtitle');
+        const saveMapConfirmBtn = document.getElementById('save-map-confirm-btn');
         const studentInstructionModal = document.getElementById('student-instruction-modal');
         const studentInstructionText = document.getElementById('student-instruction-text');
         const studentInstructionInput = document.getElementById('student-instruction-input');
@@ -906,8 +1168,15 @@
         const creatorSchoolInput = document.getElementById('creator-school-input');
         const activityModeButtons = Array.from(document.querySelectorAll('.activity-mode-btn'));
         const teacherHelpModal = document.getElementById('teacher-help-modal');
+        const brandLogo = document.getElementById('brand-logo');
+        let saveMapModalMode = 'saveAs';
+        let projectSettingsFlow = 'settings';
 
         lucide.createIcons();
+
+        brandLogo.addEventListener('error', () => {
+            document.getElementById('logo-home').classList.add('logo-fallback');
+        });
 
         const showToast = (msg) => {
             document.getElementById('toast-msg').innerText = msg;
@@ -915,10 +1184,15 @@
             setTimeout(() => toast.classList.add('translate-y-32', 'opacity-0'), 3000);
         };
 
+        const clearSharedStudentBoot = () => {
+            document.documentElement.classList.remove('shared-student-boot');
+        };
+
         const setView = (view) => {
             document.getElementById('dashboard-view').classList.toggle('hidden', view !== 'dashboard');
             document.getElementById('editor-view').classList.toggle('hidden', view !== 'editor');
             document.getElementById('editor-tools').classList.toggle('hidden', view !== 'editor');
+            document.getElementById('exit-editor').classList.toggle('hidden', view !== 'editor');
             document.body.classList.toggle('editor-view-active', view === 'editor');
             const studentInEditor = view === 'editor' && currentProject.mode === 'student';
             document.body.classList.toggle('student-view-active', studentInEditor);
@@ -982,15 +1256,88 @@
             updateCreatorCredit();
         };
 
+        const updateSaveActionsUI = () => {
+            const hasExistingProject = !!currentProject.id;
+            const saveProjectBtn = document.getElementById('save-project-btn');
+            saveAsNewBtn.classList.remove('hidden');
+            saveProjectLabel.innerText = 'שמור שינויים';
+            const saveTitle = hasExistingProject
+                ? 'שמירת שינויים בפעילות הנוכחית'
+                : 'זמין רק לפעילות קיימת. לפעילות חדשה השתמשי ב"שמור בשם".';
+            saveProjectBtn.title = saveTitle;
+            saveProjectBtn.setAttribute('aria-label', saveTitle);
+        };
+
+        const getSuggestedProjectNameForSaveAs = () => {
+            const baseName = (currentProject.name || "פעילות חדשה").trim();
+            if (!baseName) return "פעילות חדשה";
+            return baseName.includes('(עותק)') ? baseName : `${baseName} (עותק)`;
+        };
+
         const resolveStudentInstruction = (value) => {
             if (typeof value !== 'string') return DEFAULT_STUDENT_INSTRUCTION;
             const trimmed = value.trim();
             return trimmed || DEFAULT_STUDENT_INSTRUCTION;
         };
 
+        const estimatePayloadBytes = (value) => {
+            try {
+                return new Blob([JSON.stringify(value)]).size;
+            } catch {
+                return 0;
+            }
+        };
+
+        const compressDataUrlImage = (sourceDataUrl, maxSide = 2200, quality = 0.82) => new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                const ratio = Math.min(1, maxSide / Math.max(img.width, img.height));
+                const targetWidth = Math.max(1, Math.round(img.width * ratio));
+                const targetHeight = Math.max(1, Math.round(img.height * ratio));
+                const canvas = document.createElement('canvas');
+                canvas.width = targetWidth;
+                canvas.height = targetHeight;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    reject(new Error("לא הצלחתי לעבד את התמונה לשמירה."));
+                    return;
+                }
+                ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+                const compressed = canvas.toDataURL('image/jpeg', quality);
+                resolve(compressed.length < sourceDataUrl.length ? compressed : sourceDataUrl);
+            };
+            img.onerror = () => reject(new Error("שגיאה בעיבוד התמונה לפני שמירה לענן."));
+            img.src = sourceDataUrl;
+        });
+
+        const prepareProjectForCloudSave = async (project) => {
+            const snapshot = { ...project };
+            if (!snapshot.image || typeof snapshot.image !== 'string' || !snapshot.image.startsWith('data:image')) {
+                return snapshot;
+            }
+
+            const initialBytes = estimatePayloadBytes(snapshot);
+            if (initialBytes <= 7_500_000) return snapshot;
+
+            showToast("התמונה גדולה, מתבצעת דחיסה לשמירה בענן...");
+            const compressed = await compressDataUrlImage(snapshot.image, 2200, 0.8);
+            const next = { ...snapshot, image: compressed };
+            const nextBytes = estimatePayloadBytes(next);
+            if (nextBytes > 11_000_000) {
+                throw new Error("התמונה גדולה מדי לשמירה בענן. מומלץ להעלות גרסה קטנה יותר.");
+            }
+            return next;
+        };
+
         const setActivityModeUI = (isEscapeRoom) => {
             settingsEscapeMode = !!isEscapeRoom;
-            document.getElementById('escape-settings').classList.toggle('hidden', !settingsEscapeMode);
+            const escapeSettings = document.getElementById('escape-settings');
+            const escapeCodeInput = document.getElementById('escape-code');
+            const disabled = !settingsEscapeMode;
+
+            escapeSettings.classList.toggle('escape-disabled', disabled);
+            escapeCodeInput.disabled = disabled;
+
             activityModeButtons.forEach((button) => {
                 const buttonIsEscape = button.dataset.mode === 'escape';
                 const active = buttonIsEscape === settingsEscapeMode;
@@ -1017,15 +1364,31 @@
             teacherHelpModal.classList.add('hidden');
         };
 
+        const restoreEditorToolbarUI = () => {
+            const ids = [
+                'toolbar-setup-group',
+                'toolbar-publish-group',
+                'mode-toggle',
+                'settings-btn',
+                'teacher-help-btn',
+                'save-project-btn',
+                'save-as-new-btn',
+                'share-student-btn'
+            ];
+            ids.forEach((id) => document.getElementById(id).classList.remove('hidden'));
+        };
+
         const applyReadOnlyStudentUI = () => {
+            document.getElementById('toolbar-setup-group').classList.add('hidden');
+            document.getElementById('toolbar-publish-group').classList.add('hidden');
             document.getElementById('mode-toggle').classList.add('hidden');
             document.getElementById('settings-btn').classList.add('hidden');
             document.getElementById('teacher-help-btn').classList.add('hidden');
             document.getElementById('save-project-btn').classList.add('hidden');
+            document.getElementById('save-as-new-btn').classList.add('hidden');
             document.getElementById('share-student-btn').classList.add('hidden');
             document.getElementById('export-btn').classList.add('hidden');
             document.getElementById('exit-editor').classList.add('hidden');
-            document.getElementById('change-teacher-btn').classList.add('hidden');
         };
 
         const buildStudentShareUrl = (projectId) => {
@@ -1171,11 +1534,15 @@
             const btnIcon = document.getElementById('mode-icon');
 
             if (studentMode) {
-                btnText.innerText = 'מצב עריכה';
-                btnIcon.setAttribute('data-lucide', 'pencil');
+                btnText.innerText = 'חזור לתצוגת מורה';
+                btnIcon.setAttribute('data-lucide', 'undo-2');
+                modeToggle.title = 'חזור לתצוגת מורה';
+                modeToggle.setAttribute('aria-label', 'חזור לתצוגת מורה');
             } else {
                 btnText.innerText = 'תצוגת תלמיד';
                 btnIcon.setAttribute('data-lucide', 'eye');
+                modeToggle.title = 'תצוגת תלמיד';
+                modeToggle.setAttribute('aria-label', 'תצוגת תלמיד');
                 instructionText.innerText = "לחצו על המפה כדי להוסיף פעילות | גררו נקודה קיימת כדי להזיז אותה";
             }
 
@@ -1231,9 +1598,14 @@
 
             if (isSharedStudentRequest) {
                 const loaded = await openSharedProject();
+                clearSharedStudentBoot();
                 if (loaded) showToast("נפתחה מפה במצב תלמיד בלבד.");
                 return;
             }
+
+            clearSharedStudentBoot();
+            restoreEditorToolbarUI();
+            updateSaveActionsUI();
 
             if (!hasSupabaseConfig) {
                 if (teacherId) fetchProjects();
@@ -1315,8 +1687,10 @@
 
         document.getElementById('new-project-btn').onclick = () => {
             isReadOnlyStudentLink = false;
+            restoreEditorToolbarUI();
             currentProject = createEmptyProject();
             closeStudentInstructionModal();
+            updateSaveActionsUI();
             renderPins();
             syncModeUI();
             mainImage.src = '';
@@ -1328,6 +1702,7 @@
         const openProject = (project, options = {}) => {
             const forceStudent = !!options.forceStudent;
             const readOnly = !!options.readOnly;
+            if (!readOnly) restoreEditorToolbarUI();
             currentProject = {
                 ...createEmptyProject(),
                 ...project,
@@ -1339,6 +1714,7 @@
                 studentProgress: {}
             };
             isReadOnlyStudentLink = readOnly;
+            updateSaveActionsUI();
             syncModeUI();
             mainImage.src = project.image;
             uploadZone.classList.add('hidden');
@@ -1371,7 +1747,7 @@
 
         uploadZone.onclick = () => fileInput.click();
 
-        const persistCurrentProject = async () => {
+        const persistCurrentProject = async ({ forceNew = false } = {}) => {
             if (!currentUser) return;
             if (!teacherId) {
                 openTeacherModal(false);
@@ -1384,7 +1760,7 @@
             }
 
             if (!hasSupabaseConfig) {
-                const id = currentProject.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+                const id = (!forceNew && currentProject.id) || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
                 const payload = {
                     ...currentProject,
                     id,
@@ -1397,19 +1773,34 @@
                 projects = next;
                 writeLocalProjects(next);
                 currentProject.id = id;
+                updateSaveActionsUI();
                 renderProjectsGrid();
-                showToast("נשמר בארכיון המקומי!");
+                showToast(forceNew ? "נשמר כפעילות חדשה בארכיון המקומי!" : "השינויים נשמרו בארכיון המקומי!");
                 return;
             }
 
-            const id = currentProject.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+            const id = (!forceNew && currentProject.id) || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+            let projectForCloud = currentProject;
+            try {
+                projectForCloud = await prepareProjectForCloudSave(currentProject);
+            } catch (prepError) {
+                const prepMsg = prepError?.message || "שגיאה בהכנת השמירה לענן.";
+                showToast(prepMsg);
+                return;
+            }
+            if (projectForCloud.image !== currentProject.image) {
+                currentProject.image = projectForCloud.image;
+                mainImage.src = projectForCloud.image;
+            }
+
             const payload = {
-                ...currentProject,
+                ...projectForCloud,
                 id,
                 teacherId,
                 ownerUid: currentUser.uid,
                 updatedAt: new Date().toISOString()
             };
+            const payloadBytes = estimatePayloadBytes(payload);
 
             const { error } = await supabase
                 .from(supabaseProjectsTable)
@@ -1422,18 +1813,24 @@
                 }, { onConflict: 'id' });
 
             if (error) {
-                console.error("Supabase upsert error:", error);
-                showToast("שגיאה בשמירה לענן");
+                console.error("Supabase upsert error:", error, { payloadBytes });
+                const errorMsg = error.message ? `שגיאה בשמירה לענן: ${error.message}` : "שגיאה בשמירה לענן";
+                showToast(errorMsg);
                 return;
             }
 
             currentProject.id = id;
+            updateSaveActionsUI();
             await fetchProjects();
-            showToast("נשמר בענן!");
+            showToast(forceNew ? "נשמרה פעילות חדשה בענן!" : "השינויים נשמרו בענן!");
         };
 
-        const openSaveMapModal = () => {
-            saveMapNameInput.value = currentProject.name || '';
+        const openSaveMapModal = (mode = 'saveAs', suggestedName = '') => {
+            saveMapModalMode = mode;
+            saveMapModalTitle.innerText = "שמור בשם";
+            saveMapModalSubtitle.innerText = "הפעילות תישמר כפעילות חדשה בארכיון, בלי לדרוס פעילות קיימת.";
+            saveMapConfirmBtn.innerText = "שמור בשם";
+            saveMapNameInput.value = suggestedName || currentProject.name || '';
             saveMapModal.classList.remove('hidden');
             saveMapNameInput.focus();
             saveMapNameInput.select();
@@ -1450,7 +1847,25 @@
                 showToast("צריך להעלות תמונה לפני שמירה");
                 return;
             }
-            openSaveMapModal();
+            if (!currentProject.id) {
+                showToast('אין עדיין פעילות קיימת. השתמשי ב"שמור בשם".');
+                return;
+            }
+            persistCurrentProject({ forceNew: false });
+        };
+
+        saveAsNewBtn.onclick = () => {
+            if (!currentUser) return;
+            if (!teacherId) {
+                openTeacherModal(false);
+                showToast("צריך לבחור מזהה מורה לפני שמירה.");
+                return;
+            }
+            if (!currentProject.image) {
+                showToast("צריך להעלות תמונה לפני שמירה");
+                return;
+            }
+            openProjectSettingsModal('saveAs');
         };
 
         shareStudentBtn.onclick = async () => {
@@ -1461,7 +1876,7 @@
             }
             if (!currentProject.id) {
                 showToast("קודם שומרים את המפה בארכיון ואז משתפים קישור.");
-                openSaveMapModal();
+                openProjectSettingsModal('saveAs');
                 return;
             }
 
@@ -1487,7 +1902,7 @@
             }
             currentProject.name = mapName;
             saveMapModal.classList.add('hidden');
-            await persistCurrentProject();
+            await persistCurrentProject({ forceNew: saveMapModalMode === 'saveAs' });
         };
 
         saveMapNameInput.addEventListener('keydown', async (e) => {
@@ -1496,7 +1911,9 @@
             document.getElementById('save-map-confirm-btn').click();
         });
 
-        document.getElementById('teacher-help-btn').onclick = openTeacherHelpModal;
+        document.getElementById('teacher-help-btn').onclick = () => {
+            openTeacherHelpModal();
+        };
         document.getElementById('teacher-help-close-btn').onclick = closeTeacherHelpModal;
         document.getElementById('teacher-help-ok-btn').onclick = closeTeacherHelpModal;
         teacherHelpModal.addEventListener('click', (e) => {
@@ -1522,7 +1939,9 @@
             closeStudentInstructionModal();
             setView('dashboard');
         };
-        document.getElementById('change-teacher-btn').onclick = () => openTeacherModal(true);
+        document.getElementById('teacher-credit-pill').onclick = () => {
+            openTeacherModal(true);
+        };
 
         const saveTeacherFromInput = () => {
             if (!applyTeacherId(teacherIdInput.value)) {
@@ -1530,8 +1949,10 @@
                 return;
             }
             isReadOnlyStudentLink = false;
+            restoreEditorToolbarUI();
             currentProject = createEmptyProject();
             closeStudentInstructionModal();
+            updateSaveActionsUI();
             updateTeacherInfo();
             projects = [];
             renderProjectsGrid();
@@ -1753,8 +2174,8 @@
                 let msg = pin.type === 'info' ? "המידע נקרא." : "מעולה! עניתם נכון.";
                 if (currentProject.isEscapeRoom && currentProject.lockCode) {
                     const idx = currentProject.pins.indexOf(pin);
-                    const digit = currentProject.lockCode[idx % currentProject.lockCode.length];
-                    msg += ` הספרה שגיליתם: ${digit}`;
+                    const symbol = currentProject.lockCode[idx % currentProject.lockCode.length];
+                    msg += ` התו שגיליתם: ${symbol}`;
                 }
                 feedback.innerText = msg;
                 renderPins();
@@ -1817,15 +2238,23 @@
 
         window.closePinModal = () => pinModal.classList.add('hidden');
 
-        document.getElementById('settings-btn').onclick = () => {
-            document.getElementById('project-name-input').value = currentProject.name;
+        const openProjectSettingsModal = (flow = 'settings') => {
+            const isSaveAsFlow = flow === 'saveAs';
+            projectSettingsFlow = flow;
+            document.getElementById('project-name-input').value = isSaveAsFlow ? getSuggestedProjectNameForSaveAs() : (currentProject.name || "פעילות חדשה");
             studentInstructionInput.value = resolveStudentInstruction(currentProject.studentInstruction);
             creatorNameInput.value = normalizeOptionalText(currentProject.teacherName);
             creatorClassInput.value = normalizeOptionalText(currentProject.className);
             creatorSchoolInput.value = normalizeOptionalText(currentProject.schoolName);
             document.getElementById('escape-code').value = currentProject.lockCode || '';
             setActivityModeUI(currentProject.isEscapeRoom);
+            projectSettingsTitleText.innerText = isSaveAsFlow ? 'הגדרות לפני שמירה בשם' : 'הגדרות פעילות';
+            projectSettingsApplyBtn.innerText = isSaveAsFlow ? 'המשך לשמור בשם' : 'אישור';
             projectSettingsModal.classList.remove('hidden');
+        };
+
+        document.getElementById('settings-btn').onclick = () => {
+            openProjectSettingsModal('settings');
         };
 
         activityModeButtons.forEach((button) => {
@@ -1834,8 +2263,14 @@
             };
         });
 
-        window.closeSettings = () => projectSettingsModal.classList.add('hidden');
+        window.closeSettings = () => {
+            projectSettingsModal.classList.add('hidden');
+            projectSettingsFlow = 'settings';
+            projectSettingsTitleText.innerText = 'הגדרות פעילות';
+            projectSettingsApplyBtn.innerText = 'אישור';
+        };
         window.applySettings = () => {
+            const flow = projectSettingsFlow;
             currentProject.name = document.getElementById('project-name-input').value || "פעילות חדשה";
             currentProject.studentInstruction = resolveStudentInstruction(studentInstructionInput.value);
             currentProject.teacherName = normalizeOptionalText(creatorNameInput.value);
@@ -1850,6 +2285,10 @@
             currentProject.lockCode = document.getElementById('escape-code').value;
             closeSettings();
             syncModeUI();
+            if (flow === 'saveAs') {
+                openSaveMapModal('saveAs', currentProject.name || getSuggestedProjectNameForSaveAs());
+                return;
+            }
             showToast("ההגדרות עודכנו");
         };
 
@@ -1882,8 +2321,13 @@
         };
 
         window.checkFinalCode = () => {
-            const val = document.getElementById('final-code-input').value;
-            if (val === currentProject.lockCode) {
+            const val = document.getElementById('final-code-input').value.trim();
+            const expected = (currentProject.lockCode || '').trim();
+            if (!expected) {
+                showToast("לא הוגדר קוד מנעול לפעילות זו.");
+                return;
+            }
+            if (val.toLowerCase() === expected.toLowerCase()) {
                 showToast("🏆 כל הכבוד! הצלחתם לפתוח את המנעול!");
                 document.getElementById('lock-modal').classList.add('hidden');
             } else {
