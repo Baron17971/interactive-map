@@ -420,7 +420,14 @@
         .pin-open { background-color: #f59e0b !important; }
         .pin-mcq { background-color: #0f766e !important; }
         .pin-boolean { background-color: #16a34a !important; }
+        .pin-match { background-color: #0c4a6e !important; }
+        .pin-order { background-color: #be123c !important; }
+        .pin-bonus { background-color: #a16207 !important; }
         .pin-default { background-color: #1f6f69 !important; }
+        .bonus-locked {
+            filter: saturate(0.45);
+            opacity: 0.74;
+        }
 
         .pulse {
             animation: pulse-animation 1.8s infinite;
@@ -927,6 +934,9 @@
                         <button onclick="setPinType('open')" class="type-btn type-btn-idle border rounded-xl p-3 text-xs flex flex-col items-center gap-2 transition-all" data-type="open"><i data-lucide="help-circle" class="w-5 h-5"></i> שאלה</button>
                         <button onclick="setPinType('mcq')" class="type-btn type-btn-idle border rounded-xl p-3 text-xs flex flex-col items-center gap-2 transition-all" data-type="mcq"><i data-lucide="list" class="w-5 h-5"></i> אמריקאית</button>
                         <button onclick="setPinType('boolean')" class="type-btn type-btn-idle border rounded-xl p-3 text-xs flex flex-col items-center gap-2 transition-all" data-type="boolean"><i data-lucide="check-square" class="w-5 h-5"></i> נכון/לא</button>
+                        <button onclick="setPinType('match')" class="type-btn type-btn-idle border rounded-xl p-3 text-xs flex flex-col items-center gap-2 transition-all" data-type="match"><i data-lucide="shuffle" class="w-5 h-5"></i> התאמה</button>
+                        <button onclick="setPinType('order')" class="type-btn type-btn-idle border rounded-xl p-3 text-xs flex flex-col items-center gap-2 transition-all" data-type="order"><i data-lucide="list-ordered" class="w-5 h-5"></i> סידור</button>
+                        <button onclick="setPinType('bonus')" class="type-btn type-btn-idle border rounded-xl p-3 text-xs flex flex-col items-center gap-2 transition-all" data-type="bonus"><i data-lucide="gift" class="w-5 h-5"></i> בונוס</button>
                     </div>
                 </div>
 
@@ -950,6 +960,20 @@
                             <input type="radio" name="bool-correct" value="false" class="w-4 h-4 accent-indigo-600"> לא נכון
                         </label>
                     </div>
+                </div>
+
+                <div id="match-options" class="hidden space-y-2">
+                    <label class="block text-xs font-bold text-slate-400 uppercase">זוגות להתאמה (מושג ↔ התאמה)</label>
+                    <div id="match-list" class="space-y-2"></div>
+                </div>
+
+                <div id="order-options" class="hidden space-y-2">
+                    <label class="block text-xs font-bold text-slate-400 uppercase">פריטים בסדר הנכון (מלמעלה למטה)</label>
+                    <div id="order-list" class="space-y-2"></div>
+                </div>
+
+                <div id="bonus-options" class="hidden p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+                    נקודת בונוס נפתחת לתלמידים רק אחרי פתרון כל הנקודות הרגילות (שאלות פתוחות/סגורות, התאמה וסידור).
                 </div>
 
                 <div id="pin-explanation-container" class="hidden">
@@ -1038,7 +1062,7 @@
                     <h4>סוגי שאלות + מצב חדר בריחה</h4>
                     <ul>
                         <li>לחיצה על המפה מוסיפה נקודה חדשה; גרירה משנה מיקום.</li>
-                        <li>סוגי פעילות: מידע, שאלה פתוחה, אמריקאית, נכון/לא נכון.</li>
+                        <li>סוגי פעילות: מידע, שאלה פתוחה, אמריקאית, נכון/לא נכון, התאמה, סידור ונקודת בונוס.</li>
                         <li>במצב חדר בריחה אפשר להגדיר קוד סופי, והתלמידים צריכים להשלים נקודות כדי לפתוח מנעול.</li>
                     </ul>
                 </div>
@@ -1325,6 +1349,77 @@
 
         const normalizeOptionalText = (value) => (typeof value === 'string' ? value.trim() : '');
 
+        const REGULAR_QUESTION_TYPES = ['open', 'mcq', 'boolean', 'match', 'order'];
+
+        const createDefaultMatchPairs = () => ([
+            { left: '', right: '' },
+            { left: '', right: '' },
+            { left: '', right: '' }
+        ]);
+
+        const normalizeMatchPairs = (pairs) => {
+            const source = Array.isArray(pairs) ? pairs : [];
+            const normalized = source.slice(0, 4).map((pair) => ({
+                left: normalizeOptionalText(pair?.left),
+                right: normalizeOptionalText(pair?.right)
+            }));
+            while (normalized.length < 3) {
+                normalized.push({ left: '', right: '' });
+            }
+            return normalized;
+        };
+
+        const createDefaultOrderItems = () => ['', '', '', ''];
+
+        const normalizeOrderItems = (items) => {
+            const source = Array.isArray(items) ? items : [];
+            const normalized = source.slice(0, 6).map((item) => normalizeOptionalText(item));
+            while (normalized.length < 4) {
+                normalized.push('');
+            }
+            return normalized;
+        };
+
+        const normalizeMcqOptions = (options) => {
+            const source = Array.isArray(options) ? options : [];
+            const normalized = source.slice(0, 4).map((opt) => (typeof opt === 'string' ? opt : ''));
+            while (normalized.length < 4) {
+                normalized.push('');
+            }
+            return normalized;
+        };
+
+        const normalizeProjectPins = (pins) => {
+            if (!Array.isArray(pins)) return [];
+            return pins.map((pin) => ({
+                ...pin,
+                content: typeof pin?.content === 'string' ? pin.content : '',
+                explanation: normalizeOptionalText(pin?.explanation),
+                options: normalizeMcqOptions(pin?.options),
+                matchPairs: normalizeMatchPairs(pin?.matchPairs),
+                orderItems: normalizeOrderItems(pin?.orderItems)
+            }));
+        };
+
+        const isRegularQuestionPin = (pin) => REGULAR_QUESTION_TYPES.includes(pin?.type);
+
+        const getRemainingRegularPinsForBonus = () => {
+            const regularPins = (currentProject.pins || []).filter(isRegularQuestionPin);
+            const solvedRegularPins = regularPins.filter((pin) => !!currentProject.studentProgress?.[pin.id]).length;
+            return Math.max(0, regularPins.length - solvedRegularPins);
+        };
+
+        const isBonusLocked = (pin) => {
+            if (pin?.type !== 'bonus' || currentProject.mode !== 'student') return false;
+            if (currentProject.studentProgress?.[pin.id]) return false;
+            return getRemainingRegularPinsForBonus() > 0;
+        };
+
+        const shuffleArray = (items) => items
+            .map((value) => ({ value, sortKey: Math.random() }))
+            .sort((a, b) => a.sortKey - b.sortKey)
+            .map((entry) => entry.value);
+
         const normalizeStudentAnswerEntry = (entry) => {
             if (typeof entry === 'string') {
                 return { answer: entry, isCorrect: null, savedAt: null };
@@ -1356,7 +1451,10 @@
         const getPinTypeLabel = (type) => ({
             open: 'שאלה פתוחה',
             mcq: 'שאלה אמריקאית',
-            boolean: 'נכון / לא נכון'
+            boolean: 'נכון / לא נכון',
+            match: 'התאמה',
+            order: 'סידור',
+            bonus: 'נקודת בונוס'
         }[type] || 'שאלה');
 
         const escapeHtml = (value) => String(value ?? '')
@@ -1808,6 +1906,7 @@
                 ...payload,
                 id: row.id,
                 updatedAt: row.updated_at || payload.updatedAt,
+                pins: normalizeProjectPins(payload.pins),
                 studentInstruction: resolveStudentInstruction(payload.studentInstruction),
                 teacherName: normalizeOptionalText(payload.teacherName),
                 className: normalizeOptionalText(payload.className),
@@ -2047,6 +2146,7 @@
             currentProject = {
                 ...createEmptyProject(),
                 ...project,
+                pins: normalizeProjectPins(project.pins),
                 studentInstruction: resolveStudentInstruction(project.studentInstruction),
                 teacherName: normalizeOptionalText(project.teacherName || teacherProfile.teacherName),
                 className: normalizeOptionalText(project.className || teacherProfile.className),
@@ -2457,6 +2557,8 @@
                 content: '',
                 explanation: '',
                 options: ['', '', '', ''],
+                matchPairs: createDefaultMatchPairs(),
+                orderItems: createDefaultOrderItems(),
                 correctIdx: 0,
                 correctBool: true
             };
@@ -2469,17 +2571,35 @@
             pinsLayer.innerHTML = '';
             currentProject.pins.forEach((pin) => {
                 const isSolved = currentProject.studentProgress[pin.id];
+                const bonusLocked = isBonusLocked(pin);
                 const pinEl = document.createElement('div');
-                pinEl.className = `pin w-10 h-10 rounded-full flex items-center justify-center border-4 border-white shadow-xl ${currentProject.mode === 'student' && !isSolved ? 'pulse' : ''} ${isSolved ? 'correct-pin' : ''}`;
+                pinEl.className = `pin w-10 h-10 rounded-full flex items-center justify-center border-4 border-white shadow-xl ${currentProject.mode === 'student' && !isSolved && !bonusLocked ? 'pulse' : ''} ${isSolved ? 'correct-pin' : ''} ${bonusLocked ? 'bonus-locked' : ''}`;
                 pinEl.dataset.id = pin.id;
 
-                const colors = { info: 'pin-info', open: 'pin-open', mcq: 'pin-mcq', boolean: 'pin-boolean' };
+                const colors = {
+                    info: 'pin-info',
+                    open: 'pin-open',
+                    mcq: 'pin-mcq',
+                    boolean: 'pin-boolean',
+                    match: 'pin-match',
+                    order: 'pin-order',
+                    bonus: 'pin-bonus'
+                };
                 pinEl.classList.add(colors[pin.type] || 'pin-default');
                 pinEl.style.left = `${pin.x}%`;
                 pinEl.style.top = `${pin.y}%`;
 
-                const icons = { info: 'info', open: 'help-circle', mcq: 'list', boolean: 'check-square' };
-                pinEl.innerHTML = `<i data-lucide="${isSolved ? 'check' : icons[pin.type]}" class="w-5 h-5 text-white"></i>`;
+                const icons = {
+                    info: 'info',
+                    open: 'help-circle',
+                    mcq: 'list',
+                    boolean: 'check-square',
+                    match: 'shuffle',
+                    order: 'list-ordered',
+                    bonus: 'gift'
+                };
+                const iconName = isSolved ? 'check' : (bonusLocked ? 'lock' : (icons[pin.type] || 'map-pin'));
+                pinEl.innerHTML = `<i data-lucide="${iconName}" class="w-5 h-5 text-white"></i>`;
 
                 if (currentProject.mode === 'edit') {
                     pinEl.addEventListener('mousedown', (e) => startDrag(e, pin));
@@ -2487,6 +2607,12 @@
                 } else {
                     pinEl.onclick = (e) => {
                         e.stopPropagation();
+                        if (bonusLocked) {
+                            const remaining = getRemainingRegularPinsForBonus();
+                            const suffix = remaining === 1 ? 'נקודה רגילה נוספת' : `${remaining} נקודות רגילות נוספות`;
+                            showToast(`נקודת הבונוס תיפתח אחרי פתרון ${suffix}.`);
+                            return;
+                        }
                         openStudentModal(pin.id);
                     };
                 }
@@ -2513,7 +2639,10 @@
             });
             document.getElementById('mcq-options').classList.toggle('hidden', type !== 'mcq');
             document.getElementById('boolean-options').classList.toggle('hidden', type !== 'boolean');
-            const isClosedQuestion = type === 'mcq' || type === 'boolean';
+            document.getElementById('match-options').classList.toggle('hidden', type !== 'match');
+            document.getElementById('order-options').classList.toggle('hidden', type !== 'order');
+            document.getElementById('bonus-options').classList.toggle('hidden', type !== 'bonus');
+            const isClosedQuestion = ['mcq', 'boolean', 'match', 'order'].includes(type);
             document.getElementById('pin-explanation-container').classList.toggle('hidden', !isClosedQuestion);
         };
 
@@ -2538,6 +2667,55 @@
             const boolInput = document.querySelector(`input[name="bool-correct"][value="${pin.correctBool}"]`);
             if (boolInput) boolInput.checked = true;
 
+            const matchList = document.getElementById('match-list');
+            matchList.innerHTML = '';
+            normalizeMatchPairs(pin.matchPairs).forEach((pair, index) => {
+                const row = document.createElement('div');
+                row.className = 'match-row grid grid-cols-[1fr_auto_1fr] items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100';
+
+                const leftInput = document.createElement('input');
+                leftInput.type = 'text';
+                leftInput.className = 'match-left w-full border border-slate-200 rounded-lg p-2 text-sm outline-none focus:border-indigo-500';
+                leftInput.placeholder = `פריט ${index + 1}`;
+                leftInput.value = pair.left;
+
+                const middle = document.createElement('span');
+                middle.className = 'text-slate-400 text-xs font-bold';
+                middle.innerText = '↔';
+
+                const rightInput = document.createElement('input');
+                rightInput.type = 'text';
+                rightInput.className = 'match-right w-full border border-slate-200 rounded-lg p-2 text-sm outline-none focus:border-indigo-500';
+                rightInput.placeholder = `התאמה ${index + 1}`;
+                rightInput.value = pair.right;
+
+                row.appendChild(leftInput);
+                row.appendChild(middle);
+                row.appendChild(rightInput);
+                matchList.appendChild(row);
+            });
+
+            const orderList = document.getElementById('order-list');
+            orderList.innerHTML = '';
+            normalizeOrderItems(pin.orderItems).forEach((item, index) => {
+                const row = document.createElement('div');
+                row.className = 'order-row flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100';
+
+                const indexBadge = document.createElement('span');
+                indexBadge.className = 'w-6 h-6 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center';
+                indexBadge.innerText = String(index + 1);
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'order-input w-full border border-slate-200 rounded-lg p-2 text-sm outline-none focus:border-indigo-500';
+                input.placeholder = `פריט בסדר ${index + 1}`;
+                input.value = item;
+
+                row.appendChild(indexBadge);
+                row.appendChild(input);
+                orderList.appendChild(row);
+            });
+
             document.getElementById('type-selector').classList.remove('hidden');
             document.getElementById('edit-controls').classList.remove('hidden');
             document.getElementById('student-interaction').classList.add('hidden');
@@ -2545,7 +2723,15 @@
             pinModal.classList.remove('hidden');
         };
 
-        const typeLabels = { info: 'מידע', open: 'שאלה', mcq: 'רב ברירה', boolean: 'נכון/לא נכון' };
+        const typeLabels = {
+            info: 'מידע',
+            open: 'שאלה',
+            mcq: 'רב ברירה',
+            boolean: 'נכון/לא נכון',
+            match: 'התאמה',
+            order: 'סידור',
+            bonus: 'בונוס'
+        };
 
         const openStudentModal = (id) => {
             const pin = currentProject.pins.find((item) => item.id === id);
@@ -2556,6 +2742,9 @@
             document.getElementById('edit-controls').classList.add('hidden');
             document.getElementById('mcq-options').classList.add('hidden');
             document.getElementById('boolean-options').classList.add('hidden');
+            document.getElementById('match-options').classList.add('hidden');
+            document.getElementById('order-options').classList.add('hidden');
+            document.getElementById('bonus-options').classList.add('hidden');
             document.getElementById('pin-explanation-container').classList.add('hidden');
             document.getElementById('student-interaction').classList.remove('hidden');
 
@@ -2711,6 +2900,205 @@
                     markSolved();
                 };
                 area.appendChild(saveBtn);
+            } else if (pin.type === 'match') {
+                const savedEntry = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]);
+                const pairs = normalizeMatchPairs(pin.matchPairs)
+                    .map((pair) => ({
+                        left: normalizeOptionalText(pair.left),
+                        right: normalizeOptionalText(pair.right)
+                    }))
+                    .filter((pair) => pair.left && pair.right);
+
+                if (!pairs.length) {
+                    area.innerHTML = `<div class="p-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-600">המורה עדיין לא הגדיר/ה זוגות להתאמה בנקודה הזאת.</div>`;
+                    return;
+                }
+
+                const savedMap = new Map();
+                if (savedEntry.answer) {
+                    savedEntry.answer.split(' | ').forEach((chunk) => {
+                        const markerIdx = chunk.indexOf(' => ');
+                        if (markerIdx === -1) return;
+                        const left = normalizeOptionalText(chunk.slice(0, markerIdx));
+                        const right = normalizeOptionalText(chunk.slice(markerIdx + 4));
+                        if (left && right) savedMap.set(left, right);
+                    });
+                }
+
+                const rightOptions = shuffleArray(pairs.map((pair) => pair.right));
+                const rowEntries = [];
+
+                pairs.forEach((pair) => {
+                    const row = document.createElement('div');
+                    row.className = "grid grid-cols-[1fr_auto_1fr] gap-2 items-center";
+
+                    const leftCell = document.createElement('div');
+                    leftCell.className = "p-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700";
+                    leftCell.innerText = pair.left;
+
+                    const arrow = document.createElement('div');
+                    arrow.className = "text-slate-400 text-xs font-bold text-center";
+                    arrow.innerText = '↔';
+
+                    const select = document.createElement('select');
+                    select.className = "w-full border-2 border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-indigo-500 bg-white";
+                    const emptyOption = document.createElement('option');
+                    emptyOption.value = '';
+                    emptyOption.innerText = 'בחרו התאמה';
+                    select.appendChild(emptyOption);
+                    rightOptions.forEach((optionText) => {
+                        const opt = document.createElement('option');
+                        opt.value = optionText;
+                        opt.innerText = optionText;
+                        select.appendChild(opt);
+                    });
+                    if (savedMap.has(pair.left)) {
+                        const savedValue = savedMap.get(pair.left);
+                        if (rightOptions.includes(savedValue)) {
+                            select.value = savedValue;
+                        }
+                    }
+
+                    rowEntries.push({ left: pair.left, select });
+                    row.appendChild(leftCell);
+                    row.appendChild(arrow);
+                    row.appendChild(select);
+                    area.appendChild(row);
+                });
+
+                if (savedEntry.answer) {
+                    revealExplanation();
+                }
+
+                const saveBtn = document.createElement('button');
+                saveBtn.type = 'button';
+                saveBtn.className = "w-full bg-indigo-600 text-white py-3 rounded-xl font-bold mt-3";
+                saveBtn.innerText = "שמור תשובה";
+                saveBtn.onclick = () => {
+                    if (rowEntries.some((entry) => !entry.select.value)) {
+                        showWrong(feedback, "נא להשלים התאמה לכל הפריטים לפני שמירה.");
+                        return;
+                    }
+                    const answerText = rowEntries
+                        .map((entry) => `${entry.left} => ${entry.select.value}`)
+                        .join(' | ');
+                    saveStudentAnswer(pin, answerText);
+                    revealExplanation();
+                    markSolved();
+                };
+                area.appendChild(saveBtn);
+            } else if (pin.type === 'order') {
+                const savedEntry = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]);
+                const configuredItems = normalizeOrderItems(pin.orderItems)
+                    .map((item) => normalizeOptionalText(item))
+                    .filter(Boolean);
+
+                if (!configuredItems.length) {
+                    area.innerHTML = `<div class="p-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-600">המורה עדיין לא הגדיר/ה פריטים לסידור בנקודה הזאת.</div>`;
+                    return;
+                }
+
+                const getSavedOrder = () => {
+                    const tokens = savedEntry.answer
+                        ? savedEntry.answer.split(' | ').map((item) => normalizeOptionalText(item)).filter(Boolean)
+                        : [];
+                    if (tokens.length !== configuredItems.length) return null;
+                    const remaining = [...configuredItems];
+                    const valid = tokens.every((token) => {
+                        const idx = remaining.indexOf(token);
+                        if (idx === -1) return false;
+                        remaining.splice(idx, 1);
+                        return true;
+                    });
+                    return valid ? tokens : null;
+                };
+
+                let studentOrder = getSavedOrder() || shuffleArray(configuredItems);
+
+                const orderList = document.createElement('div');
+                orderList.className = 'space-y-2';
+                area.appendChild(orderList);
+
+                const renderOrderRows = () => {
+                    orderList.innerHTML = '';
+                    studentOrder.forEach((item, index) => {
+                        const row = document.createElement('div');
+                        row.className = "flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-2";
+
+                        const indexBadge = document.createElement('span');
+                        indexBadge.className = "w-8 h-8 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center";
+                        indexBadge.innerText = String(index + 1);
+
+                        const text = document.createElement('div');
+                        text.className = "flex-grow text-sm font-semibold text-slate-700 px-1";
+                        text.innerText = item;
+
+                        const upBtn = document.createElement('button');
+                        upBtn.type = 'button';
+                        upBtn.className = "px-2 py-1 rounded-lg border text-xs font-bold";
+                        upBtn.innerText = 'מעלה';
+                        upBtn.disabled = index === 0;
+                        upBtn.onclick = () => {
+                            [studentOrder[index - 1], studentOrder[index]] = [studentOrder[index], studentOrder[index - 1]];
+                            renderOrderRows();
+                        };
+
+                        const downBtn = document.createElement('button');
+                        downBtn.type = 'button';
+                        downBtn.className = "px-2 py-1 rounded-lg border text-xs font-bold";
+                        downBtn.innerText = 'מטה';
+                        downBtn.disabled = index === studentOrder.length - 1;
+                        downBtn.onclick = () => {
+                            [studentOrder[index], studentOrder[index + 1]] = [studentOrder[index + 1], studentOrder[index]];
+                            renderOrderRows();
+                        };
+
+                        row.appendChild(indexBadge);
+                        row.appendChild(text);
+                        row.appendChild(upBtn);
+                        row.appendChild(downBtn);
+                        orderList.appendChild(row);
+                    });
+                };
+
+                renderOrderRows();
+
+                if (savedEntry.answer) {
+                    revealExplanation();
+                }
+
+                const saveBtn = document.createElement('button');
+                saveBtn.type = 'button';
+                saveBtn.className = "w-full bg-indigo-600 text-white py-3 rounded-xl font-bold mt-3";
+                saveBtn.innerText = "שמור תשובה";
+                saveBtn.onclick = () => {
+                    saveStudentAnswer(pin, studentOrder.join(' | '));
+                    revealExplanation();
+                    markSolved();
+                };
+                area.appendChild(saveBtn);
+            } else if (pin.type === 'bonus') {
+                if (isBonusLocked(pin)) {
+                    showWrong(feedback, "נקודת הבונוס עדיין נעולה.");
+                    return;
+                }
+
+                const savedEntry = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]);
+                area.innerHTML = `
+                    <textarea id='bonus-answer' class='w-full border-2 border-slate-200 rounded-xl p-3 mb-3' placeholder='(אופציונלי) כתבו תשובת בונוס...'></textarea>
+                    <button id='btn-bonus-submit' class='w-full bg-amber-500 text-white py-3 rounded-xl font-bold'>שמור בונוס</button>
+                `;
+
+                const bonusInput = document.getElementById('bonus-answer');
+                if (savedEntry.answer && savedEntry.answer !== 'בונוס הושלם') {
+                    bonusInput.value = savedEntry.answer;
+                }
+
+                document.getElementById('btn-bonus-submit').onclick = () => {
+                    const answerText = normalizeOptionalText(bonusInput.value) || 'בונוס הושלם';
+                    saveStudentAnswer(pin, answerText);
+                    markSolved();
+                };
             } else if (pin.type === 'open') {
                 const existingAnswer = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]).answer;
                 area.innerHTML = `<textarea id='ans-txt' class='w-full border-2 border-slate-200 rounded-xl p-3 mb-3' placeholder='הקלידו כאן...'></textarea>
@@ -2739,15 +3127,30 @@
             const pin = currentProject.pins.find((item) => item.id === currentEditingPinId);
             pin.type = currentPinType;
             pin.content = document.getElementById('pin-content').value;
-            pin.explanation = (pin.type === 'mcq' || pin.type === 'boolean')
+            pin.explanation = ['mcq', 'boolean', 'match', 'order'].includes(pin.type)
                 ? normalizeOptionalText(document.getElementById('pin-explanation').value)
                 : '';
             if (pin.type === 'mcq') {
                 pin.options = Array.from(document.querySelectorAll('.mcq-input')).map((input) => input.value);
                 pin.correctIdx = document.querySelector('input[name="mcq-correct"]:checked')?.value || 0;
+            } else {
+                pin.options = normalizeMcqOptions(pin.options);
             }
             if (pin.type === 'boolean') {
                 pin.correctBool = document.querySelector('input[name="bool-correct"][value="true"]').checked ? "true" : "false";
+            }
+            if (pin.type === 'match') {
+                pin.matchPairs = Array.from(document.querySelectorAll('.match-row')).map((row) => ({
+                    left: normalizeOptionalText(row.querySelector('.match-left')?.value),
+                    right: normalizeOptionalText(row.querySelector('.match-right')?.value)
+                }));
+            } else {
+                pin.matchPairs = normalizeMatchPairs(pin.matchPairs);
+            }
+            if (pin.type === 'order') {
+                pin.orderItems = Array.from(document.querySelectorAll('.order-input')).map((input) => normalizeOptionalText(input.value));
+            } else {
+                pin.orderItems = normalizeOrderItems(pin.orderItems);
             }
             renderPins();
             closePinModal();
