@@ -1330,7 +1330,12 @@
                 studentAnswers: currentProject.studentAnswers || {},
                 updatedAt: new Date().toISOString()
             };
-            localStorage.setItem(key, JSON.stringify(payload));
+            try {
+                localStorage.setItem(key, JSON.stringify(payload));
+            } catch (err) {
+                console.error("Student session write failed:", err);
+                showToast("התשובה גדולה מדי לשמירה בדפדפן. נסו קובץ קטן יותר או קישור.");
+            }
         };
 
         const setView = (view) => {
@@ -1348,6 +1353,7 @@
         const normalizeTeacherId = (value) => value.trim().toLowerCase();
 
         const normalizeOptionalText = (value) => (typeof value === 'string' ? value.trim() : '');
+        const MAX_STUDENT_ATTACHMENT_BYTES = 1024 * 1024;
 
         const REGULAR_QUESTION_TYPES = ['open', 'mcq', 'boolean', 'match', 'order'];
 
@@ -1420,33 +1426,66 @@
             .sort((a, b) => a.sortKey - b.sortKey)
             .map((entry) => entry.value);
 
+        const normalizeStudentAttachment = (attachment) => {
+            if (!attachment || typeof attachment !== 'object') return null;
+            const name = normalizeOptionalText(attachment.name);
+            const type = normalizeOptionalText(attachment.type);
+            const dataUrl = typeof attachment.dataUrl === 'string' ? attachment.dataUrl : '';
+            const size = Number(attachment.size);
+            if (!name || !dataUrl) return null;
+            return {
+                name,
+                type,
+                dataUrl,
+                size: Number.isFinite(size) && size >= 0 ? size : null
+            };
+        };
+
         const normalizeStudentAnswerEntry = (entry) => {
             if (typeof entry === 'string') {
-                return { answer: entry, isCorrect: null, savedAt: null };
+                return { answer: entry, isCorrect: null, savedAt: null, answerLink: '', attachment: null };
             }
             if (!entry || typeof entry !== 'object') {
-                return { answer: '', isCorrect: null, savedAt: null };
+                return { answer: '', isCorrect: null, savedAt: null, answerLink: '', attachment: null };
             }
             return {
                 answer: normalizeOptionalText(entry.answer),
                 isCorrect: typeof entry.isCorrect === 'boolean' ? entry.isCorrect : null,
-                savedAt: typeof entry.savedAt === 'string' ? entry.savedAt : null
+                savedAt: typeof entry.savedAt === 'string' ? entry.savedAt : null,
+                answerLink: normalizeOptionalText(entry.answerLink),
+                attachment: normalizeStudentAttachment(entry.attachment)
             };
         };
 
-        const saveStudentAnswer = (pin, answer, isCorrect = null) => {
+        const saveStudentAnswer = (pin, answer, isCorrect = null, extras = {}) => {
             if (!pin) return;
             currentProject.studentAnswers = currentProject.studentAnswers || {};
+            const normalizedAnswerLink = normalizeOptionalText(extras?.answerLink);
+            const normalizedAttachment = normalizeStudentAttachment(extras?.attachment);
             currentProject.studentAnswers[pin.id] = {
                 pinId: pin.id,
                 type: pin.type,
                 prompt: normalizeOptionalText(pin.content),
                 answer: normalizeOptionalText(answer),
+                answerLink: normalizedAnswerLink,
+                attachment: normalizedAttachment,
                 isCorrect: typeof isCorrect === 'boolean' ? isCorrect : null,
                 savedAt: new Date().toISOString()
             };
             persistStudentSession();
         };
+
+        const hasStudentAnswerContent = (entry) => {
+            const normalized = normalizeStudentAnswerEntry(entry);
+            return !!(normalized.answer || normalized.answerLink || normalized.attachment);
+        };
+
+        const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+            reader.onerror = () => reject(new Error('failed_to_read_file'));
+            reader.readAsDataURL(file);
+        });
 
         const getPinTypeLabel = (type) => ({
             open: 'שאלה פתוחה',
@@ -1515,14 +1554,18 @@
             const questions = (currentProject.pins || []).filter((pin) => pin.type !== 'info');
             const answers = questions.map((pin, index) => {
                 const entry = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]);
-                const answerText = entry.answer || 'לא ניתנה תשובה';
-                const statusText = entry.answer ? 'נשמרה תשובה' : 'ללא תשובה';
+                const hasAnyAnswer = hasStudentAnswerContent(entry);
+                const answerText = entry.answer || 'לא ניתנה תשובת טקסט';
+                const statusText = hasAnyAnswer ? 'נשמרה תשובה' : 'ללא תשובה';
                 return {
                     index: index + 1,
                     pinId: pin.id,
                     type: pin.type,
                     prompt: normalizeOptionalText(pin.content),
                     answer: answerText,
+                    answerLink: entry.answerLink || '',
+                    attachmentName: entry.attachment?.name || '',
+                    hasAnyAnswer,
                     isCorrect: entry.isCorrect,
                     savedAt: entry.savedAt,
                     statusText
@@ -1533,7 +1576,7 @@
                 return;
             }
 
-            const answeredCount = answers.filter((item) => item.answer !== 'לא ניתנה תשובה').length;
+            const answeredCount = answers.filter((item) => item.hasAnyAnswer).length;
             const generatedAt = new Date().toLocaleString('he-IL');
             const teacherLine = [
                 normalizeOptionalText(currentProject.teacherName),
@@ -1546,6 +1589,8 @@
                     <div style="margin-top:4px;white-space:pre-wrap;">${escapeHtml(item.prompt || 'ללא טקסט שאלה')}</div>
                     <div style="margin-top:8px;font-weight:700;">תשובת תלמיד:</div>
                     <div style="white-space:pre-wrap;">${escapeHtml(item.answer)}</div>
+                    ${item.answerLink ? `<div style="margin-top:6px;font-size:12px;color:#4f6e6b;"><strong>קישור:</strong> ${escapeHtml(item.answerLink)}</div>` : ''}
+                    ${item.attachmentName ? `<div style="margin-top:6px;font-size:12px;color:#4f6e6b;"><strong>קובץ מצורף:</strong> ${escapeHtml(item.attachmentName)}</div>` : ''}
                     <div style="margin-top:6px;font-size:12px;color:#4f6e6b;">סטטוס: ${escapeHtml(item.statusText)}</div>
                 </div>
             `).join('');
@@ -3086,32 +3131,196 @@
                 const savedEntry = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]);
                 area.innerHTML = `
                     <textarea id='bonus-answer' class='w-full border-2 border-slate-200 rounded-xl p-3 mb-3' placeholder='(אופציונלי) כתבו תשובת בונוס...'></textarea>
+                    <input id='bonus-link' type='url' class='w-full border-2 border-slate-200 rounded-xl p-3 mb-3' placeholder='קישור לתשובה (אופציונלי)'>
+                    <div class='mb-3 p-3 rounded-xl border border-slate-200 bg-white'>
+                        <label class='block text-xs font-bold text-slate-500 uppercase mb-2'>קובץ/תמונה (אופציונלי)</label>
+                        <input id='bonus-file' type='file' class='w-full text-sm'>
+                        <div id='bonus-file-preview' class='mt-2 hidden'>
+                            <img id='bonus-image-preview' class='hidden w-full max-h-52 object-contain rounded-lg border border-slate-200' alt='תצוגת תמונה מצורפת'>
+                        </div>
+                        <p id='bonus-file-status' class='text-xs text-slate-500 mt-2'>לא נבחר קובץ.</p>
+                        <button id='bonus-file-clear' type='button' class='hidden text-xs text-red-600 font-semibold mt-1'>הסר קובץ</button>
+                    </div>
                     <button id='btn-bonus-submit' class='w-full bg-amber-500 text-white py-3 rounded-xl font-bold'>שמור בונוס</button>
                 `;
 
                 const bonusInput = document.getElementById('bonus-answer');
-                if (savedEntry.answer && savedEntry.answer !== 'בונוס הושלם') {
-                    bonusInput.value = savedEntry.answer;
-                }
+                const bonusLinkInput = document.getElementById('bonus-link');
+                const bonusFileInput = document.getElementById('bonus-file');
+                const bonusFileStatus = document.getElementById('bonus-file-status');
+                const bonusFileClearBtn = document.getElementById('bonus-file-clear');
+                const bonusPreviewWrap = document.getElementById('bonus-file-preview');
+                const bonusImagePreview = document.getElementById('bonus-image-preview');
+                let selectedAttachment = savedEntry.attachment ? { ...savedEntry.attachment } : null;
+
+                if (savedEntry.answer && savedEntry.answer !== 'בונוס הושלם') bonusInput.value = savedEntry.answer;
+                bonusLinkInput.value = savedEntry.answerLink || '';
+
+                const renderBonusAttachment = () => {
+                    if (!selectedAttachment) {
+                        bonusFileStatus.innerText = 'לא נבחר קובץ.';
+                        bonusFileClearBtn.classList.add('hidden');
+                        bonusPreviewWrap.classList.add('hidden');
+                        bonusImagePreview.classList.add('hidden');
+                        bonusImagePreview.removeAttribute('src');
+                        return;
+                    }
+                    const sizeLabel = Number.isFinite(selectedAttachment.size)
+                        ? ` (${Math.round(selectedAttachment.size / 1024)}KB)`
+                        : '';
+                    bonusFileStatus.innerText = `נבחר קובץ: ${selectedAttachment.name}${sizeLabel}`;
+                    bonusFileClearBtn.classList.remove('hidden');
+                    if ((selectedAttachment.type || '').startsWith('image/') && selectedAttachment.dataUrl) {
+                        bonusPreviewWrap.classList.remove('hidden');
+                        bonusImagePreview.classList.remove('hidden');
+                        bonusImagePreview.src = selectedAttachment.dataUrl;
+                    } else {
+                        bonusPreviewWrap.classList.add('hidden');
+                        bonusImagePreview.classList.add('hidden');
+                        bonusImagePreview.removeAttribute('src');
+                    }
+                };
+
+                renderBonusAttachment();
+
+                bonusFileInput.addEventListener('change', async () => {
+                    const file = bonusFileInput.files?.[0];
+                    if (!file) return;
+                    if (file.size > MAX_STUDENT_ATTACHMENT_BYTES) {
+                        bonusFileInput.value = '';
+                        showWrong(feedback, "הקובץ גדול מדי. העלו קובץ עד 1MB או השתמשו בקישור.");
+                        return;
+                    }
+                    try {
+                        const dataUrl = await readFileAsDataUrl(file);
+                        selectedAttachment = {
+                            name: file.name,
+                            type: file.type || '',
+                            size: file.size,
+                            dataUrl
+                        };
+                        renderBonusAttachment();
+                    } catch {
+                        bonusFileInput.value = '';
+                        showWrong(feedback, "לא הצלחתי לקרוא את הקובץ. נסו קובץ אחר.");
+                    }
+                });
+
+                bonusFileClearBtn.onclick = () => {
+                    selectedAttachment = null;
+                    bonusFileInput.value = '';
+                    renderBonusAttachment();
+                };
 
                 document.getElementById('btn-bonus-submit').onclick = () => {
-                    const answerText = normalizeOptionalText(bonusInput.value) || 'בונוס הושלם';
-                    saveStudentAnswer(pin, answerText);
+                    const answerText = normalizeOptionalText(bonusInput.value);
+                    const answerLink = normalizeOptionalText(bonusLinkInput.value);
+                    if (!answerText && !answerLink && !selectedAttachment) {
+                        saveStudentAnswer(pin, 'בונוס הושלם');
+                        markSolved();
+                        return;
+                    }
+                    saveStudentAnswer(pin, answerText || 'בונוס הושלם', null, {
+                        answerLink,
+                        attachment: selectedAttachment
+                    });
                     markSolved();
                 };
             } else if (pin.type === 'open') {
-                const existingAnswer = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]).answer;
-                area.innerHTML = `<textarea id='ans-txt' class='w-full border-2 border-slate-200 rounded-xl p-3 mb-3' placeholder='הקלידו כאן...'></textarea>
-                                 <button id='btn-submit' class='w-full bg-indigo-600 text-white py-3 rounded-xl font-bold'>שמור תשובה</button>`;
+                const savedEntry = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]);
+                area.innerHTML = `
+                    <textarea id='ans-txt' class='w-full border-2 border-slate-200 rounded-xl p-3 mb-3' placeholder='הקלידו כאן...'></textarea>
+                    <input id='ans-link' type='url' class='w-full border-2 border-slate-200 rounded-xl p-3 mb-3' placeholder='קישור לתשובה (אופציונלי)'>
+                    <div class='mb-3 p-3 rounded-xl border border-slate-200 bg-white'>
+                        <label class='block text-xs font-bold text-slate-500 uppercase mb-2'>קובץ/תמונה (אופציונלי)</label>
+                        <input id='ans-file' type='file' class='w-full text-sm'>
+                        <div id='ans-file-preview' class='mt-2 hidden'>
+                            <img id='ans-image-preview' class='hidden w-full max-h-52 object-contain rounded-lg border border-slate-200' alt='תצוגת תמונה מצורפת'>
+                        </div>
+                        <p id='ans-file-status' class='text-xs text-slate-500 mt-2'>לא נבחר קובץ.</p>
+                        <button id='ans-file-clear' type='button' class='hidden text-xs text-red-600 font-semibold mt-1'>הסר קובץ</button>
+                    </div>
+                    <button id='btn-submit' class='w-full bg-indigo-600 text-white py-3 rounded-xl font-bold'>שמור תשובה</button>
+                `;
                 const answerInput = document.getElementById('ans-txt');
-                answerInput.value = existingAnswer;
-                document.getElementById('btn-submit').onclick = () => {
-                    const answerText = answerInput.value.trim();
-                    if (!answerText) {
-                        showWrong(feedback, "נא לכתוב תשובה לפני שמירה.");
+                const answerLinkInput = document.getElementById('ans-link');
+                const answerFileInput = document.getElementById('ans-file');
+                const answerFileStatus = document.getElementById('ans-file-status');
+                const answerFileClearBtn = document.getElementById('ans-file-clear');
+                const answerPreviewWrap = document.getElementById('ans-file-preview');
+                const answerImagePreview = document.getElementById('ans-image-preview');
+                let selectedAttachment = savedEntry.attachment ? { ...savedEntry.attachment } : null;
+
+                answerInput.value = savedEntry.answer;
+                answerLinkInput.value = savedEntry.answerLink || '';
+
+                const renderOpenAttachment = () => {
+                    if (!selectedAttachment) {
+                        answerFileStatus.innerText = 'לא נבחר קובץ.';
+                        answerFileClearBtn.classList.add('hidden');
+                        answerPreviewWrap.classList.add('hidden');
+                        answerImagePreview.classList.add('hidden');
+                        answerImagePreview.removeAttribute('src');
                         return;
                     }
-                    saveStudentAnswer(pin, answerText);
+                    const sizeLabel = Number.isFinite(selectedAttachment.size)
+                        ? ` (${Math.round(selectedAttachment.size / 1024)}KB)`
+                        : '';
+                    answerFileStatus.innerText = `נבחר קובץ: ${selectedAttachment.name}${sizeLabel}`;
+                    answerFileClearBtn.classList.remove('hidden');
+                    if ((selectedAttachment.type || '').startsWith('image/') && selectedAttachment.dataUrl) {
+                        answerPreviewWrap.classList.remove('hidden');
+                        answerImagePreview.classList.remove('hidden');
+                        answerImagePreview.src = selectedAttachment.dataUrl;
+                    } else {
+                        answerPreviewWrap.classList.add('hidden');
+                        answerImagePreview.classList.add('hidden');
+                        answerImagePreview.removeAttribute('src');
+                    }
+                };
+
+                renderOpenAttachment();
+
+                answerFileInput.addEventListener('change', async () => {
+                    const file = answerFileInput.files?.[0];
+                    if (!file) return;
+                    if (file.size > MAX_STUDENT_ATTACHMENT_BYTES) {
+                        answerFileInput.value = '';
+                        showWrong(feedback, "הקובץ גדול מדי. העלו קובץ עד 1MB או השתמשו בקישור.");
+                        return;
+                    }
+                    try {
+                        const dataUrl = await readFileAsDataUrl(file);
+                        selectedAttachment = {
+                            name: file.name,
+                            type: file.type || '',
+                            size: file.size,
+                            dataUrl
+                        };
+                        renderOpenAttachment();
+                    } catch {
+                        answerFileInput.value = '';
+                        showWrong(feedback, "לא הצלחתי לקרוא את הקובץ. נסו קובץ אחר.");
+                    }
+                });
+
+                answerFileClearBtn.onclick = () => {
+                    selectedAttachment = null;
+                    answerFileInput.value = '';
+                    renderOpenAttachment();
+                };
+
+                document.getElementById('btn-submit').onclick = () => {
+                    const answerText = answerInput.value.trim();
+                    const answerLink = normalizeOptionalText(answerLinkInput.value);
+                    if (!answerText && !answerLink && !selectedAttachment) {
+                        showWrong(feedback, "נא לצרף טקסט, קישור או קובץ לפני שמירה.");
+                        return;
+                    }
+                    saveStudentAnswer(pin, answerText, null, {
+                        answerLink,
+                        attachment: selectedAttachment
+                    });
                     markSolved();
                 };
             }
