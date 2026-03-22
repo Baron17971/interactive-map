@@ -2954,16 +2954,20 @@
                 area.appendChild(explanationBox);
             };
 
-            const markSolved = () => {
+            const markSolved = ({ awardLockSymbol = true } = {}) => {
                 currentProject.studentProgress[pin.id] = true;
                 feedback.classList.remove('hidden', 'bg-red-100', 'text-red-700');
                 feedback.classList.add('bg-green-100', 'text-green-700');
 
                 let msg = pin.type === 'info' ? "המידע נקרא." : "התשובה נשמרה.";
                 if (currentProject.isEscapeRoom && currentProject.lockCode) {
-                    const idx = currentProject.pins.indexOf(pin);
-                    const symbol = currentProject.lockCode[idx % currentProject.lockCode.length];
-                    msg += ` התו שגיליתם: ${symbol}`;
+                    if (awardLockSymbol) {
+                        const idx = currentProject.pins.indexOf(pin);
+                        const symbol = currentProject.lockCode[idx % currentProject.lockCode.length];
+                        msg += ` התו שגיליתם: ${symbol}`;
+                    } else {
+                        msg += " לא התקבל תו בנקודה זו.";
+                    }
                 }
                 feedback.innerText = msg;
                 persistStudentSession();
@@ -3022,7 +3026,7 @@
                     const isCorrect = String(selectedIdx) === String(pin.correctIdx);
                     saveStudentAnswer(pin, selected?.text || '', isCorrect);
                     revealExplanation();
-                    markSolved();
+                    markSolved({ awardLockSymbol: isCorrect });
                 };
                 area.appendChild(saveBtn);
             } else if (pin.type === 'boolean') {
@@ -3071,7 +3075,7 @@
                     const isCorrect = selectedValue == (pin.correctBool == "true" || pin.correctBool === true);
                     saveStudentAnswer(pin, selected?.text || '', isCorrect);
                     revealExplanation();
-                    markSolved();
+                    markSolved({ awardLockSymbol: isCorrect });
                 };
                 area.appendChild(saveBtn);
             } else if (pin.type === 'match') {
@@ -3156,9 +3160,10 @@
                     const answerText = rowEntries
                         .map((entry) => `${entry.left} => ${entry.select.value}`)
                         .join(' | ');
-                    saveStudentAnswer(pin, answerText);
+                    const isCorrect = rowEntries.every((entry, idx) => entry.select.value === pairs[idx].right);
+                    saveStudentAnswer(pin, answerText, isCorrect);
                     revealExplanation();
-                    markSolved();
+                    markSolved({ awardLockSymbol: isCorrect });
                 };
                 area.appendChild(saveBtn);
             } else if (pin.type === 'order') {
@@ -3246,9 +3251,11 @@
                 saveBtn.className = "w-full bg-indigo-600 text-white py-3 rounded-xl font-bold mt-3";
                 saveBtn.innerText = "שמור תשובה";
                 saveBtn.onclick = () => {
-                    saveStudentAnswer(pin, studentOrder.join(' | '));
+                    const isCorrect = studentOrder.length === configuredItems.length
+                        && studentOrder.every((item, idx) => item === configuredItems[idx]);
+                    saveStudentAnswer(pin, studentOrder.join(' | '), isCorrect);
                     revealExplanation();
-                    markSolved();
+                    markSolved({ awardLockSymbol: isCorrect });
                 };
                 area.appendChild(saveBtn);
             } else if (pin.type === 'video') {
