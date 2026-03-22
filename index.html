@@ -935,11 +935,6 @@
                     <textarea id="pin-content" rows="4" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="כתבו כאן את השאלה או המידע לתלמיד..."></textarea>
                 </div>
 
-                <div id="pin-explanation-container" class="hidden">
-                    <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">הסבר (אופציונלי)</label>
-                    <textarea id="pin-explanation" rows="3" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="לדוגמה: מה הרעיון שעומד מאחורי התשובה הנכונה"></textarea>
-                </div>
-
                 <div id="mcq-options" class="hidden space-y-2">
                     <label class="block text-xs font-bold text-slate-400 uppercase">אפשרויות (סמנו את הנכונה):</label>
                     <div id="mcq-list" class="space-y-3"></div>
@@ -955,6 +950,11 @@
                             <input type="radio" name="bool-correct" value="false" class="w-4 h-4 accent-indigo-600"> לא נכון
                         </label>
                     </div>
+                </div>
+
+                <div id="pin-explanation-container" class="hidden">
+                    <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">הסבר (אופציונלי)</label>
+                    <textarea id="pin-explanation" rows="3" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="לדוגמה: מה הרעיון שעומד מאחורי התשובה הנכונה"></textarea>
                 </div>
 
                 <div id="student-interaction" class="hidden mt-2 p-6 bg-slate-50 rounded-2xl border border-slate-200 shadow-inner">
@@ -1106,7 +1106,7 @@
         </div>
     </div>
 
-    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl transform translate-y-32 opacity-0 transition-all duration-500 z-[100] flex items-center gap-3">
+    <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl transform -translate-y-32 opacity-0 transition-all duration-500 z-[100] flex items-center gap-3">
         <i data-lucide="info" class="w-5 h-5 text-indigo-400"></i>
         <span id="toast-msg">הודעה</span>
     </div>
@@ -1213,8 +1213,8 @@
 
         const showToast = (msg) => {
             document.getElementById('toast-msg').innerText = msg;
-            toast.classList.remove('translate-y-32', 'opacity-0');
-            setTimeout(() => toast.classList.add('translate-y-32', 'opacity-0'), 3000);
+            toast.classList.remove('-translate-y-32', 'opacity-0');
+            setTimeout(() => toast.classList.add('-translate-y-32', 'opacity-0'), 3000);
         };
 
         const clearSharedStudentBoot = () => {
