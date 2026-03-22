@@ -935,6 +935,11 @@
                     <textarea id="pin-content" rows="4" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="כתבו כאן את השאלה או המידע לתלמיד..."></textarea>
                 </div>
 
+                <div id="pin-explanation-container" class="hidden">
+                    <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">הסבר (אופציונלי)</label>
+                    <textarea id="pin-explanation" rows="3" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="לדוגמה: מה הרעיון שעומד מאחורי התשובה הנכונה"></textarea>
+                </div>
+
                 <div id="mcq-options" class="hidden space-y-2">
                     <label class="block text-xs font-bold text-slate-400 uppercase">אפשרויות (סמנו את הנכונה):</label>
                     <div id="mcq-list" class="space-y-3"></div>
@@ -1413,13 +1418,7 @@
             const answers = questions.map((pin, index) => {
                 const entry = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]);
                 const answerText = entry.answer || 'לא ניתנה תשובה';
-                const statusText = entry.isCorrect === true
-                    ? 'נכונה'
-                    : entry.isCorrect === false
-                        ? 'לא נכונה'
-                        : entry.answer
-                            ? 'נשמרה תשובה'
-                            : 'ללא תשובה';
+                const statusText = entry.answer ? 'נשמרה תשובה' : 'ללא תשובה';
                 return {
                     index: index + 1,
                     pinId: pin.id,
@@ -2456,6 +2455,7 @@
                 y,
                 type: 'info',
                 content: '',
+                explanation: '',
                 options: ['', '', '', ''],
                 correctIdx: 0,
                 correctBool: true
@@ -2513,6 +2513,8 @@
             });
             document.getElementById('mcq-options').classList.toggle('hidden', type !== 'mcq');
             document.getElementById('boolean-options').classList.toggle('hidden', type !== 'boolean');
+            const isClosedQuestion = type === 'mcq' || type === 'boolean';
+            document.getElementById('pin-explanation-container').classList.toggle('hidden', !isClosedQuestion);
         };
 
         const openPinModal = (id) => {
@@ -2520,6 +2522,7 @@
             const pin = currentProject.pins.find((item) => item.id === id);
             document.getElementById('pin-modal-title').innerText = "עריכת נקודה";
             document.getElementById('pin-content').value = pin.content;
+            document.getElementById('pin-explanation').value = normalizeOptionalText(pin.explanation);
             setPinType(pin.type);
 
             const mcqList = document.getElementById('mcq-list');
@@ -2553,6 +2556,7 @@
             document.getElementById('edit-controls').classList.add('hidden');
             document.getElementById('mcq-options').classList.add('hidden');
             document.getElementById('boolean-options').classList.add('hidden');
+            document.getElementById('pin-explanation-container').classList.add('hidden');
             document.getElementById('student-interaction').classList.remove('hidden');
 
             setupStudentUI(pin);
@@ -2564,16 +2568,35 @@
             const feedback = document.getElementById('student-feedback');
             feedback.classList.add('hidden');
             area.innerHTML = '';
+            let explanationRendered = false;
+            const revealExplanation = () => {
+                if (explanationRendered) return;
+                const explanationText = normalizeOptionalText(pin.explanation);
+                if (!explanationText) return;
+                explanationRendered = true;
+
+                const explanationBox = document.createElement('div');
+                explanationBox.className = "mt-3 p-4 rounded-xl bg-slate-100 border border-slate-200";
+
+                const explanationTitle = document.createElement('p');
+                explanationTitle.className = "text-xs text-slate-500 font-bold uppercase mb-1";
+                explanationTitle.innerText = "הסבר";
+
+                const explanationBody = document.createElement('p');
+                explanationBody.className = "text-sm text-slate-700 whitespace-pre-wrap";
+                explanationBody.innerText = explanationText;
+
+                explanationBox.appendChild(explanationTitle);
+                explanationBox.appendChild(explanationBody);
+                area.appendChild(explanationBox);
+            };
 
             const markSolved = () => {
                 currentProject.studentProgress[pin.id] = true;
                 feedback.classList.remove('hidden', 'bg-red-100', 'text-red-700');
                 feedback.classList.add('bg-green-100', 'text-green-700');
 
-                let msg = pin.type === 'info' ? "המידע נקרא." : "מעולה! עניתם נכון.";
-                if (pin.type === 'open') {
-                    msg = "התשובה נשמרה.";
-                }
+                let msg = pin.type === 'info' ? "המידע נקרא." : "התשובה נשמרה.";
                 if (currentProject.isEscapeRoom && currentProject.lockCode) {
                     const idx = currentProject.pins.indexOf(pin);
                     const symbol = currentProject.lockCode[idx % currentProject.lockCode.length];
@@ -2620,6 +2643,7 @@
                         selectedIdx = savedBtn.index;
                         optionButtons.forEach((entry) => setOptionState(entry.btn, entry.index === savedBtn.index));
                     }
+                    revealExplanation();
                 }
 
                 const saveBtn = document.createElement('button');
@@ -2634,11 +2658,8 @@
                     const selected = optionButtons.find((entry) => entry.index === selectedIdx);
                     const isCorrect = String(selectedIdx) === String(pin.correctIdx);
                     saveStudentAnswer(pin, selected?.text || '', isCorrect);
-                    if (isCorrect) {
-                        markSolved();
-                        return;
-                    }
-                    showWrong(feedback, "התשובה נשמרה. אפשר לנסות שוב.");
+                    revealExplanation();
+                    markSolved();
                 };
                 area.appendChild(saveBtn);
             } else if (pin.type === 'boolean') {
@@ -2671,6 +2692,7 @@
                         selectedValue = savedBtn.value;
                         choiceButtons.forEach((entry) => setChoiceState(entry.btn, entry.value === savedBtn.value));
                     }
+                    revealExplanation();
                 }
 
                 const saveBtn = document.createElement('button');
@@ -2685,11 +2707,8 @@
                     const selected = choiceButtons.find((entry) => entry.value === selectedValue);
                     const isCorrect = selectedValue == (pin.correctBool == "true" || pin.correctBool === true);
                     saveStudentAnswer(pin, selected?.text || '', isCorrect);
-                    if (isCorrect) {
-                        markSolved();
-                        return;
-                    }
-                    showWrong(feedback, "התשובה נשמרה. אפשר לנסות שוב.");
+                    revealExplanation();
+                    markSolved();
                 };
                 area.appendChild(saveBtn);
             } else if (pin.type === 'open') {
@@ -2710,7 +2729,7 @@
             }
         };
 
-        const showWrong = (feedback, message = "לא בדיוק, כדאי לנסות שוב!") => {
+        const showWrong = (feedback, message = "נא להשלים תשובה לפני שמירה.") => {
             feedback.classList.remove('hidden', 'bg-green-100', 'text-green-700');
             feedback.classList.add('bg-red-100', 'text-red-700');
             feedback.innerText = message;
@@ -2720,6 +2739,9 @@
             const pin = currentProject.pins.find((item) => item.id === currentEditingPinId);
             pin.type = currentPinType;
             pin.content = document.getElementById('pin-content').value;
+            pin.explanation = (pin.type === 'mcq' || pin.type === 'boolean')
+                ? normalizeOptionalText(document.getElementById('pin-explanation').value)
+                : '';
             if (pin.type === 'mcq') {
                 pin.options = Array.from(document.querySelectorAll('.mcq-input')).map((input) => input.value);
                 pin.correctIdx = document.querySelector('input[name="mcq-correct"]:checked')?.value || 0;
