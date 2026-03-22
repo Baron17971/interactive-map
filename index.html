@@ -423,6 +423,7 @@
         .pin-match { background-color: #0c4a6e !important; }
         .pin-order { background-color: #be123c !important; }
         .pin-bonus { background-color: #a16207 !important; }
+        .pin-video { background-color: #dc2626 !important; }
         .pin-default { background-color: #1f6f69 !important; }
         .bonus-locked {
             filter: saturate(0.45);
@@ -937,6 +938,7 @@
                         <button onclick="setPinType('match')" class="type-btn type-btn-idle border rounded-xl p-3 text-xs flex flex-col items-center gap-2 transition-all" data-type="match"><i data-lucide="shuffle" class="w-5 h-5"></i> התאמה</button>
                         <button onclick="setPinType('order')" class="type-btn type-btn-idle border rounded-xl p-3 text-xs flex flex-col items-center gap-2 transition-all" data-type="order"><i data-lucide="list-ordered" class="w-5 h-5"></i> סידור</button>
                         <button onclick="setPinType('bonus')" class="type-btn type-btn-idle border rounded-xl p-3 text-xs flex flex-col items-center gap-2 transition-all" data-type="bonus"><i data-lucide="gift" class="w-5 h-5"></i> בונוס</button>
+                        <button onclick="setPinType('video')" class="type-btn type-btn-idle border rounded-xl p-3 text-xs flex flex-col items-center gap-2 transition-all" data-type="video"><i data-lucide="video" class="w-5 h-5"></i> וידאו</button>
                     </div>
                 </div>
 
@@ -973,7 +975,19 @@
                 </div>
 
                 <div id="bonus-options" class="hidden p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm">
-                    נקודת בונוס נפתחת לתלמידים רק אחרי פתרון כל הנקודות הרגילות (שאלות פתוחות/סגורות, התאמה וסידור).
+                    נקודת בונוס נפתחת לתלמידים רק אחרי פתרון כל הנקודות הרגילות (שאלות פתוחות/סגורות, התאמה, סידור ווידאו).
+                </div>
+
+                <div id="video-options" class="hidden space-y-3 p-3 rounded-xl bg-rose-50 border border-rose-200">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">קישור YouTube</label>
+                        <input id="video-url-input" type="url" class="w-full border-2 border-slate-200 rounded-xl p-3 outline-none focus:border-rose-500 transition-all text-sm" placeholder="https://www.youtube.com/watch?v=...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">זמן הופעת השאלה (בשניות)</label>
+                        <input id="video-reveal-seconds-input" type="number" min="0" step="1" class="w-full border-2 border-slate-200 rounded-xl p-3 outline-none focus:border-rose-500 transition-all text-sm" placeholder="למשל: 35">
+                    </div>
+                    <p class="text-xs text-slate-500">התלמיד יראה את השאלה רק כשהסרטון מגיע לזמן שהוגדר.</p>
                 </div>
 
                 <div id="pin-explanation-container" class="hidden">
@@ -1062,7 +1076,7 @@
                     <h4>סוגי שאלות + מצב חדר בריחה</h4>
                     <ul>
                         <li>לחיצה על המפה מוסיפה נקודה חדשה; גרירה משנה מיקום.</li>
-                        <li>סוגי פעילות: מידע, שאלה פתוחה, אמריקאית, נכון/לא נכון, התאמה, סידור ונקודת בונוס.</li>
+                        <li>סוגי פעילות: מידע, שאלה פתוחה, אמריקאית, נכון/לא נכון, התאמה, סידור, בונוס ונקודת וידאו.</li>
                         <li>במצב חדר בריחה אפשר להגדיר קוד סופי, והתלמידים צריכים להשלים נקודות כדי לפתוח מנעול.</li>
                     </ul>
                 </div>
@@ -1188,6 +1202,9 @@
         let dragStartX;
         let dragStartY;
         let hasMovedDuringDrag = false;
+        let activeYoutubePlayer = null;
+        let activeYoutubeTimer = null;
+        let youtubeApiLoader = null;
 
         const uploadZone = document.getElementById('upload-zone');
         const fileInput = document.getElementById('file-input');
@@ -1355,7 +1372,7 @@
         const normalizeOptionalText = (value) => (typeof value === 'string' ? value.trim() : '');
         const MAX_STUDENT_ATTACHMENT_BYTES = 1024 * 1024;
 
-        const REGULAR_QUESTION_TYPES = ['open', 'mcq', 'boolean', 'match', 'order'];
+        const REGULAR_QUESTION_TYPES = ['open', 'mcq', 'boolean', 'match', 'order', 'video'];
 
         const createDefaultMatchPairs = () => ([
             { left: '', right: '' },
@@ -1403,7 +1420,11 @@
                 explanation: normalizeOptionalText(pin?.explanation),
                 options: normalizeMcqOptions(pin?.options),
                 matchPairs: normalizeMatchPairs(pin?.matchPairs),
-                orderItems: normalizeOrderItems(pin?.orderItems)
+                orderItems: normalizeOrderItems(pin?.orderItems),
+                videoUrl: normalizeOptionalText(pin?.videoUrl),
+                videoRevealSeconds: Number.isFinite(Number(pin?.videoRevealSeconds))
+                    ? Math.max(0, Math.floor(Number(pin.videoRevealSeconds)))
+                    : 0
             }));
         };
 
@@ -1487,13 +1508,94 @@
             reader.readAsDataURL(file);
         });
 
+        const formatSecondsLabel = (seconds) => {
+            const total = Math.max(0, Math.floor(Number(seconds) || 0));
+            const mins = Math.floor(total / 60);
+            const secs = String(total % 60).padStart(2, '0');
+            return `${mins}:${secs}`;
+        };
+
+        const clearActiveYoutubePlayer = () => {
+            if (activeYoutubeTimer) {
+                clearInterval(activeYoutubeTimer);
+                activeYoutubeTimer = null;
+            }
+            if (activeYoutubePlayer && typeof activeYoutubePlayer.destroy === 'function') {
+                try {
+                    activeYoutubePlayer.destroy();
+                } catch (err) {
+                    console.warn('YT destroy failed:', err);
+                }
+            }
+            activeYoutubePlayer = null;
+        };
+
+        const extractYouTubeVideoId = (urlValue) => {
+            const raw = normalizeOptionalText(urlValue);
+            if (!raw) return '';
+            try {
+                const url = new URL(raw.startsWith('http') ? raw : `https://${raw}`);
+                const host = url.hostname.replace(/^www\./, '');
+                if (host === 'youtu.be') {
+                    return normalizeOptionalText(url.pathname.split('/')[1] || '');
+                }
+                if (host.endsWith('youtube.com')) {
+                    if (url.searchParams.get('v')) return normalizeOptionalText(url.searchParams.get('v'));
+                    const parts = url.pathname.split('/').filter(Boolean);
+                    const markerIdx = parts.findIndex((segment) => ['embed', 'shorts', 'live'].includes(segment));
+                    if (markerIdx >= 0 && parts[markerIdx + 1]) {
+                        return normalizeOptionalText(parts[markerIdx + 1]);
+                    }
+                }
+                return '';
+            } catch {
+                return '';
+            }
+        };
+
+        const loadYouTubeApi = () => {
+            if (window.YT && window.YT.Player) {
+                return Promise.resolve(window.YT);
+            }
+            if (youtubeApiLoader) {
+                return youtubeApiLoader;
+            }
+            youtubeApiLoader = new Promise((resolve, reject) => {
+                const existingScript = document.querySelector('script[data-yt-api="true"]');
+                const onReady = () => {
+                    if (window.YT && window.YT.Player) {
+                        resolve(window.YT);
+                    } else {
+                        reject(new Error('yt_api_not_available'));
+                    }
+                };
+                const previousReady = window.onYouTubeIframeAPIReady;
+                window.onYouTubeIframeAPIReady = () => {
+                    if (typeof previousReady === 'function') previousReady();
+                    onReady();
+                };
+                if (!existingScript) {
+                    const script = document.createElement('script');
+                    script.src = 'https://www.youtube.com/iframe_api';
+                    script.async = true;
+                    script.dataset.ytApi = 'true';
+                    script.onerror = () => reject(new Error('yt_api_load_failed'));
+                    document.head.appendChild(script);
+                } else if (window.YT && window.YT.Player) {
+                    onReady();
+                }
+            });
+            return youtubeApiLoader;
+        };
+
         const getPinTypeLabel = (type) => ({
             open: 'שאלה פתוחה',
             mcq: 'שאלה אמריקאית',
             boolean: 'נכון / לא נכון',
             match: 'התאמה',
             order: 'סידור',
-            bonus: 'נקודת בונוס'
+            bonus: 'נקודת בונוס',
+            video: 'נקודת וידאו'
         }[type] || 'שאלה');
 
         const escapeHtml = (value) => String(value ?? '')
@@ -2604,6 +2706,8 @@
                 options: ['', '', '', ''],
                 matchPairs: createDefaultMatchPairs(),
                 orderItems: createDefaultOrderItems(),
+                videoUrl: '',
+                videoRevealSeconds: 0,
                 correctIdx: 0,
                 correctBool: true
             };
@@ -2628,7 +2732,8 @@
                     boolean: 'pin-boolean',
                     match: 'pin-match',
                     order: 'pin-order',
-                    bonus: 'pin-bonus'
+                    bonus: 'pin-bonus',
+                    video: 'pin-video'
                 };
                 pinEl.classList.add(colors[pin.type] || 'pin-default');
                 pinEl.style.left = `${pin.x}%`;
@@ -2641,7 +2746,8 @@
                     boolean: 'check-square',
                     match: 'shuffle',
                     order: 'list-ordered',
-                    bonus: 'gift'
+                    bonus: 'gift',
+                    video: 'video'
                 };
                 const iconName = isSolved ? 'check' : (bonusLocked ? 'lock' : (icons[pin.type] || 'map-pin'));
                 pinEl.innerHTML = `<i data-lucide="${iconName}" class="w-5 h-5 text-white"></i>`;
@@ -2687,6 +2793,7 @@
             document.getElementById('match-options').classList.toggle('hidden', type !== 'match');
             document.getElementById('order-options').classList.toggle('hidden', type !== 'order');
             document.getElementById('bonus-options').classList.toggle('hidden', type !== 'bonus');
+            document.getElementById('video-options').classList.toggle('hidden', type !== 'video');
             const isClosedQuestion = ['mcq', 'boolean', 'match', 'order'].includes(type);
             document.getElementById('pin-explanation-container').classList.toggle('hidden', !isClosedQuestion);
         };
@@ -2761,6 +2868,9 @@
                 orderList.appendChild(row);
             });
 
+            document.getElementById('video-url-input').value = normalizeOptionalText(pin.videoUrl);
+            document.getElementById('video-reveal-seconds-input').value = String(Math.max(0, Number(pin.videoRevealSeconds) || 0));
+
             document.getElementById('type-selector').classList.remove('hidden');
             document.getElementById('edit-controls').classList.remove('hidden');
             document.getElementById('student-interaction').classList.add('hidden');
@@ -2775,13 +2885,16 @@
             boolean: 'נכון/לא נכון',
             match: 'התאמה',
             order: 'סידור',
-            bonus: 'בונוס'
+            bonus: 'בונוס',
+            video: 'וידאו'
         };
 
         const openStudentModal = (id) => {
             const pin = currentProject.pins.find((item) => item.id === id);
             document.getElementById('pin-modal-title').innerText = typeLabels[pin.type];
-            document.getElementById('pin-content').value = pin.content;
+            document.getElementById('pin-content').value = pin.type === 'video'
+                ? 'צפו בסרטון. השאלה תופיע בזמן שהוגדר.'
+                : pin.content;
             document.getElementById('pin-content').disabled = true;
             document.getElementById('type-selector').classList.add('hidden');
             document.getElementById('edit-controls').classList.add('hidden');
@@ -2790,6 +2903,7 @@
             document.getElementById('match-options').classList.add('hidden');
             document.getElementById('order-options').classList.add('hidden');
             document.getElementById('bonus-options').classList.add('hidden');
+            document.getElementById('video-options').classList.add('hidden');
             document.getElementById('pin-explanation-container').classList.add('hidden');
             document.getElementById('student-interaction').classList.remove('hidden');
 
@@ -2798,6 +2912,7 @@
         };
 
         const setupStudentUI = (pin) => {
+            clearActiveYoutubePlayer();
             const area = document.getElementById('student-quiz-area');
             const feedback = document.getElementById('student-feedback');
             feedback.classList.add('hidden');
@@ -3122,6 +3237,120 @@
                     markSolved();
                 };
                 area.appendChild(saveBtn);
+            } else if (pin.type === 'video') {
+                const savedEntry = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]);
+                const revealSeconds = Math.max(0, Math.floor(Number(pin.videoRevealSeconds) || 0));
+                const videoId = extractYouTubeVideoId(pin.videoUrl);
+                const playerHostId = `yt-player-${pin.id}-${Date.now()}`;
+
+                const status = document.createElement('div');
+                status.className = 'text-sm text-slate-600';
+                area.appendChild(status);
+
+                const playerWrap = document.createElement('div');
+                playerWrap.className = 'rounded-2xl overflow-hidden border border-slate-200 bg-black';
+                const playerHost = document.createElement('div');
+                playerHost.id = playerHostId;
+                playerHost.className = 'w-full h-[230px]';
+                playerWrap.appendChild(playerHost);
+                area.appendChild(playerWrap);
+
+                const questionWrap = document.createElement('div');
+                questionWrap.className = 'hidden mt-3 space-y-2';
+                questionWrap.innerHTML = `
+                    <label class="block text-xs font-bold text-slate-500 uppercase">שאלת המשך</label>
+                    <p id="video-question-text" class="text-sm text-slate-700 whitespace-pre-wrap"></p>
+                    <textarea id="video-answer-input" class="w-full border-2 border-slate-200 rounded-xl p-3" placeholder="כתבו כאן את התשובה..."></textarea>
+                    <button id="video-answer-save" type="button" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold">שמור תשובה</button>
+                `;
+                area.appendChild(questionWrap);
+
+                const questionTextEl = questionWrap.querySelector('#video-question-text');
+                const questionInput = questionWrap.querySelector('#video-answer-input');
+                const questionSaveBtn = questionWrap.querySelector('#video-answer-save');
+                let questionRevealed = false;
+                questionTextEl.innerText = normalizeOptionalText(pin.content) || 'ענו על השאלה לפי הסרטון.';
+
+                const revealQuestion = () => {
+                    if (questionRevealed) return;
+                    questionRevealed = true;
+                    questionWrap.classList.remove('hidden');
+                    status.innerText = 'השאלה זמינה עכשיו. אפשר לענות.';
+                    if (activeYoutubeTimer) {
+                        clearInterval(activeYoutubeTimer);
+                        activeYoutubeTimer = null;
+                    }
+                };
+
+                questionInput.value = savedEntry.answer || '';
+                if (hasStudentAnswerContent(savedEntry)) {
+                    revealQuestion();
+                }
+
+                questionSaveBtn.onclick = () => {
+                    const answerText = normalizeOptionalText(questionInput.value);
+                    if (!answerText) {
+                        showWrong(feedback, "נא לכתוב תשובה לפני שמירה.");
+                        return;
+                    }
+                    saveStudentAnswer(pin, answerText);
+                    markSolved();
+                };
+
+                if (!videoId) {
+                    status.innerText = 'לא הוגדר קישור YouTube תקין. אפשר לענות מיד על השאלה.';
+                    revealQuestion();
+                    return;
+                }
+
+                status.innerText = revealSeconds > 0
+                    ? `השאלה תופיע בזמן ${formatSecondsLabel(revealSeconds)} של הסרטון.`
+                    : 'השאלה זמינה מיד עם הפעלת הסרטון.';
+
+                loadYouTubeApi()
+                    .then((YT) => {
+                        activeYoutubePlayer = new YT.Player(playerHostId, {
+                            videoId,
+                            playerVars: {
+                                rel: 0,
+                                modestbranding: 1,
+                                playsinline: 1
+                            },
+                            events: {
+                                onReady: () => {
+                                    if (revealSeconds === 0 || hasStudentAnswerContent(savedEntry)) {
+                                        revealQuestion();
+                                    }
+                                },
+                                onStateChange: (event) => {
+                                    if (questionRevealed) return;
+                                    if (event.data === YT.PlayerState.PLAYING) {
+                                        if (activeYoutubeTimer) clearInterval(activeYoutubeTimer);
+                                        activeYoutubeTimer = setInterval(() => {
+                                            if (!activeYoutubePlayer || typeof activeYoutubePlayer.getCurrentTime !== 'function') return;
+                                            const currentSeconds = Math.floor(activeYoutubePlayer.getCurrentTime());
+                                            if (currentSeconds >= revealSeconds) {
+                                                revealQuestion();
+                                            }
+                                        }, 300);
+                                        return;
+                                    }
+                                    if ([YT.PlayerState.PAUSED, YT.PlayerState.BUFFERING].includes(event.data) && activeYoutubeTimer) {
+                                        clearInterval(activeYoutubeTimer);
+                                        activeYoutubeTimer = null;
+                                    }
+                                    if (event.data === YT.PlayerState.ENDED) {
+                                        revealQuestion();
+                                    }
+                                }
+                            }
+                        });
+                    })
+                    .catch((err) => {
+                        console.error('YouTube player init failed:', err);
+                        status.innerText = 'לא הצלחתי לטעון את הסרטון. אפשר לענות על השאלה ללא וידאו.';
+                        revealQuestion();
+                    });
             } else if (pin.type === 'bonus') {
                 if (isBonusLocked(pin)) {
                     showWrong(feedback, "נקודת הבונוס עדיין נעולה.");
@@ -3361,6 +3590,13 @@
             } else {
                 pin.orderItems = normalizeOrderItems(pin.orderItems);
             }
+            if (pin.type === 'video') {
+                pin.videoUrl = normalizeOptionalText(document.getElementById('video-url-input').value);
+                pin.videoRevealSeconds = Math.max(0, Math.floor(Number(document.getElementById('video-reveal-seconds-input').value) || 0));
+            } else {
+                pin.videoUrl = normalizeOptionalText(pin.videoUrl);
+                pin.videoRevealSeconds = Math.max(0, Math.floor(Number(pin.videoRevealSeconds) || 0));
+            }
             renderPins();
             closePinModal();
         };
@@ -3371,7 +3607,10 @@
             closePinModal();
         };
 
-        window.closePinModal = () => pinModal.classList.add('hidden');
+        window.closePinModal = () => {
+            clearActiveYoutubePlayer();
+            pinModal.classList.add('hidden');
+        };
 
         const openProjectSettingsModal = (flow = 'settings') => {
             const isSaveAsFlow = flow === 'saveAs';
