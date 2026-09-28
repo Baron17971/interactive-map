@@ -2472,6 +2472,90 @@
         }
 
         #teacher-help-modal { display:none !important; }
+
+        .teacher-preview-return {
+            align-self:flex-start;
+            margin:0 0 12px;
+            min-height:42px;
+            padding:9px 13px;
+            border:1px solid rgba(122,46,110,.18);
+            border-radius:12px;
+            background:#FFFDF9;
+            color:#7A2E6E;
+            display:inline-flex;
+            align-items:center;
+            gap:7px;
+            font-weight:900;
+            box-shadow:0 8px 18px rgba(95,33,79,.08);
+        }
+        .teacher-preview-return.hidden { display:none!important; }
+
+        .mobile-options-overlay {
+            background:rgba(36,54,74,.34);
+            align-items:flex-end;
+            justify-content:center;
+            padding:12px;
+        }
+        .mobile-options-overlay:not(.hidden) { display:flex; }
+        .mobile-options-sheet {
+            width:min(520px,100%);
+            background:#FFFDF9;
+            border:1px solid #E8E1E7;
+            border-radius:22px;
+            padding:14px;
+            box-shadow:0 24px 70px rgba(36,54,74,.24);
+        }
+        .mobile-options-head {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            padding:4px 4px 10px;
+        }
+        .mobile-options-head span {
+            display:block;
+            color:#C9973E;
+            font-size:.68rem;
+            font-weight:900;
+        }
+        .mobile-options-head strong {
+            display:block;
+            color:#24364A;
+            font-size:1.05rem;
+        }
+        #mobile-options-close-btn {
+            width:38px;height:38px;border-radius:11px;
+            border:1px solid #E8E1E7;background:#fff;color:#7A2E6E;
+            display:grid;place-items:center;
+        }
+        .mobile-option-row {
+            width:100%;
+            display:grid;
+            grid-template-columns:40px 1fr;
+            align-items:center;
+            gap:10px;
+            padding:13px 10px;
+            border:0;
+            border-top:1px solid #EEE8ED;
+            background:transparent;
+            text-align:right;
+            color:#24364A;
+        }
+        .mobile-option-row > i { color:#7A2E6E; }
+        .mobile-option-row span { display:block;min-width:0; }
+        .mobile-option-row strong { display:block;font-size:.88rem; }
+        .mobile-option-row small { display:block;color:#6F7D8C;font-size:.72rem;margin-top:2px;line-height:1.4; }
+
+        @media(max-width:760px){
+            .teacher-preview-return {
+                position:sticky;
+                top:8px;
+                z-index:25;
+                margin-bottom:10px;
+                background:rgba(255,253,249,.96);
+                backdrop-filter:blur(10px);
+            }
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -2738,6 +2822,10 @@
             </div>
 
             <div id="canvas-area" class="hidden flex flex-col items-center">
+                <button type="button" id="teacher-preview-return-btn" class="teacher-preview-return hidden">
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    חזרה לעריכת הפעילות
+                </button>
                 <div class="mb-4 bg-indigo-50 text-indigo-700 px-6 py-2 rounded-full text-sm font-semibold border border-indigo-100" id="instruction-text">
                     לחצו על המפה כדי להוסיף פעילות | גררו נקודה קיימת כדי להזיז אותה
                 </div>
@@ -2786,6 +2874,28 @@
             </div>
         </div>
     </main>
+
+    <div id="mobile-options-modal" class="fixed inset-0 hidden z-[70] mobile-options-overlay">
+        <div class="mobile-options-sheet" role="dialog" aria-modal="true" aria-label="אפשרויות נוספות">
+            <div class="mobile-options-head">
+                <div>
+                    <span>פעולות נוספות</span>
+                    <strong>אפשרויות</strong>
+                </div>
+                <button type="button" id="mobile-options-close-btn" aria-label="סגירה">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <button type="button" id="mobile-option-copy-btn" class="mobile-option-row">
+                <i data-lucide="copy" class="w-5 h-5"></i>
+                <span><strong>שמור כעותק חדש</strong><small>יוצר פעילות נוספת בלי לשנות את המקור</small></span>
+            </button>
+            <button type="button" id="mobile-option-guide-btn" class="mobile-option-row">
+                <i data-lucide="circle-help" class="w-5 h-5"></i>
+                <span><strong>מדריך למורה</strong><small>הסבר על בנייה, שמירה ושיתוף</small></span>
+            </button>
+        </div>
+    </div>
 
     <div id="project-settings-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-4 md:p-7 max-h-[90vh] overflow-y-auto">
@@ -3173,10 +3283,15 @@
             document.getElementById('logo-home').classList.add('logo-fallback');
         });
 
-        const showToast = (msg) => {
+        let toastTimer = null;
+        const showToast = (msg, duration = 3000) => {
             document.getElementById('toast-msg').innerText = msg;
+            if (toastTimer) clearTimeout(toastTimer);
             toast.classList.remove('-translate-y-32', 'opacity-0');
-            setTimeout(() => toast.classList.add('-translate-y-32', 'opacity-0'), 3000);
+            toastTimer = setTimeout(() => {
+                toast.classList.add('-translate-y-32', 'opacity-0');
+                toastTimer = null;
+            }, duration);
         };
 
         const clearSharedStudentBoot = () => {
@@ -4107,6 +4222,7 @@
             document.body.classList.toggle('editor-view-active', editorVisible);
             document.body.classList.toggle('student-view-active', studentMode && editorVisible);
             document.getElementById('student-stats').classList.toggle('hidden', !studentMode);
+            document.getElementById('teacher-preview-return-btn')?.classList.toggle('hidden', !(studentMode && !isReadOnlyStudentLink));
             instructionText.classList.toggle('hidden', studentMode);
             const btnText = document.getElementById('mode-text');
             const btnIcon = document.getElementById('mode-icon');
@@ -4266,6 +4382,9 @@
             isReadOnlyStudentLink = false;
             restoreEditorToolbarUI();
             currentProject = createEmptyProject();
+            currentProject.teacherName = normalizeOptionalText(teacherProfile.teacherName);
+            currentProject.className = normalizeOptionalText(teacherProfile.className);
+            currentProject.schoolName = normalizeOptionalText(teacherProfile.schoolName);
             closeStudentInstructionModal();
             updateSaveActionsUI();
             renderPins();
@@ -4273,7 +4392,7 @@
             mainImage.src = '';
             uploadZone.classList.remove('hidden');
             document.getElementById('canvas-area').classList.add('hidden');
-            setView('editor');
+            openProjectSettingsModal('new');
         };
 
         document.getElementById('dashboard-projects-btn')?.addEventListener('click', () => {
@@ -4372,7 +4491,7 @@
                 currentProject.id = id;
                 updateSaveActionsUI();
                 renderProjectsGrid();
-                showToast(forceNew ? "נשמר כפעילות חדשה בארכיון המקומי!" : "השינויים נשמרו בארכיון המקומי!");
+                showToast("הפעילות נשמרה", 900);
                 return;
             }
 
@@ -4418,8 +4537,8 @@
 
             currentProject.id = id;
             updateSaveActionsUI();
-            await fetchProjects();
-            showToast(forceNew ? "הפעילות נשמרה!" : "השינויים נשמרו");
+            showToast("הפעילות נשמרה", 900);
+            fetchProjects().catch((err) => console.error("Archive refresh after save failed:", err));
         };
 
         const openSaveMapModal = (mode = 'initialSave', suggestedName = '') => {
@@ -4676,35 +4795,45 @@
         mobileSettingsBtn?.addEventListener('click', () => document.getElementById('settings-btn')?.click());
         mobilePreviewBtn?.addEventListener('click', () => document.getElementById('mode-toggle')?.click());
         mobileShareBtn?.addEventListener('click', () => document.getElementById('share-student-btn')?.click());
+        const mobileOptionsModal = document.getElementById('mobile-options-modal');
+        const closeMobileOptions = () => mobileOptionsModal?.classList.add('hidden');
+
         mobileMoreBtn?.addEventListener('click', () => {
-            const menu = document.getElementById('toolbar-more-menu');
-            const button = document.getElementById('toolbar-more-btn');
-            if (!menu || !button) return;
-            menu.classList.remove('hidden');
-            button.setAttribute('aria-expanded','true');
+            mobileOptionsModal?.classList.remove('hidden');
+        });
+        document.getElementById('mobile-options-close-btn')?.addEventListener('click', closeMobileOptions);
+        mobileOptionsModal?.addEventListener('click', (e) => {
+            if (e.target === mobileOptionsModal) closeMobileOptions();
+        });
+        document.getElementById('mobile-option-copy-btn')?.addEventListener('click', () => {
+            closeMobileOptions();
+            saveAsNewBtn?.click();
+        });
+        document.getElementById('mobile-option-guide-btn')?.addEventListener('click', () => {
+            closeMobileOptions();
+            document.getElementById('teacher-help-btn')?.click();
         });
 
 
         window.addEventListener('popstate', (event) => {
             if (isSharedStudentRequest) return;
 
-            const view = event.state?.mapiView || 'landing';
-            const previewState = event.state?.mapiPreview === 'student';
-
-            if (view === 'editor') {
-                currentProject.mode = previewState ? 'student' : 'edit';
+            if (currentProject.mode === 'student' && !isReadOnlyStudentLink) {
+                currentProject.mode = 'edit';
                 currentProject.studentProgress = {};
                 currentProject.studentAnswers = {};
                 syncModeUI();
                 renderPins();
-
-                if (previewState) {
-                    showStudentInstructionModal();
-                } else {
-                    closeStudentInstructionModal();
-                }
+                closeStudentInstructionModal();
+                history.pushState(
+                    { ...(event.state || {}), mapiView: 'editor', mapiPreview: null },
+                    '',
+                    window.location.href
+                );
+                return;
             }
 
+            const view = event.state?.mapiView || 'landing';
             applyHistoryView(view);
         });
 
@@ -5738,16 +5867,23 @@
 
         const openProjectSettingsModal = (flow = 'settings') => {
             const isSaveAsFlow = flow === 'saveAs';
+            const isNewFlow = flow === 'new';
             projectSettingsFlow = flow;
-            document.getElementById('project-name-input').value = isSaveAsFlow ? getSuggestedProjectNameForSaveAs() : (currentProject.name || "פעילות חדשה");
+            document.getElementById('project-name-input').value = isSaveAsFlow
+                ? getSuggestedProjectNameForSaveAs()
+                : (currentProject.name || "פעילות חדשה");
             studentInstructionInput.value = resolveStudentInstruction(currentProject.studentInstruction);
             creatorNameInput.value = normalizeOptionalText(currentProject.teacherName);
             creatorClassInput.value = normalizeOptionalText(currentProject.className);
             creatorSchoolInput.value = normalizeOptionalText(currentProject.schoolName);
             document.getElementById('escape-code').value = currentProject.lockCode || '';
             setActivityModeUI(currentProject.isEscapeRoom);
-            projectSettingsTitleText.innerText = isSaveAsFlow ? 'הגדרות לפני שמירה בשם' : 'הגדרות פעילות';
-            projectSettingsApplyBtn.innerText = isSaveAsFlow ? 'המשך לשמור בשם' : 'אישור';
+            projectSettingsTitleText.innerText = isNewFlow
+                ? 'התחלת פעילות חדשה'
+                : (isSaveAsFlow ? 'הגדרות לפני שמירה בשם' : 'הגדרות פעילות');
+            projectSettingsApplyBtn.innerText = isNewFlow
+                ? 'המשך לבחירת תמונה'
+                : (isSaveAsFlow ? 'המשך לשמור בשם' : 'אישור');
             projectSettingsModal.classList.remove('hidden');
         };
 
@@ -5783,12 +5919,37 @@
             currentProject.lockCode = document.getElementById('escape-code').value;
             closeSettings();
             syncModeUI();
+            if (flow === 'new') {
+                mainImage.src = '';
+                uploadZone.classList.remove('hidden');
+                document.getElementById('canvas-area').classList.add('hidden');
+                setView('editor');
+                return;
+            }
             if (flow === 'saveAs') {
                 openSaveMapModal('saveAs', currentProject.name || getSuggestedProjectNameForSaveAs());
                 return;
             }
-            showToast("ההגדרות עודכנו");
+            showToast("ההגדרות עודכנו", 1200);
         };
+
+        const returnToTeacherEdit = () => {
+            currentProject.mode = 'edit';
+            currentProject.studentProgress = {};
+            currentProject.studentAnswers = {};
+            if (!isSharedStudentRequest && history.state?.mapiPreview === 'student') {
+                history.replaceState(
+                    { ...(history.state || {}), mapiView: 'editor', mapiPreview: null },
+                    '',
+                    window.location.href
+                );
+            }
+            syncModeUI();
+            renderPins();
+            closeStudentInstructionModal();
+        };
+
+        document.getElementById('teacher-preview-return-btn')?.addEventListener('click', returnToTeacherEdit);
 
         modeToggle.onclick = () => {
             if (isReadOnlyStudentLink) {
@@ -5796,37 +5957,24 @@
                 return;
             }
 
-            if (currentProject.mode === 'edit') {
-                currentProject.mode = 'student';
-                currentProject.studentProgress = {};
-                currentProject.studentAnswers = {};
-
-                if (!isSharedStudentRequest) {
-                    history.pushState(
-                        { ...(history.state || {}), mapiView: 'editor', mapiPreview: 'student' },
-                        '',
-                        window.location.href
-                    );
-                }
-
-                syncModeUI();
-                renderPins();
-                showStudentInstructionModal();
+            if (currentProject.mode === 'student') {
+                returnToTeacherEdit();
                 return;
             }
 
-            // Returning from teacher preview should stay inside the same activity.
-            if (!isSharedStudentRequest && history.state?.mapiPreview === 'student') {
-                history.back();
-                return;
-            }
-
-            currentProject.mode = 'edit';
+            currentProject.mode = 'student';
             currentProject.studentProgress = {};
             currentProject.studentAnswers = {};
+            if (!isSharedStudentRequest) {
+                history.replaceState(
+                    { ...(history.state || {}), mapiView: 'editor', mapiPreview: 'student' },
+                    '',
+                    window.location.href
+                );
+            }
             syncModeUI();
             renderPins();
-            closeStudentInstructionModal();
+            showStudentInstructionModal();
         };
 
         document.getElementById('export-btn').onclick = () => {
