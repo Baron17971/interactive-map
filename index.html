@@ -4419,7 +4419,7 @@
             currentProject.id = id;
             updateSaveActionsUI();
             await fetchProjects();
-            showToast(forceNew ? "נשמרה פעילות חדשה בענן!" : "השינויים נשמרו בענן!");
+            showToast(forceNew ? "הפעילות נשמרה!" : "השינויים נשמרו");
         };
 
         const openSaveMapModal = (mode = 'initialSave', suggestedName = '') => {
@@ -4687,7 +4687,24 @@
 
         window.addEventListener('popstate', (event) => {
             if (isSharedStudentRequest) return;
+
             const view = event.state?.mapiView || 'landing';
+            const previewState = event.state?.mapiPreview === 'student';
+
+            if (view === 'editor') {
+                currentProject.mode = previewState ? 'student' : 'edit';
+                currentProject.studentProgress = {};
+                currentProject.studentAnswers = {};
+                syncModeUI();
+                renderPins();
+
+                if (previewState) {
+                    showStudentInstructionModal();
+                } else {
+                    closeStudentInstructionModal();
+                }
+            }
+
             applyHistoryView(view);
         });
 
@@ -5778,16 +5795,38 @@
                 showToast("זהו קישור צפייה בלבד לתלמיד.");
                 return;
             }
-            currentProject.mode = currentProject.mode === 'edit' ? 'student' : 'edit';
+
+            if (currentProject.mode === 'edit') {
+                currentProject.mode = 'student';
+                currentProject.studentProgress = {};
+                currentProject.studentAnswers = {};
+
+                if (!isSharedStudentRequest) {
+                    history.pushState(
+                        { ...(history.state || {}), mapiView: 'editor', mapiPreview: 'student' },
+                        '',
+                        window.location.href
+                    );
+                }
+
+                syncModeUI();
+                renderPins();
+                showStudentInstructionModal();
+                return;
+            }
+
+            // Returning from teacher preview should stay inside the same activity.
+            if (!isSharedStudentRequest && history.state?.mapiPreview === 'student') {
+                history.back();
+                return;
+            }
+
+            currentProject.mode = 'edit';
             currentProject.studentProgress = {};
             currentProject.studentAnswers = {};
             syncModeUI();
             renderPins();
-            if (currentProject.mode === 'student') {
-                showStudentInstructionModal();
-            } else {
-                closeStudentInstructionModal();
-            }
+            closeStudentInstructionModal();
         };
 
         document.getElementById('export-btn').onclick = () => {
