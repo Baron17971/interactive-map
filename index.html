@@ -1296,6 +1296,241 @@
             .teacher-action-icon{width:40px;height:40px}
             .teacher-projects-head{align-items:start;flex-direction:column}
         }
+
+        /* ===== Mobile containment fixes ===== */
+        html, body {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        #landing-view,
+        .landing-shell,
+        .landing-nav,
+        .landing-hero,
+        .landing-copy,
+        .landing-visual,
+        .product-frame,
+        .product-window,
+        main,
+        #dashboard-view,
+        #editor-view,
+        #canvas-area,
+        #map-wrapper {
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        #landing-view,
+        .landing-shell {
+            width: 100%;
+            overflow-x: clip;
+        }
+
+        .landing-nav {
+            width: 100%;
+        }
+
+        .landing-brand {
+            min-width: 0;
+            flex: 1 1 auto;
+            overflow: hidden;
+        }
+
+        .landing-brand img {
+            max-width: 100%;
+            flex: 0 1 auto;
+        }
+
+        .landing-nav-actions {
+            min-width: 0;
+            flex: 0 0 auto;
+        }
+
+        .landing-visual {
+            width: 100%;
+            overflow: visible;
+        }
+
+        .product-frame {
+            margin-inline: auto;
+        }
+
+        @media (max-width: 620px) {
+            .landing-nav {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 9px;
+            }
+
+            .landing-brand {
+                width: 100%;
+            }
+
+            .landing-brand img {
+                width: auto;
+                max-width: 138px;
+                height: 34px;
+            }
+
+            .landing-nav-actions {
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                gap: 6px;
+                max-width: 100%;
+            }
+
+            .landing-login-btn {
+                white-space: nowrap;
+                font-size: .78rem;
+                padding: 9px 10px;
+                border-radius: 11px;
+            }
+
+            .landing-hero {
+                width: 100%;
+                padding-inline: 4px;
+                overflow: hidden;
+            }
+
+            .landing-copy {
+                width: 100%;
+                padding-inline: 8px;
+            }
+
+            .landing-copy h1,
+            .landing-subtitle {
+                max-width: 100%;
+                overflow-wrap: anywhere;
+            }
+
+            .landing-visual {
+                width: 100%;
+                min-height: 340px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding-inline: 0;
+                overflow: hidden;
+            }
+
+            .landing-lab-glow {
+                inset: 8% 2% 8% 2%;
+            }
+
+            .product-frame {
+                width: min(94vw, 440px);
+                max-width: 94vw;
+                margin-inline: auto;
+                transform: none;
+            }
+
+            .student-phone {
+                width: 122px;
+                height: 250px;
+                left: 50%;
+                bottom: -6px;
+                transform: translateX(-128px) rotate(1.5deg);
+            }
+
+            .landing-features {
+                width: 100%;
+                padding-inline: 0;
+                overflow: hidden;
+            }
+
+            .landing-feature {
+                min-width: 0;
+            }
+
+            .landing-feature > div {
+                min-width: 0;
+            }
+
+            .landing-feature strong,
+            .landing-feature span {
+                overflow-wrap: anywhere;
+            }
+
+            #app-header {
+                overflow: visible;
+            }
+
+            #app-header > div {
+                width: 100%;
+                max-width: 100%;
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+            }
+
+            #logo-home {
+                min-width: 0;
+                flex: 1 1 auto;
+            }
+
+            #brand-logo {
+                max-width: 145px !important;
+                height: 38px !important;
+            }
+
+            #brand-tagline {
+                display: none !important;
+            }
+
+            #editor-tools {
+                order: 3;
+                width: 100%;
+                max-width: 100%;
+                flex: 1 1 100%;
+                overflow-x: auto;
+                overflow-y: hidden;
+                justify-content: flex-start !important;
+                padding-bottom: 2px;
+                scrollbar-width: thin;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            #editor-tools .toolbar-group {
+                flex: 0 0 auto;
+            }
+
+            #user-info {
+                flex: 0 0 auto;
+                max-width: 42%;
+            }
+
+            .user-credit-pill {
+                max-width: 100%;
+            }
+
+            .user-credit-pill #display-uid {
+                max-width: 120px !important;
+            }
+
+            body.editor-view-active main,
+            body.student-view-active main {
+                width: 100%;
+                max-width: 100%;
+                padding-left: 8px !important;
+                padding-right: 8px !important;
+                overflow-x: hidden;
+            }
+
+            #map-wrapper {
+                width: 100%;
+                max-width: 100%;
+                margin-inline: auto;
+            }
+
+            #main-image {
+                display: block;
+                max-width: 100% !important;
+                height: auto !important;
+            }
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
