@@ -2111,6 +2111,101 @@
                 font-size:.72rem;
             }
         }
+
+        /* ===== MAPI chosen palette cleanup ===== */
+        :root {
+            --mapi-deep-teal:#0F5F73;
+            --mapi-plum:#7A2E6E;
+            --mapi-gold:#C9973E;
+            --mapi-cream:#FAF7F1;
+            --mapi-navy:#24364A;
+            --mapi-slate:#6F7D8C;
+            --mapi-line:#E5E8EC;
+        }
+
+        .mobile-teacher-actions {
+            background:rgba(255,255,255,.97)!important;
+            border-color:var(--mapi-line)!important;
+            box-shadow:0 16px 36px rgba(36,54,74,.10)!important;
+        }
+
+        .mobile-actions-kicker {
+            color:var(--mapi-plum)!important;
+        }
+
+        .mobile-actions-head strong,
+        .mobile-action-card,
+        .mobile-save-primary strong {
+            color:var(--mapi-navy);
+        }
+
+        .mobile-save-state {
+            background:rgba(201,151,62,.12)!important;
+            color:#8A6424!important;
+            border-color:rgba(201,151,62,.24)!important;
+        }
+
+        .mobile-save-primary {
+            background:linear-gradient(135deg,var(--mapi-plum),#65255E)!important;
+            box-shadow:0 10px 24px rgba(122,46,110,.22)!important;
+        }
+
+        .mobile-save-primary strong,
+        .mobile-save-primary small {
+            color:#fff!important;
+        }
+
+        .mobile-action-card {
+            background:#fff!important;
+            border-color:var(--mapi-line)!important;
+            color:var(--mapi-navy)!important;
+        }
+
+        .mobile-action-card i {
+            color:var(--mapi-deep-teal)!important;
+        }
+
+        .mobile-action-card:active {
+            background:var(--mapi-cream)!important;
+        }
+
+        #mobile-share-btn i {
+            color:var(--mapi-plum)!important;
+        }
+
+        #mobile-more-btn i {
+            color:var(--mapi-gold)!important;
+        }
+
+        #app-header {
+            background:linear-gradient(135deg,#183F4C,#0F5F73)!important;
+        }
+
+        #teacher-credit-pill {
+            background:rgba(255,255,255,.10)!important;
+            border-color:rgba(255,255,255,.18)!important;
+            color:#F7F3EA!important;
+        }
+
+        #exit-editor {
+            background:rgba(255,255,255,.08)!important;
+            border-color:rgba(255,255,255,.18)!important;
+        }
+
+        .mapi-toolbar-btn {
+            background:rgba(255,255,255,.09)!important;
+            border-color:rgba(255,255,255,.18)!important;
+            color:#fff!important;
+        }
+
+        .mapi-save-main {
+            background:linear-gradient(135deg,var(--mapi-plum),#65255E)!important;
+        }
+
+        .mapi-share-btn {
+            background:rgba(201,151,62,.14)!important;
+            border-color:rgba(201,151,62,.32)!important;
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -2178,9 +2273,9 @@
                 </button>
 
                 <div id="toolbar-more-wrap" class="mapi-more-wrap">
-                    <button id="toolbar-more-btn" class="mapi-toolbar-btn mapi-more-btn" type="button" aria-haspopup="menu" aria-expanded="false" title="פעולות נוספות">
+                    <button id="toolbar-more-btn" class="mapi-toolbar-btn mapi-more-btn" type="button" aria-haspopup="menu" aria-expanded="false" title="אפשרויות נוספות">
                         <i data-lucide="ellipsis" class="w-5 h-5"></i>
-                        <span>עוד</span>
+                        <span>אפשרויות</span>
                     </button>
                     <div id="toolbar-more-menu" class="mapi-more-menu hidden" role="menu">
                         <button id="save-as-new-btn" type="button" role="menuitem">
@@ -2348,7 +2443,7 @@
                         </button>
                         <button type="button" id="mobile-more-btn" class="mobile-action-card">
                             <i data-lucide="ellipsis" class="w-5 h-5"></i>
-                            <span>עוד</span>
+                            <span>אפשרויות</span>
                         </button>
                     </div>
                 </section>
