@@ -3885,6 +3885,80 @@
         .project-card:hover .project-edit-link {
             color:#7F836F!important;
         }
+
+        /* ===== Visual distinction: regular vs escape room ===== */
+
+        /* Choice screen */
+        #choose-regular-logic.activity-logic-card {
+            background:linear-gradient(160deg,#FFFDF9 0%,#F7EFF5 100%)!important;
+            border-color:#E6D6E2!important;
+        }
+        #choose-regular-logic .activity-logic-icon {
+            background:#EFE4EC!important;
+            color:#7A2E6E!important;
+        }
+        #choose-regular-logic .activity-logic-icon svg,
+        #choose-regular-logic > svg {
+            color:#7A2E6E!important;
+            stroke:#7A2E6E!important;
+        }
+
+        #choose-escape-logic.activity-logic-card {
+            background:linear-gradient(160deg,#F7F8F3 0%,#EEF1E8 100%)!important;
+            border-color:rgba(178,181,157,.55)!important;
+        }
+        #choose-escape-logic .activity-logic-icon {
+            background:#E7EADD!important;
+            color:#5E6254!important;
+        }
+        #choose-escape-logic .activity-logic-icon svg,
+        #choose-escape-logic > svg {
+            color:#7F836F!important;
+            stroke:#7F836F!important;
+        }
+        #choose-escape-logic .activity-logic-copy em {
+            color:#6E735F!important;
+        }
+
+        /* Archive cards */
+        .project-card.project-card-regular {
+            background:linear-gradient(155deg,#FFFDF9 0%,#F7EFF5 100%)!important;
+            border-color:#E6D6E2!important;
+            box-shadow:0 10px 26px rgba(122,46,110,.07)!important;
+        }
+        .project-card.project-card-regular:hover {
+            box-shadow:0 16px 34px rgba(122,46,110,.11)!important;
+        }
+
+        .project-card.project-card-escape {
+            background:linear-gradient(155deg,#F7F8F3 0%,#EEF1E8 100%)!important;
+            border-color:rgba(178,181,157,.55)!important;
+            box-shadow:0 10px 26px rgba(106,117,103,.10)!important;
+        }
+        .project-card.project-card-escape:hover {
+            box-shadow:0 16px 34px rgba(106,117,103,.14)!important;
+        }
+
+        .project-kind-badge.regular {
+            background:#EFE4EC!important;
+            color:#7A2E6E!important;
+            border-color:#E1CADB!important;
+        }
+        .project-kind-badge.escape {
+            background:#E7EADD!important;
+            color:#5E6254!important;
+            border-color:rgba(178,181,157,.60)!important;
+        }
+
+        .project-card-regular .project-edit-link,
+        .project-card-regular:hover .project-edit-link {
+            color:#7A2E6E!important;
+        }
+
+        .project-card-escape .project-edit-link,
+        .project-card-escape:hover .project-edit-link {
+            color:#7F836F!important;
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -5987,12 +6061,12 @@
 
             projects.forEach((p, index) => {
                 const card = document.createElement('div');
-                card.className = "project-card group cursor-pointer flex flex-col justify-between h-48 p-5";
+                card.className = `project-card ${p.isEscapeRoom ? 'project-card-escape' : 'project-card-regular'} group cursor-pointer flex flex-col justify-between h-48 p-5`;
                 card.style.animationDelay = `${index * 60}ms`;
                 card.innerHTML = `
                     <div class="flex flex-col gap-2">
                         <div class="flex justify-between items-start">
-                            <span class="project-kind-badge">${p.isEscapeRoom ? 'חדר בריחה' : 'פעילות רגילה'}</span>
+                            <span class="project-kind-badge ${p.isEscapeRoom ? 'escape' : 'regular'}">${p.isEscapeRoom ? 'חדר בריחה' : 'פעילות רגילה'}</span>
                             <button class="delete-proj project-delete-btn p-1" data-id="${p.id}">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
