@@ -2024,6 +2024,93 @@
                 font-size:.74rem;
             }
         }
+
+        .teacher-principles {
+            display:grid;
+            grid-template-columns:repeat(3,minmax(0,1fr));
+            gap:10px;
+            margin-top:20px;
+        }
+
+        .teacher-principle {
+            min-width:0;
+            display:flex;
+            align-items:flex-start;
+            gap:10px;
+            padding:13px;
+            border-radius:16px;
+            border:1px solid rgba(20,110,103,.11);
+            background:linear-gradient(155deg,rgba(248,252,251,.96),rgba(255,255,255,.94));
+        }
+
+        .teacher-principle-num {
+            width:32px;
+            height:32px;
+            flex:0 0 32px;
+            border-radius:50%;
+            display:grid;
+            place-items:center;
+            background:linear-gradient(135deg,#14998f,#0f766e);
+            color:#fff;
+            font-weight:900;
+            font-size:.8rem;
+            box-shadow:0 6px 14px rgba(15,118,110,.18);
+        }
+
+        .teacher-principle-copy {
+            min-width:0;
+            display:block;
+        }
+
+        .teacher-principle-copy strong {
+            display:block;
+            color:#173d3a;
+            font-size:.82rem;
+            line-height:1.35;
+            margin-bottom:4px;
+        }
+
+        .teacher-principle-copy small {
+            display:block;
+            color:#6b7e7b;
+            font-size:.7rem;
+            line-height:1.45;
+        }
+
+        @media(max-width:900px){
+            .teacher-principles {
+                grid-template-columns:1fr;
+                gap:8px;
+            }
+        }
+
+        @media(max-width:620px){
+            .teacher-welcome-card {
+                padding:20px 18px!important;
+            }
+
+            .teacher-welcome-card p {
+                font-size:.96rem;
+                line-height:1.65;
+            }
+
+            .teacher-principles {
+                margin-top:16px;
+            }
+
+            .teacher-principle {
+                padding:11px 12px;
+                border-radius:14px;
+            }
+
+            .teacher-principle-copy strong {
+                font-size:.84rem;
+            }
+
+            .teacher-principle-copy small {
+                font-size:.72rem;
+            }
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -2145,11 +2232,29 @@
                 <div class="teacher-welcome-card">
                     <div class="eyebrow">סביבת המורה</div>
                     <h2 id="dashboard-greeting">שלום, מורה! 👋</h2>
-                    <p>מכאן יוצרים פעילות חדשה, חוזרים לפעילויות ששמרת ומקבלים עזרה בכל שלב. הבנייה עצמה נשארת פשוטה: מתחילים מתמונה ומוסיפים עליה נקודות למידה.</p>
-                    <div class="teacher-process" aria-label="שלבי עבודה">
-                        <span><b>1</b> מעלים תמונה</span>
-                        <span><b>2</b> מוסיפים נקודות</span>
-                        <span><b>3</b> שומרים ומשתפים</span>
+                    <p>מכאן יוצרים פעילות חדשה, חוזרים לפעילויות ששמרת ומקבלים עזרה בכל שלב. ב־MAPI התמונה היא נקודת הפתיחה ללמידה פעילה: התלמיד מתבונן, חוקר, עונה ומתקדם דרך נקודות שבנית במיוחד עבורו.</p>
+                    <div class="teacher-principles" aria-label="עקרונות העבודה ב-MAPI">
+                        <div class="teacher-principle">
+                            <span class="teacher-principle-num">1</span>
+                            <span class="teacher-principle-copy">
+                                <strong>מתחילים מתמונה שמזמינה חקר</strong>
+                                <small>מפה, צילום, תרשים, יצירת אמנות או מודל — כל תמונה יכולה להפוך למרחב למידה.</small>
+                            </span>
+                        </div>
+                        <div class="teacher-principle">
+                            <span class="teacher-principle-num">2</span>
+                            <span class="teacher-principle-copy">
+                                <strong>בונים מסלול של נקודות למידה</strong>
+                                <small>מידע, שאלות, וידאו, התאמה וסידור מתחברים לתמונה ויוצרים התקדמות פעילה.</small>
+                            </span>
+                        </div>
+                        <div class="teacher-principle">
+                            <span class="teacher-principle-num">3</span>
+                            <span class="teacher-principle-copy">
+                                <strong>משתפים ונותנים לתלמיד לחקור</strong>
+                                <small>קישור אחד פותח חוויה מותאמת למובייל, שבה התלמיד מתקדם בקצב שלו.</small>
+                            </span>
+                        </div>
                     </div>
                 </div>
 
@@ -2650,10 +2755,45 @@
         const showLanding = () => {
             if (isSharedStudentRequest) return;
             document.body.classList.add('landing-active');
+            setHistoryView('landing', { replace: !history.state?.mapiView });
         };
 
         const hideLanding = () => {
             document.body.classList.remove('landing-active');
+        };
+
+        let mapiHandlingHistory = false;
+
+        const setHistoryView = (view, { replace = false } = {}) => {
+            if (isSharedStudentRequest || mapiHandlingHistory) return;
+            const currentView = history.state?.mapiView;
+            if (currentView === view) return;
+            const state = { ...(history.state || {}), mapiView: view };
+            if (replace) {
+                history.replaceState(state, '', window.location.href);
+            } else {
+                history.pushState(state, '', window.location.href);
+            }
+        };
+
+        const applyHistoryView = (view) => {
+            mapiHandlingHistory = true;
+            try {
+                if (view === 'landing') {
+                    document.body.classList.add('landing-active');
+                    document.getElementById('dashboard-view')?.classList.remove('hidden');
+                    document.getElementById('editor-view')?.classList.add('hidden');
+                    document.getElementById('editor-tools')?.classList.add('hidden');
+                    document.getElementById('exit-editor')?.classList.add('hidden');
+                    document.body.classList.remove('editor-view-active','student-view-active');
+                    return;
+                }
+
+                hideLanding();
+                setView(view === 'editor' ? 'editor' : 'dashboard');
+            } finally {
+                mapiHandlingHistory = false;
+            }
         };
 
         const openTeacherEntry = () => {
@@ -2772,6 +2912,9 @@
             document.body.classList.toggle('student-view-active', studentInEditor);
             updateCreatorCredit();
             updateStudentExportButtonVisibility();
+            if (!mapiHandlingHistory && (view === 'dashboard' || view === 'editor')) {
+                setHistoryView(view);
+            }
         };
 
         const normalizeTeacherId = (value) => value.trim().toLowerCase();
@@ -3993,13 +4136,21 @@
             closeTeacherHelpModal();
             closeStudentInstructionModal();
             closeStudentExportMetaModal(null);
-            setView('dashboard');
+            if (!isSharedStudentRequest && history.state?.mapiView === 'editor') {
+                history.back();
+            } else {
+                setView('dashboard');
+            }
         };
         document.getElementById('logo-home').onclick = () => {
             closeTeacherHelpModal();
             closeStudentInstructionModal();
             closeStudentExportMetaModal(null);
-            setView('dashboard');
+            if (!isSharedStudentRequest && history.state?.mapiView === 'editor') {
+                history.back();
+            } else {
+                setView('dashboard');
+            }
         };
         document.getElementById('teacher-credit-pill').onclick = () => {
             openTeacherModal(true);
@@ -4081,6 +4232,13 @@
             if (!menu || !button) return;
             menu.classList.remove('hidden');
             button.setAttribute('aria-expanded','true');
+        });
+
+
+        window.addEventListener('popstate', (event) => {
+            if (isSharedStudentRequest) return;
+            const view = event.state?.mapiView || 'landing';
+            applyHistoryView(view);
         });
 
         const startDrag = (e, pin) => {
