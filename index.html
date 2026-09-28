@@ -3522,6 +3522,48 @@
                 margin-inline:4px;
             }
         }
+
+        /* ===== Contrast fix for dark plum action cards ===== */
+        #new-project-btn.teacher-action-btn.primary {
+            background:linear-gradient(135deg,#7A2E6E 0%,#5F214F 100%)!important;
+            border-color:rgba(95,33,79,.38)!important;
+            color:#FFF8F1!important;
+            box-shadow:0 10px 24px rgba(95,33,79,.16)!important;
+        }
+        #new-project-btn.teacher-action-btn.primary .teacher-action-copy strong {
+            color:#FFF8F1!important;
+        }
+        #new-project-btn.teacher-action-btn.primary .teacher-action-copy small {
+            color:rgba(255,248,241,.82)!important;
+        }
+        #new-project-btn.teacher-action-btn.primary .teacher-action-icon {
+            background:rgba(255,255,255,.12)!important;
+            color:#FFF8F1!important;
+        }
+        #new-project-btn.teacher-action-btn.primary .teacher-action-arrow,
+        #new-project-btn.teacher-action-btn.primary svg,
+        #new-project-btn.teacher-action-btn.primary i {
+            color:#FFF8F1!important;
+            stroke:#FFF8F1!important;
+        }
+        #new-project-btn.teacher-action-btn.primary:hover {
+            border-color:rgba(255,255,255,.16)!important;
+            box-shadow:0 13px 28px rgba(95,33,79,.22)!important;
+        }
+
+        /* soften the remaining green dashboard accents */
+        .teacher-principle-num {
+            background:#7A2E6E!important;
+            color:#FFF8F1!important;
+        }
+        .teacher-action-icon {
+            background:#F3E9F0!important;
+            color:#7A2E6E!important;
+        }
+        .teacher-action-icon svg {
+            color:#7A2E6E!important;
+            stroke:#7A2E6E!important;
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
