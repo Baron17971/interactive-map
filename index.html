@@ -2322,6 +2322,156 @@
         body.editor-view-active main {
             background:linear-gradient(180deg,var(--mapi-cream) 0%,#F8F4EE 100%);
         }
+
+        /* ===== Dedicated teacher guide page ===== */
+        .teacher-guide-page {
+            width:min(1040px,100%);
+            margin:0 auto;
+            padding:4px 0 24px;
+        }
+
+        .teacher-guide-hero {
+            background:linear-gradient(150deg,#FFFDF9 0%,#FAF7F1 100%);
+            border:1px solid #E8E1E7;
+            border-radius:26px;
+            padding:28px;
+            box-shadow:0 14px 34px rgba(95,33,79,.08);
+            margin-bottom:18px;
+        }
+
+        .teacher-guide-back {
+            display:inline-flex;
+            align-items:center;
+            gap:7px;
+            border:1px solid #E8E1E7;
+            background:#fff;
+            color:#5F214F;
+            border-radius:12px;
+            padding:8px 12px;
+            font-weight:800;
+            font-size:.8rem;
+            margin-bottom:18px;
+        }
+
+        .teacher-guide-eyebrow {
+            color:#C9973E;
+            font-size:.76rem;
+            font-weight:900;
+            margin-bottom:6px;
+        }
+
+        .teacher-guide-hero h2 {
+            margin:0 0 8px;
+            color:#24364A;
+            font-size:clamp(2rem,4vw,3rem);
+            font-weight:900;
+        }
+
+        .teacher-guide-hero p {
+            margin:0;
+            color:#6F7D8C;
+            line-height:1.7;
+            max-width:760px;
+        }
+
+        .teacher-guide-grid {
+            display:grid;
+            grid-template-columns:repeat(2,minmax(0,1fr));
+            gap:14px;
+        }
+
+        .teacher-guide-card {
+            display:grid;
+            grid-template-columns:46px 1fr;
+            gap:13px;
+            align-items:start;
+            background:#FFFDF9;
+            border:1px solid #E8E1E7;
+            border-radius:20px;
+            padding:18px;
+            box-shadow:0 8px 20px rgba(95,33,79,.05);
+        }
+
+        .teacher-guide-icon {
+            width:44px;
+            height:44px;
+            border-radius:13px;
+            display:grid;
+            place-items:center;
+            background:#EFE4EC;
+            color:#7A2E6E;
+        }
+
+        .teacher-guide-card h3 {
+            margin:0 0 6px;
+            color:#24364A;
+            font-size:1rem;
+            font-weight:900;
+        }
+
+        .teacher-guide-card p {
+            margin:0;
+            color:#6F7D8C;
+            font-size:.86rem;
+            line-height:1.6;
+        }
+
+        .teacher-guide-tip {
+            display:grid;
+            grid-template-columns:42px 1fr;
+            gap:12px;
+            margin-top:16px;
+            padding:18px;
+            border-radius:18px;
+            background:#F4EEE5;
+            border:1px solid #E8E1E7;
+            color:#24364A;
+        }
+
+        .teacher-guide-tip > i {
+            color:#667761;
+            margin-top:2px;
+        }
+
+        .teacher-guide-tip strong {
+            display:block;
+            color:#7A2E6E;
+            margin-bottom:4px;
+        }
+
+        .teacher-guide-tip p {
+            margin:0;
+            color:#6F7D8C;
+            line-height:1.6;
+            font-size:.86rem;
+        }
+
+        @media(max-width:700px){
+            .teacher-guide-page {
+                padding-top:0;
+            }
+
+            .teacher-guide-hero {
+                padding:20px 18px;
+                border-radius:22px;
+            }
+
+            .teacher-guide-grid {
+                grid-template-columns:1fr;
+                gap:10px;
+            }
+
+            .teacher-guide-card {
+                padding:15px;
+                border-radius:17px;
+            }
+
+            .teacher-guide-hero h2 {
+                font-size:2rem;
+            }
+        }
+
+        #teacher-help-modal { display:none !important; }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -2502,6 +2652,76 @@
                 </div>
             </div>
         </div>
+
+        <section id="teacher-guide-view" class="hidden teacher-guide-page" aria-label="מדריך למורה">
+            <div class="teacher-guide-hero">
+                <button type="button" id="teacher-guide-back-btn" class="teacher-guide-back">
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    חזרה לסביבת המורה
+                </button>
+                <div class="teacher-guide-eyebrow">MAPI למורים</div>
+                <h2>מדריך למורה</h2>
+                <p>מדריך קצר ומעשי לבנייה, שמירה ושיתוף של פעילות. אפשר לחזור אליו בכל שלב בלי לצאת מהאפליקציה.</p>
+            </div>
+
+            <div class="teacher-guide-grid">
+                <article class="teacher-guide-card">
+                    <span class="teacher-guide-icon"><i data-lucide="image-plus" class="w-5 h-5"></i></span>
+                    <div>
+                        <h3>1. מתחילים מתמונה</h3>
+                        <p>בחרו צילום, תרשים, מפה, יצירת אמנות או מודל. התמונה היא סביבת הלמידה שעליה נבנית כל הפעילות.</p>
+                    </div>
+                </article>
+
+                <article class="teacher-guide-card">
+                    <span class="teacher-guide-icon"><i data-lucide="map-pin-plus" class="w-5 h-5"></i></span>
+                    <div>
+                        <h3>2. מוסיפים נקודות למידה</h3>
+                        <p>לחיצה על התמונה יוצרת נקודה חדשה. בכל נקודה אפשר לשלב מידע, שאלה פתוחה, אמריקאית, נכון/לא נכון, התאמה, סידור, וידאו או בונוס.</p>
+                    </div>
+                </article>
+
+                <article class="teacher-guide-card">
+                    <span class="teacher-guide-icon"><i data-lucide="settings" class="w-5 h-5"></i></span>
+                    <div>
+                        <h3>3. מגדירים את הפעילות</h3>
+                        <p>ב"הגדרות" אפשר לעדכן שם פעילות, הנחיית פתיחה לתלמידים, שם המורה, כיתה ובית ספר, וגם לבחור מצב רגיל או חדר בריחה.</p>
+                    </div>
+                </article>
+
+                <article class="teacher-guide-card">
+                    <span class="teacher-guide-icon"><i data-lucide="save" class="w-5 h-5"></i></span>
+                    <div>
+                        <h3>4. שומרים בפשטות</h3>
+                        <p>בפעם הראשונה לוחצים "שמירה" ונותנים שם לפעילות. לאחר מכן כל לחיצה על "שמירה" מעדכנת את אותה פעילות מיד.</p>
+                    </div>
+                </article>
+
+                <article class="teacher-guide-card">
+                    <span class="teacher-guide-icon"><i data-lucide="eye" class="w-5 h-5"></i></span>
+                    <div>
+                        <h3>5. בודקים כתלמיד</h3>
+                        <p>פתחו "תצוגת תלמיד" כדי לראות בדיוק מה התלמידים יראו, לבדוק נקודות, שאלות והתקדמות לפני השיתוף.</p>
+                    </div>
+                </article>
+
+                <article class="teacher-guide-card">
+                    <span class="teacher-guide-icon"><i data-lucide="share-2" class="w-5 h-5"></i></span>
+                    <div>
+                        <h3>6. משתפים</h3>
+                        <p>לאחר שמירת הפעילות לחצו "שיתוף". הקישור שנוצר נפתח במצב תלמיד בלבד ואפשר לשלוח אותו ישירות או להפוך אותו ל־QR.</p>
+                    </div>
+                </article>
+            </div>
+
+            <div class="teacher-guide-tip">
+                <i data-lucide="sparkles" class="w-5 h-5"></i>
+                <div>
+                    <strong>טיפ פדגוגי</strong>
+                    <p>עדיף לבנות מסלול קצר ומדויק של נקודות משמעותיות מאשר להעמיס נקודות רבות. כל נקודה צריכה לגרום לתלמיד להתבונן, לחשוב או לבצע פעולה.</p>
+                </div>
+            </div>
+        </section>
 
         <div id="editor-view" class="hidden space-y-6">
             <div id="upload-zone" class="w-full max-w-2xl mx-auto bg-white border-4 border-dashed border-slate-200 rounded-3xl p-16 text-center hover:border-indigo-400 cursor-pointer transition-all">
@@ -2993,6 +3213,7 @@
                 if (view === 'landing') {
                     document.body.classList.add('landing-active');
                     document.getElementById('dashboard-view')?.classList.remove('hidden');
+                    document.getElementById('teacher-guide-view')?.classList.add('hidden');
                     document.getElementById('editor-view')?.classList.add('hidden');
                     document.getElementById('editor-tools')?.classList.add('hidden');
                     document.getElementById('exit-editor')?.classList.add('hidden');
@@ -3001,7 +3222,13 @@
                 }
 
                 hideLanding();
-                setView(view === 'editor' ? 'editor' : 'dashboard');
+                if (view === 'editor') {
+                    setView('editor');
+                } else if (view === 'guide') {
+                    setView('guide');
+                } else {
+                    setView('dashboard');
+                }
             } finally {
                 mapiHandlingHistory = false;
             }
@@ -3115,6 +3342,7 @@
 
         const setView = (view) => {
             document.getElementById('dashboard-view').classList.toggle('hidden', view !== 'dashboard');
+            document.getElementById('teacher-guide-view')?.classList.toggle('hidden', view !== 'guide');
             document.getElementById('editor-view').classList.toggle('hidden', view !== 'editor');
             document.getElementById('editor-tools').classList.toggle('hidden', view !== 'editor');
             document.getElementById('exit-editor').classList.toggle('hidden', view !== 'editor');
@@ -3123,7 +3351,7 @@
             document.body.classList.toggle('student-view-active', studentInEditor);
             updateCreatorCredit();
             updateStudentExportButtonVisibility();
-            if (!mapiHandlingHistory && (view === 'dashboard' || view === 'editor')) {
+            if (!mapiHandlingHistory && (view === 'dashboard' || view === 'editor' || view === 'guide')) {
                 setHistoryView(view);
             }
         };
@@ -4052,7 +4280,8 @@
             document.getElementById('projects-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
         document.getElementById('dashboard-help-btn')?.addEventListener('click', () => {
-            document.getElementById('teacher-help-btn')?.click();
+            setView('guide');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
 
         const openProject = (project, options = {}) => {
@@ -4326,14 +4555,24 @@
         });
 
         document.getElementById('teacher-help-btn').onclick = () => {
-            openTeacherHelpModal();
+            document.getElementById('toolbar-more-menu')?.classList.add('hidden');
+            document.getElementById('toolbar-more-btn')?.setAttribute('aria-expanded','false');
+            setView('guide');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         };
-        document.getElementById('teacher-help-close-btn').onclick = closeTeacherHelpModal;
-        document.getElementById('teacher-help-ok-btn').onclick = closeTeacherHelpModal;
-        teacherHelpModal.addEventListener('click', (e) => {
-            if (e.target === teacherHelpModal) {
-                closeTeacherHelpModal();
+
+        document.getElementById('teacher-guide-back-btn')?.addEventListener('click', () => {
+            if (!isSharedStudentRequest && history.state?.mapiView === 'guide') {
+                history.back();
+            } else {
+                setView('dashboard');
             }
+        });
+
+        document.getElementById('teacher-help-close-btn')?.addEventListener('click', closeTeacherHelpModal);
+        document.getElementById('teacher-help-ok-btn')?.addEventListener('click', closeTeacherHelpModal);
+        teacherHelpModal?.addEventListener('click', (e) => {
+            if (e.target === teacherHelpModal) closeTeacherHelpModal();
         });
 
         document.getElementById('student-instruction-close-btn').onclick = closeStudentInstructionModal;
