@@ -1801,6 +1801,229 @@
                 grid-column:auto;
             }
         }
+
+        /* ===== Mobile teacher action center ===== */
+        .mobile-teacher-actions {
+            display:none;
+        }
+
+        @media(max-width:760px){
+            body.editor-view-active #app-header {
+                padding:8px 10px!important;
+            }
+
+            body.editor-view-active #app-header > div {
+                display:flex!important;
+                flex-wrap:nowrap!important;
+                justify-content:space-between!important;
+                align-items:center!important;
+                gap:8px!important;
+            }
+
+            body.editor-view-active #logo-home {
+                flex:1 1 auto;
+                min-width:0;
+            }
+
+            body.editor-view-active #brand-logo {
+                height:34px!important;
+                max-width:122px!important;
+            }
+
+            body.editor-view-active #user-info {
+                display:flex!important;
+                flex:0 0 auto;
+                max-width:58%!important;
+                gap:5px!important;
+            }
+
+            body.editor-view-active #teacher-credit-pill {
+                padding:7px 9px!important;
+                border-radius:12px!important;
+            }
+
+            body.editor-view-active #display-uid {
+                max-width:145px!important;
+                font-size:.68rem!important;
+            }
+
+            body.editor-view-active #exit-editor {
+                width:38px!important;
+                height:38px!important;
+                border-radius:11px!important;
+            }
+
+            body.editor-view-active #editor-tools.mapi-simple-toolbar {
+                display:none!important;
+            }
+
+            body.editor-view-active main {
+                padding:10px 10px 18px!important;
+            }
+
+            body.editor-view-active #editor-view {
+                gap:8px!important;
+            }
+
+            body.editor-view-active #canvas-area {
+                width:100%;
+                align-items:stretch!important;
+            }
+
+            body.editor-view-active #map-wrapper {
+                width:100%!important;
+                max-width:100%!important;
+                margin:0 auto!important;
+                border-width:5px!important;
+                border-radius:20px!important;
+            }
+
+            body.editor-view-active #main-image {
+                width:100%!important;
+                height:auto!important;
+                object-fit:contain!important;
+            }
+
+            .mobile-teacher-actions {
+                display:block;
+                width:100%;
+                margin-top:14px;
+                padding:14px;
+                border-radius:22px;
+                background:rgba(255,255,255,.96);
+                border:1px solid rgba(20,110,103,.14);
+                box-shadow:0 14px 34px rgba(18,58,55,.10);
+            }
+
+            body.student-view-active .mobile-teacher-actions {
+                display:none!important;
+            }
+
+            .mobile-actions-head {
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap:12px;
+                margin-bottom:12px;
+            }
+
+            .mobile-actions-head > div {
+                min-width:0;
+            }
+
+            .mobile-actions-kicker {
+                display:block;
+                color:#8a1f63;
+                font-size:.68rem;
+                font-weight:800;
+                margin-bottom:2px;
+            }
+
+            .mobile-actions-head strong {
+                display:block;
+                color:#17354a;
+                font-size:.95rem;
+                line-height:1.2;
+            }
+
+            .mobile-save-state {
+                flex:0 0 auto;
+                padding:5px 8px;
+                border-radius:999px;
+                background:#eef8f6;
+                color:#0f766e;
+                border:1px solid rgba(20,153,143,.14);
+                font-size:.65rem;
+                font-weight:800;
+            }
+
+            .mobile-save-primary {
+                width:100%;
+                min-height:68px;
+                border:0;
+                border-radius:16px;
+                background:linear-gradient(135deg,#14998f,#0f766e);
+                color:#fff;
+                display:grid;
+                grid-template-columns:42px 1fr;
+                align-items:center;
+                gap:11px;
+                padding:11px 14px;
+                text-align:right;
+                box-shadow:0 10px 24px rgba(15,118,110,.22);
+            }
+
+            .mobile-save-primary > i {
+                width:42px;
+                height:42px;
+                padding:10px;
+                border-radius:12px;
+                background:rgba(255,255,255,.15);
+            }
+
+            .mobile-save-primary strong {
+                display:block;
+                font-size:.96rem;
+                margin-bottom:2px;
+            }
+
+            .mobile-save-primary small {
+                display:block;
+                font-size:.68rem;
+                line-height:1.35;
+                opacity:.86;
+                font-weight:600;
+            }
+
+            .mobile-actions-grid {
+                display:grid;
+                grid-template-columns:repeat(4,minmax(0,1fr));
+                gap:7px;
+                margin-top:10px;
+            }
+
+            .mobile-action-card {
+                min-width:0;
+                min-height:70px;
+                border:1px solid rgba(20,110,103,.13);
+                border-radius:14px;
+                background:#f8fbfa;
+                color:#17354a;
+                display:flex;
+                flex-direction:column;
+                align-items:center;
+                justify-content:center;
+                gap:6px;
+                padding:8px 4px;
+                font-size:.68rem;
+                font-weight:800;
+                line-height:1.1;
+                text-align:center;
+            }
+
+            .mobile-action-card i {
+                color:#0f766e;
+            }
+
+            .mobile-action-card:active {
+                transform:scale(.98);
+                background:#eef8f6;
+            }
+        }
+
+        @media(max-width:390px){
+            .mobile-actions-grid {
+                grid-template-columns:repeat(2,minmax(0,1fr));
+            }
+
+            .mobile-action-card {
+                min-height:62px;
+                flex-direction:row;
+                justify-content:flex-start;
+                padding-inline:12px;
+                font-size:.74rem;
+            }
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -1987,6 +2210,43 @@
                     <img id="main-image" src="" alt="Map" class="max-w-full h-auto pointer-events-none">
                     <div id="pins-layer" class="absolute inset-0 pointer-events-auto"></div>
                 </div>
+
+                <section id="mobile-teacher-actions" class="mobile-teacher-actions" aria-label="פעולות מורה">
+                    <div class="mobile-actions-head">
+                        <div>
+                            <span class="mobile-actions-kicker">מרכז פעולות</span>
+                            <strong>מה תרצי לעשות עכשיו?</strong>
+                        </div>
+                        <span id="mobile-save-state" class="mobile-save-state">מוכן לשמירה</span>
+                    </div>
+
+                    <button type="button" id="mobile-save-btn" class="mobile-save-primary">
+                        <i data-lucide="save" class="w-5 h-5"></i>
+                        <span>
+                            <strong>שמירת הפעילות</strong>
+                            <small>בפעם הראשונה נותנים שם, אחר כך נשמר מיד</small>
+                        </span>
+                    </button>
+
+                    <div class="mobile-actions-grid">
+                        <button type="button" id="mobile-settings-btn" class="mobile-action-card">
+                            <i data-lucide="settings" class="w-5 h-5"></i>
+                            <span>הגדרות</span>
+                        </button>
+                        <button type="button" id="mobile-preview-btn" class="mobile-action-card">
+                            <i data-lucide="eye" class="w-5 h-5"></i>
+                            <span>תצוגת תלמיד</span>
+                        </button>
+                        <button type="button" id="mobile-share-btn" class="mobile-action-card">
+                            <i data-lucide="share-2" class="w-5 h-5"></i>
+                            <span>שיתוף</span>
+                        </button>
+                        <button type="button" id="mobile-more-btn" class="mobile-action-card">
+                            <i data-lucide="ellipsis" class="w-5 h-5"></i>
+                            <span>עוד</span>
+                        </button>
+                    </div>
+                </section>
             </div>
         </div>
     </main>
@@ -3009,6 +3269,10 @@
                 : 'שמירת הפעילות בפעם הראשונה';
             saveProjectBtn.title = saveTitle;
             saveProjectBtn.setAttribute('aria-label', saveTitle);
+            const mobileSaveState = document.getElementById('mobile-save-state');
+            if (mobileSaveState) {
+                mobileSaveState.textContent = hasExistingProject ? 'נשמר בארכיון' : 'עדיין לא נשמר';
+            }
         };
 
         const getSuggestedProjectNameForSaveAs = () => {
@@ -3797,6 +4061,25 @@
         document.getElementById('teacher-help-btn')?.addEventListener('click', () => {
             toolbarMoreMenu?.classList.add('hidden');
             toolbarMoreBtn?.setAttribute('aria-expanded','false');
+        });
+
+
+        const mobileSaveBtn = document.getElementById('mobile-save-btn');
+        const mobileSettingsBtn = document.getElementById('mobile-settings-btn');
+        const mobilePreviewBtn = document.getElementById('mobile-preview-btn');
+        const mobileShareBtn = document.getElementById('mobile-share-btn');
+        const mobileMoreBtn = document.getElementById('mobile-more-btn');
+
+        mobileSaveBtn?.addEventListener('click', () => document.getElementById('save-project-btn')?.click());
+        mobileSettingsBtn?.addEventListener('click', () => document.getElementById('settings-btn')?.click());
+        mobilePreviewBtn?.addEventListener('click', () => document.getElementById('mode-toggle')?.click());
+        mobileShareBtn?.addEventListener('click', () => document.getElementById('share-student-btn')?.click());
+        mobileMoreBtn?.addEventListener('click', () => {
+            const menu = document.getElementById('toolbar-more-menu');
+            const button = document.getElementById('toolbar-more-btn');
+            if (!menu || !button) return;
+            menu.classList.remove('hidden');
+            button.setAttribute('aria-expanded','true');
         });
 
         const startDrag = (e, pin) => {
