@@ -1531,6 +1531,41 @@
                 height: auto !important;
             }
         }
+
+        .landing-hero-image {
+            position: relative;
+            z-index: 3;
+            display: block;
+            width: min(500px, 92%);
+            max-height: 650px;
+            height: auto;
+            object-fit: contain;
+            object-position: center;
+            border-radius: 28px;
+            box-shadow: 0 28px 60px rgba(36,54,74,.16);
+            margin-inline: auto;
+        }
+
+        @media (max-width: 980px) {
+            .landing-hero-image {
+                width: min(460px, 88vw);
+                max-height: 560px;
+            }
+        }
+
+        @media (max-width: 620px) {
+            .landing-visual {
+                min-height: 0 !important;
+                padding: 6px 0 0;
+            }
+
+            .landing-hero-image {
+                width: min(340px, 92vw);
+                max-height: none;
+                border-radius: 22px;
+                box-shadow: 0 18px 38px rgba(36,54,74,.14);
+            }
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -1583,44 +1618,13 @@
 
                 <div class="landing-visual" aria-hidden="true">
                     <div class="landing-lab-glow"></div>
-                    <div class="product-frame">
-                        <div class="product-window">
-                            <div class="preview-sidebar">
-                                <div class="preview-brand">MAPI 2.0</div>
-                                <div class="preview-add">+ הוספת נקודה</div>
-                                <div class="preview-row"><div class="preview-thumb"></div><div><div class="preview-line"></div><div class="preview-line-sm"></div></div></div>
-                                <div class="preview-row"><div class="preview-thumb"></div><div><div class="preview-line"></div><div class="preview-line-sm"></div></div></div>
-                                <div class="preview-row"><div class="preview-thumb"></div><div><div class="preview-line"></div><div class="preview-line-sm"></div></div></div>
-                                <div class="preview-row"><div class="preview-thumb"></div><div><div class="preview-line"></div><div class="preview-line-sm"></div></div></div>
-                            </div>
-                            <div class="preview-canvas">
-                                <span class="preview-pin p1" data-n="1"></span>
-                                <span class="preview-pin p2" data-n="2"></span>
-                                <span class="preview-pin p3" data-n="3"></span>
-                            </div>
-                            <div class="preview-editor">
-                                <strong>עריכת נקודה</strong>
-                                <div class="preview-chip-row"><div class="preview-chip"></div><div class="preview-chip"></div><div class="preview-chip"></div><div class="preview-chip"></div></div>
-                                <div class="preview-field"></div>
-                                <div class="preview-field"></div>
-                                <div class="preview-save"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="student-phone">
-                        <div class="student-notch"></div>
-                        <div class="student-screen">
-                            <div class="student-title">תהליכי התא</div>
-                            <div class="student-progress"><span></span></div>
-                            <div class="student-science"></div>
-                            <div class="student-question">איזה מבנה אחראי על ויסות מעבר חומרים בתא?</div>
-                            <div class="student-option selected"></div>
-                            <div class="student-option"></div>
-                            <div class="student-option"></div>
-                            <div class="student-next"></div>
-                        </div>
-                    </div>
+                    <img
+                        class="landing-hero-image"
+                        src="/mapi-home-hero.png?v=1"
+                        alt=""
+                        loading="eager"
+                        decoding="async"
+                    >
                 </div>
             </div>
 
