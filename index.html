@@ -3250,6 +3250,278 @@
         #project-settings-modal label:has(+ #activity-mode-selector) {
             display:none!important;
         }
+
+        /* ===== Final MAPI palette normalization: plum + cream ===== */
+        :root {
+            --bg-soft:#FAF7F1;
+            --bg-mid:#F3ECE7;
+            --ink-900:#24364A;
+            --ink-700:#465766;
+            --ink-500:#6F7D8C;
+            --brand-600:#5F214F;
+            --brand-500:#7A2E6E;
+            --brand-300:#C7A4BD;
+            --accent-500:#C9973E;
+            --surface:rgba(255,253,249,.94);
+            --surface-strong:#FFFDF9;
+            --line-soft:rgba(122,46,110,.14);
+            --shadow-main:0 14px 38px rgba(95,33,79,.10);
+        }
+
+        body {
+            color:var(--ink-900);
+            background:
+                radial-gradient(900px 520px at 8% -15%, rgba(122,46,110,.11), transparent 58%),
+                radial-gradient(880px 520px at 92% 0%, rgba(201,151,62,.08), transparent 60%),
+                linear-gradient(180deg,var(--bg-soft) 0%,var(--bg-mid) 100%)!important;
+        }
+
+        .modal-overlay {
+            background:rgba(36,54,74,.38)!important;
+            backdrop-filter:blur(7px);
+        }
+
+        #project-settings-modal > div,
+        #pin-modal > div,
+        #teacher-modal > div,
+        #save-map-modal > div,
+        #student-export-meta-modal > div,
+        #student-help-modal > div,
+        #teacher-help-modal > div,
+        #student-instruction-modal > div,
+        #lock-modal > div {
+            background:linear-gradient(165deg,#FFFDF9 0%,#FAF7F1 100%)!important;
+            border:1px solid #E8E1E7!important;
+            color:#24364A!important;
+            box-shadow:0 22px 52px rgba(48,31,45,.22)!important;
+        }
+
+        #teacher-modal {
+            --teacher-modal-plum:#7A2E6E;
+        }
+        #teacher-modal > div {
+            border-top:5px solid var(--teacher-modal-plum)!important;
+        }
+        #teacher-modal h3,
+        #save-map-modal h3,
+        #student-export-meta-modal h3,
+        #lock-modal h3,
+        #student-instruction-modal h3 {
+            color:#24364A!important;
+        }
+        #teacher-modal p,
+        #save-map-modal p,
+        #student-export-meta-modal p,
+        #lock-modal p,
+        #student-instruction-modal p {
+            color:#6F7D8C!important;
+        }
+        #teacher-modal label,
+        #save-map-modal label,
+        #student-export-meta-modal label,
+        #project-settings-modal label,
+        #pin-modal label {
+            color:#465766!important;
+        }
+
+        #teacher-id-input,
+        #save-map-name-input,
+        #student-export-name-input,
+        #student-export-class-input,
+        #project-settings-modal input,
+        #project-settings-modal textarea,
+        #pin-modal textarea,
+        #pin-modal input[type="text"],
+        #final-code-input {
+            background:#FFF!important;
+            color:#24364A!important;
+            border-color:#E4DAE2!important;
+        }
+
+        #teacher-id-input:focus,
+        #save-map-name-input:focus,
+        #student-export-name-input:focus,
+        #student-export-class-input:focus,
+        #project-settings-modal input:focus,
+        #project-settings-modal textarea:focus,
+        #pin-modal textarea:focus,
+        #pin-modal input[type="text"]:focus,
+        #final-code-input:focus {
+            border-color:#7A2E6E!important;
+            box-shadow:0 0 0 4px rgba(122,46,110,.10)!important;
+        }
+
+        #teacher-save-btn,
+        #save-map-confirm-btn,
+        #student-export-meta-confirm-btn,
+        #project-settings-apply-btn,
+        #student-instruction-close-btn,
+        #teacher-help-ok-btn,
+        #lock-modal button[onclick*="checkFinalCode"] {
+            background:linear-gradient(135deg,#7A2E6E,#5F214F)!important;
+            border-color:transparent!important;
+            color:#FFF8F1!important;
+            box-shadow:0 9px 22px rgba(122,46,110,.20)!important;
+        }
+
+        #teacher-save-btn:hover,
+        #save-map-confirm-btn:hover,
+        #student-export-meta-confirm-btn:hover,
+        #project-settings-apply-btn:hover,
+        #student-instruction-close-btn:hover,
+        #teacher-help-ok-btn:hover {
+            filter:brightness(1.05);
+        }
+
+        #teacher-cancel-btn,
+        #save-map-cancel-btn,
+        #student-export-meta-cancel-btn,
+        #project-settings-modal button[onclick="closeSettings()"] {
+            background:#F4EEE5!important;
+            color:#5F214F!important;
+            border:1px solid #E8E1E7!important;
+        }
+
+        #pin-modal > div > div:first-child {
+            background:linear-gradient(135deg,#5F214F,#7A2E6E)!important;
+            color:#FFF8F1!important;
+        }
+        #pin-modal > div > div:first-child h3,
+        #pin-modal > div > div:first-child button,
+        #pin-modal > div > div:first-child svg {
+            color:#FFF8F1!important;
+            stroke:#FFF8F1!important;
+        }
+        #pin-modal > div > div:first-child button:hover {
+            background:rgba(255,255,255,.12)!important;
+        }
+
+        .type-btn-active {
+            background:linear-gradient(135deg,#7A2E6E,#5F214F)!important;
+            color:#FFF8F1!important;
+            border-color:transparent!important;
+            box-shadow:0 8px 18px rgba(122,46,110,.18)!important;
+        }
+        .type-btn-active svg {
+            color:#FFF8F1!important;
+            stroke:#FFF8F1!important;
+        }
+        .type-btn-idle {
+            background:#FFFDF9!important;
+            color:#465766!important;
+            border-color:#E8E1E7!important;
+        }
+        .type-btn-idle:hover {
+            background:#F4EAF1!important;
+            border-color:#C7A4BD!important;
+        }
+
+        .activity-mode-btn-active {
+            background:linear-gradient(135deg,#7A2E6E,#5F214F)!important;
+            color:#FFF8F1!important;
+            border-color:transparent!important;
+            box-shadow:0 8px 18px rgba(122,46,110,.18)!important;
+        }
+        .activity-mode-btn-idle {
+            background:#FFFDF9!important;
+            color:#465766!important;
+            border-color:#E8E1E7!important;
+        }
+
+        #student-instruction-modal .bg-teal-100 {
+            background:#EFE4EC!important;
+        }
+        #student-instruction-modal .text-teal-700 {
+            color:#7A2E6E!important;
+        }
+
+        #lock-modal > div > div:first-child {
+            background:#F7EDD0!important;
+            color:#9A6D19!important;
+        }
+
+        #toast {
+            background:#5F214F!important;
+            border:1px solid rgba(255,255,255,.16)!important;
+            color:#FFF8F1!important;
+        }
+        #toast span,
+        #toast svg,
+        #toast i {
+            color:#FFF8F1!important;
+            stroke:#FFF8F1!important;
+        }
+
+        #student-boot-overlay {
+            background:rgba(36,54,74,.42)!important;
+        }
+        #student-boot-overlay > div {
+            background:#FFFDF9!important;
+            border-color:#E8E1E7!important;
+            color:#5F214F!important;
+            box-shadow:0 16px 34px rgba(95,33,79,.16)!important;
+        }
+        #student-boot-spinner {
+            border-color:rgba(122,46,110,.20)!important;
+            border-top-color:#7A2E6E!important;
+        }
+
+        .teacher-guide-item {
+            background:#FFFDF9!important;
+            border-color:#E8E1E7!important;
+        }
+        .teacher-guide-item h4 {
+            color:#7A2E6E!important;
+        }
+        .teacher-guide-item p,
+        .teacher-guide-item ul {
+            color:#596774!important;
+        }
+
+        #upload-zone {
+            border-color:rgba(122,46,110,.22)!important;
+            background:linear-gradient(160deg,#FFFDF9 0%,#FAF7F1 100%)!important;
+        }
+        #upload-zone:hover {
+            border-color:#7A2E6E!important;
+        }
+        #upload-zone .bg-indigo-50 {
+            background:#EFE4EC!important;
+        }
+        #upload-zone .text-indigo-600 {
+            color:#7A2E6E!important;
+        }
+
+        #instruction-text {
+            background:#F4EAF1!important;
+            color:#5F214F!important;
+            border-color:#E3D4DF!important;
+        }
+
+        /* Dark surfaces always use light typography */
+        #app-header,
+        #app-header button,
+        #app-header .mapi-toolbar-btn,
+        #app-header #teacher-credit-pill,
+        .mapi-save-main {
+            color:#FFF8F1!important;
+        }
+        #app-header svg,
+        #app-header i,
+        .mapi-save-main svg {
+            stroke:#FFF8F1!important;
+            color:#FFF8F1!important;
+        }
+
+        @media(max-width:700px){
+            #teacher-modal > div,
+            #save-map-modal > div,
+            #student-export-meta-modal > div,
+            #lock-modal > div,
+            #pin-modal > div {
+                margin-inline:4px;
+            }
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
