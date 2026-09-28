@@ -2472,93 +2472,6 @@
         }
 
         #teacher-help-modal { display:none !important; }
-
-        /* ===== Explicit screen navigation + replace image ===== */
-        .screen-nav-row {
-            width:100%;
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            gap:10px;
-            margin-bottom:4px;
-        }
-
-        .screen-back-btn,
-        .screen-secondary-btn {
-            min-height:40px;
-            border-radius:12px;
-            padding:8px 12px;
-            display:inline-flex;
-            align-items:center;
-            justify-content:center;
-            gap:7px;
-            font-weight:800;
-            font-size:.8rem;
-            transition:.18s ease;
-        }
-
-        .screen-back-btn {
-            background:#FFFDF9;
-            color:#5F214F;
-            border:1px solid #E8E1E7;
-        }
-
-        .screen-secondary-btn {
-            background:#EFE4EC;
-            color:#7A2E6E;
-            border:1px solid rgba(122,46,110,.14);
-        }
-
-        .screen-back-btn:hover,
-        .screen-secondary-btn:hover {
-            transform:translateY(-1px);
-            box-shadow:0 8px 18px rgba(95,33,79,.08);
-        }
-
-        .screen-secondary-btn.hidden {
-            display:none!important;
-        }
-
-        @media(max-width:760px){
-            .screen-nav-row {
-                margin-bottom:0;
-                padding-inline:1px;
-            }
-
-            .screen-back-btn,
-            .screen-secondary-btn {
-                min-height:38px;
-                padding:7px 10px;
-                font-size:.72rem;
-                border-radius:11px;
-            }
-
-            .editor-screen-nav {
-                position:sticky;
-                top:0;
-                z-index:20;
-                background:rgba(250,247,241,.94);
-                backdrop-filter:blur(10px);
-                padding:7px 0;
-            }
-
-            .mobile-actions-grid-five {
-                grid-template-columns:repeat(2,minmax(0,1fr))!important;
-            }
-
-            .mobile-actions-grid-five #mobile-replace-image-btn {
-                grid-column:1 / -1;
-                min-height:54px;
-                flex-direction:row;
-                justify-content:center;
-                background:#F4EEE5!important;
-                color:#7A2E6E!important;
-            }
-
-            .mobile-actions-grid-five #mobile-replace-image-btn i {
-                color:#7A2E6E!important;
-            }
-        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -2676,12 +2589,6 @@
 
     <main class="flex-grow p-6 max-w-7xl mx-auto w-full">
         <div id="dashboard-view" class="space-y-6">
-            <div class="screen-nav-row">
-                <button type="button" id="dashboard-home-back-btn" class="screen-back-btn">
-                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                    חזרה לדף הבית
-                </button>
-            </div>
             <section class="teacher-dashboard-intro">
                 <div class="teacher-welcome-card">
                     <div class="eyebrow">סביבת המורה</div>
@@ -2817,16 +2724,6 @@
         </section>
 
         <div id="editor-view" class="hidden space-y-6">
-            <div class="screen-nav-row editor-screen-nav">
-                <button type="button" id="editor-back-btn" class="screen-back-btn">
-                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                    חזרה לסביבת המורה
-                </button>
-                <button type="button" id="replace-image-btn" class="screen-secondary-btn hidden">
-                    <i data-lucide="image-up" class="w-4 h-4"></i>
-                    החלפת תמונה
-                </button>
-            </div>
             <div id="upload-zone" class="w-full max-w-2xl mx-auto bg-white border-4 border-dashed border-slate-200 rounded-3xl p-16 text-center hover:border-indigo-400 cursor-pointer transition-all">
                 <input type="file" id="file-input" class="hidden" accept="image/*">
                 <div class="flex flex-col items-center gap-5">
@@ -2867,11 +2764,7 @@
                         </span>
                     </button>
 
-                    <div class="mobile-actions-grid mobile-actions-grid-five">
-                        <button type="button" id="mobile-replace-image-btn" class="mobile-action-card">
-                            <i data-lucide="image-up" class="w-5 h-5"></i>
-                            <span>החלפת תמונה</span>
-                        </button>
+                    <div class="mobile-actions-grid">
                         <button type="button" id="mobile-settings-btn" class="mobile-action-card">
                             <i data-lucide="settings" class="w-5 h-5"></i>
                             <span>הגדרות</span>
@@ -3238,8 +3131,6 @@
         const fileInput = document.getElementById('file-input');
         const mainImage = document.getElementById('main-image');
         const pinsLayer = document.getElementById('pins-layer');
-        const replaceImageBtn = document.getElementById('replace-image-btn');
-        const mobileReplaceImageBtn = document.getElementById('mobile-replace-image-btn');
         const mapWrapper = document.getElementById('map-wrapper');
         const pinModal = document.getElementById('pin-modal');
         const modeToggle = document.getElementById('mode-toggle');
@@ -3460,7 +3351,6 @@
             document.body.classList.toggle('student-view-active', studentInEditor);
             updateCreatorCredit();
             updateStudentExportButtonVisibility();
-            updateReplaceImageButtonVisibility();
             if (!mapiHandlingHistory && (view === 'dashboard' || view === 'editor' || view === 'guide')) {
                 setHistoryView(view);
             }
@@ -4383,7 +4273,6 @@
             mainImage.src = '';
             uploadZone.classList.remove('hidden');
             document.getElementById('canvas-area').classList.add('hidden');
-            updateReplaceImageButtonVisibility();
             setView('editor');
         };
 
@@ -4420,7 +4309,6 @@
             mainImage.src = project.image;
             uploadZone.classList.add('hidden');
             document.getElementById('canvas-area').classList.remove('hidden');
-            updateReplaceImageButtonVisibility();
             renderPins();
             setView('editor');
             if (isReadOnlyStudentLink) {
@@ -4433,25 +4321,6 @@
             }
         };
 
-        const updateReplaceImageButtonVisibility = () => {
-            const hasImage = !!currentProject.image && currentProject.mode === 'edit' && !isReadOnlyStudentLink;
-            replaceImageBtn?.classList.toggle('hidden', !hasImage);
-            mobileReplaceImageBtn?.classList.toggle('hidden', !hasImage);
-        };
-
-        const chooseReplacementImage = () => {
-            if (isReadOnlyStudentLink || currentProject.mode !== 'edit') return;
-            if ((currentProject.pins || []).length > 0) {
-                const proceed = confirm("להחליף את התמונה? נקודות הלמידה הקיימות יישארו במיקומן היחסי על גבי התמונה החדשה.");
-                if (!proceed) return;
-            }
-            fileInput.value = '';
-            fileInput.click();
-        };
-
-        replaceImageBtn?.addEventListener('click', chooseReplacementImage);
-        mobileReplaceImageBtn?.addEventListener('click', chooseReplacementImage);
-
         fileInput.onchange = (e) => {
             const file = e.target.files[0];
             if (file) {
@@ -4461,7 +4330,6 @@
                     mainImage.src = ev.target.result;
                     uploadZone.classList.add('hidden');
                     document.getElementById('canvas-area').classList.remove('hidden');
-                    updateReplaceImageButtonVisibility();
                 };
                 reader.readAsDataURL(file);
             }
@@ -4504,9 +4372,7 @@
                 currentProject.id = id;
                 updateSaveActionsUI();
                 renderProjectsGrid();
-                const mobileSaveState = document.getElementById('mobile-save-state');
-                if (mobileSaveState) mobileSaveState.textContent = 'נשמר בהצלחה';
-                showToast(forceNew ? "הפעילות נשמרה!" : "השינויים נשמרו!");
+                showToast(forceNew ? "נשמר כפעילות חדשה בארכיון המקומי!" : "השינויים נשמרו בארכיון המקומי!");
                 return;
             }
 
@@ -4553,9 +4419,7 @@
             currentProject.id = id;
             updateSaveActionsUI();
             await fetchProjects();
-            const mobileSaveState = document.getElementById('mobile-save-state');
-            if (mobileSaveState) mobileSaveState.textContent = 'נשמר בהצלחה';
-            showToast(forceNew ? "הפעילות נשמרה!" : "השינויים נשמרו!");
+            showToast(forceNew ? "נשמרה פעילות חדשה בענן!" : "השינויים נשמרו בענן!");
         };
 
         const openSaveMapModal = (mode = 'initialSave', suggestedName = '') => {
@@ -4574,11 +4438,8 @@
             }, 20);
         };
 
-        const handlePrimarySave = async () => {
-            if (!currentUser) {
-                showToast("לא ניתן לשמור כרגע. נסו להיכנס מחדש לסביבת המורה.");
-                return;
-            }
+        document.getElementById('save-project-btn').onclick = async () => {
+            if (!currentUser) return;
             if (!teacherId) {
                 openTeacherModal(false);
                 showToast("צריך לבחור מזהה מורה לפני שמירה.");
@@ -4597,9 +4458,6 @@
             }
             await persistCurrentProject({ forceNew: false });
         };
-
-        document.getElementById('save-project-btn').onclick = handlePrimarySave;
-        document.getElementById('mobile-save-btn')?.addEventListener('click', handlePrimarySave);
 
         saveAsNewBtn.onclick = () => {
             if (!currentUser || !teacherId || !currentProject.image) return;
@@ -4814,6 +4672,7 @@
         const mobileShareBtn = document.getElementById('mobile-share-btn');
         const mobileMoreBtn = document.getElementById('mobile-more-btn');
 
+        mobileSaveBtn?.addEventListener('click', () => document.getElementById('save-project-btn')?.click());
         mobileSettingsBtn?.addEventListener('click', () => document.getElementById('settings-btn')?.click());
         mobilePreviewBtn?.addEventListener('click', () => document.getElementById('mode-toggle')?.click());
         mobileShareBtn?.addEventListener('click', () => document.getElementById('share-student-btn')?.click());
@@ -4830,24 +4689,6 @@
             if (isSharedStudentRequest) return;
             const view = event.state?.mapiView || 'landing';
             applyHistoryView(view);
-        });
-
-
-        document.getElementById('dashboard-home-back-btn')?.addEventListener('click', () => {
-            document.body.classList.add('landing-active');
-            setHistoryView('landing');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-
-        document.getElementById('editor-back-btn')?.addEventListener('click', () => {
-            closeTeacherHelpModal();
-            closeStudentInstructionModal();
-            closeStudentExportMetaModal(null);
-            if (!isSharedStudentRequest && history.state?.mapiView === 'editor') {
-                history.back();
-            } else {
-                setView('dashboard');
-            }
         });
 
         const startDrag = (e, pin) => {
