@@ -741,7 +741,402 @@
                 padding-right: 8px !important;
             }
         }
-    </style>
+    
+        /* ===== MAPI landing / teacher entry ===== */
+        body.landing-active {
+            overflow-x: hidden;
+            background: #fbf8f2;
+        }
+        body.landing-active #app-header,
+        body.landing-active > main {
+            display: none !important;
+        }
+        #landing-view {
+            display: none;
+            min-height: 100svh;
+            position: relative;
+            overflow: hidden;
+            background:
+                radial-gradient(900px 560px at 88% -10%, rgba(20,153,143,.15), transparent 60%),
+                radial-gradient(760px 520px at 4% 75%, rgba(122,46,110,.12), transparent 62%),
+                linear-gradient(180deg, #fcfaf6 0%, #f6f0e7 100%);
+            color: #17354a;
+        }
+        body.landing-active #landing-view { display: block; }
+        .landing-shell {
+            min-height: 100svh;
+            display: flex;
+            flex-direction: column;
+            width: min(1440px, 100%);
+            margin: 0 auto;
+            padding: 18px 28px 24px;
+            position: relative;
+            z-index: 2;
+        }
+        .landing-nav {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:18px;
+            padding: 10px 14px 10px 18px;
+            border:1px solid rgba(23,53,74,.10);
+            background:rgba(255,255,255,.82);
+            backdrop-filter:blur(16px);
+            border-radius:22px;
+            box-shadow:0 12px 30px rgba(35,55,70,.07);
+        }
+        .landing-brand {
+            display:flex;
+            align-items:center;
+            gap:12px;
+            min-width:0;
+        }
+        .landing-brand img {
+            display:block;
+            height:54px;
+            width:auto;
+            max-width:250px;
+            object-fit:contain;
+        }
+        .landing-brand-copy {
+            display:flex;
+            flex-direction:column;
+            line-height:1.1;
+            color:#66727c;
+            font-size:.78rem;
+            font-weight:700;
+        }
+        .landing-nav-actions {
+            display:flex;
+            align-items:center;
+            gap:10px;
+        }
+        .landing-text-btn {
+            border:0;
+            background:transparent;
+            color:#17354a;
+            font-weight:800;
+            padding:10px 13px;
+            border-radius:12px;
+        }
+        .landing-text-btn:hover { background:rgba(15,118,110,.07); }
+        .landing-login-btn,
+        .landing-primary {
+            border:0;
+            background:linear-gradient(135deg,#8a1f63,#6f275f);
+            color:#fff;
+            font-weight:800;
+            border-radius:14px;
+            box-shadow:0 10px 24px rgba(122,46,110,.22);
+            transition:.2s ease;
+        }
+        .landing-login-btn { padding:11px 18px; }
+        .landing-primary { padding:15px 24px; font-size:1.05rem; }
+        .landing-login-btn:hover,.landing-primary:hover {
+            transform:translateY(-1px);
+            box-shadow:0 14px 28px rgba(122,46,110,.28);
+        }
+        .landing-secondary {
+            border:1.5px solid #17354a;
+            background:rgba(255,255,255,.72);
+            color:#17354a;
+            font-weight:800;
+            border-radius:14px;
+            padding:14px 22px;
+            transition:.2s ease;
+        }
+        .landing-secondary:hover { background:#fff; transform:translateY(-1px); }
+        .landing-hero {
+            flex:1;
+            display:grid;
+            grid-template-columns:minmax(0,1.02fr) minmax(420px,.98fr);
+            align-items:center;
+            gap:54px;
+            padding:56px 34px 30px;
+        }
+        .landing-copy {
+            max-width:690px;
+            text-align:right;
+            direction:rtl;
+        }
+        .landing-kicker {
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            color:#b47729;
+            font-size:.9rem;
+            font-weight:800;
+            margin-bottom:18px;
+        }
+        .landing-kicker::before {
+            content:"";
+            width:34px;
+            height:2px;
+            background:#c9973e;
+            border-radius:999px;
+        }
+        .landing-copy h1 {
+            margin:0;
+            color:#102f45;
+            font-size:clamp(3rem,5.2vw,5.5rem);
+            line-height:.98;
+            letter-spacing:-.035em;
+            font-weight:900;
+        }
+        .landing-copy h1 .smart { color:#8a1f63; }
+        .landing-subtitle {
+            margin:22px 0 0;
+            color:#42596a;
+            font-size:clamp(1.05rem,1.65vw,1.38rem);
+            line-height:1.65;
+            font-weight:600;
+            max-width:650px;
+        }
+        .landing-cta-row {
+            display:flex;
+            gap:12px;
+            flex-wrap:wrap;
+            margin-top:28px;
+        }
+        .landing-trust {
+            display:flex;
+            gap:18px;
+            flex-wrap:wrap;
+            margin-top:24px;
+            color:#60717f;
+            font-size:.88rem;
+            font-weight:700;
+        }
+        .landing-trust span {
+            display:inline-flex;
+            align-items:center;
+            gap:7px;
+        }
+        .landing-trust i { color:#168c91; }
+        .landing-visual {
+            position:relative;
+            min-height:560px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+        .landing-lab-glow {
+            position:absolute;
+            inset:7% 5% 12% 8%;
+            border-radius:42% 58% 54% 46% / 42% 38% 62% 58%;
+            background:
+                radial-gradient(circle at 34% 30%,rgba(22,140,145,.22),transparent 34%),
+                radial-gradient(circle at 75% 62%,rgba(138,31,99,.20),transparent 32%),
+                linear-gradient(145deg,rgba(255,255,255,.68),rgba(237,226,211,.55));
+            filter:blur(.2px);
+            border:1px solid rgba(255,255,255,.9);
+        }
+        .product-frame {
+            position:relative;
+            z-index:2;
+            width:min(610px,94%);
+            aspect-ratio: 16/10;
+            background:#fff;
+            border:1px solid rgba(18,47,69,.13);
+            border-radius:24px;
+            box-shadow:0 28px 60px rgba(36,54,74,.16);
+            padding:14px;
+            transform:rotate(-1.2deg);
+        }
+        .product-window {
+            height:100%;
+            border-radius:17px;
+            overflow:hidden;
+            background:#f7f8f7;
+            display:grid;
+            grid-template-columns:118px 1fr 150px;
+            direction:ltr;
+        }
+        .preview-sidebar {
+            background:#fff;
+            border-right:1px solid #e7e8ea;
+            padding:14px 10px;
+            display:flex;
+            flex-direction:column;
+            gap:9px;
+        }
+        .preview-brand {
+            font-size:.78rem;
+            font-weight:900;
+            color:#17354a;
+            margin-bottom:4px;
+        }
+        .preview-add {
+            height:28px;
+            background:#168c91;
+            color:#fff;
+            border-radius:8px;
+            font-size:.66rem;
+            font-weight:800;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+        .preview-row {
+            height:38px;
+            border:1px solid #eceef0;
+            border-radius:9px;
+            display:grid;
+            grid-template-columns:23px 1fr;
+            align-items:center;
+            gap:7px;
+            padding:5px;
+        }
+        .preview-thumb {
+            width:23px;height:23px;border-radius:6px;
+            background:
+                radial-gradient(circle at 45% 48%,#8a1f63 0 17%,transparent 18%),
+                radial-gradient(circle at 65% 35%,#c9973e 0 10%,transparent 11%),
+                linear-gradient(135deg,#d8efed,#84c8c7);
+        }
+        .preview-line,.preview-line-sm { border-radius:999px;background:#d9dde1;height:5px; }
+        .preview-line-sm{width:66%}
+        .preview-canvas {
+            position:relative;
+            overflow:hidden;
+            background:
+                radial-gradient(circle at 42% 45%,#7d2b74 0 8%,#9d5b96 9% 13%,transparent 14%),
+                radial-gradient(circle at 55% 58%,#d37a2f 0 7%,#f0ad58 8% 11%,transparent 12%),
+                radial-gradient(circle at 48% 49%,#6ba8bc 0 24%,#94cad3 25% 34%,transparent 35%),
+                radial-gradient(circle at 51% 50%,#e8dcb8 0 44%,#cce3dd 45% 58%,#76b8b9 59% 100%);
+        }
+        .preview-pin {
+            position:absolute;width:34px;height:34px;border-radius:50% 50% 50% 6px;
+            transform:rotate(-45deg);
+            background:#c9973e;
+            border:3px solid #fff;
+            box-shadow:0 5px 12px rgba(0,0,0,.18);
+        }
+        .preview-pin::after {
+            content:attr(data-n);
+            position:absolute;inset:0;display:grid;place-items:center;
+            transform:rotate(45deg);color:#fff;font-weight:900;font-size:.7rem;
+        }
+        .p1{left:20%;top:18%}.p2{left:51%;top:42%;background:#168c91}.p3{left:67%;top:68%;background:#8a1f63}
+        .preview-editor {
+            background:#fff;
+            border-left:1px solid #e7e8ea;
+            padding:14px 10px;
+            display:flex;
+            flex-direction:column;
+            gap:9px;
+        }
+        .preview-editor strong {font-size:.68rem;color:#17354a}
+        .preview-chip-row {display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+        .preview-chip {height:30px;border:1px solid #e5e8eb;border-radius:8px;background:#fafafa}
+        .preview-field {height:46px;border:1px solid #e5e8eb;border-radius:9px;background:#fbfbfb}
+        .preview-save {height:28px;border-radius:8px;background:#168c91}
+        .student-phone {
+            position:absolute;
+            z-index:4;
+            width:190px;
+            height:386px;
+            left:-16px;
+            bottom:20px;
+            border:8px solid #1c1f24;
+            border-radius:34px;
+            background:#fff;
+            box-shadow:0 24px 44px rgba(36,54,74,.22);
+            overflow:hidden;
+            transform:rotate(2deg);
+        }
+        .student-notch {
+            width:72px;height:19px;background:#1c1f24;border-radius:0 0 12px 12px;margin:0 auto 8px;
+        }
+        .student-screen {padding:0 10px 11px;direction:rtl}
+        .student-title {font-size:.72rem;font-weight:900;color:#17354a}
+        .student-progress {height:6px;border-radius:99px;background:#e7eaec;margin:8px 0 10px;overflow:hidden}
+        .student-progress span {display:block;width:44%;height:100%;background:#168c91}
+        .student-science {
+            height:118px;border-radius:12px;
+            background:
+                radial-gradient(circle at 50% 50%,#7d2b74 0 12%,#9a5b91 13% 20%,transparent 21%),
+                radial-gradient(circle at 32% 65%,#dc7a30 0 9%,#f1ad56 10% 14%,transparent 15%),
+                radial-gradient(circle at 50% 50%,#83bbc6 0 35%,#d8e5d8 36% 57%,#78b8b8 58% 100%);
+            position:relative;
+        }
+        .student-question {font-size:.68rem;font-weight:800;line-height:1.45;color:#24364a;margin:10px 0 8px}
+        .student-option {
+            height:32px;border:1px solid #dde3e6;border-radius:9px;margin-top:6px;
+            background:#fff;
+        }
+        .student-option.selected {border:2px solid #168c91;background:#f1fbfa}
+        .student-next {height:34px;border-radius:9px;background:#8a1f63;margin-top:9px}
+        .landing-features {
+            display:grid;
+            grid-template-columns:repeat(4,1fr);
+            gap:10px;
+            padding: 8px 34px 6px;
+        }
+        .landing-feature {
+            min-height:88px;
+            display:flex;
+            gap:11px;
+            align-items:center;
+            padding:13px 14px;
+            border-top:1px solid rgba(23,53,74,.10);
+            color:#41596b;
+        }
+        .landing-feature i { color:#168c91; flex:0 0 auto; }
+        .landing-feature strong {display:block;color:#17354a;font-size:.92rem}
+        .landing-feature span {font-size:.76rem;line-height:1.35}
+        @media(max-width: 980px){
+            .landing-shell{padding:12px 14px 16px}
+            .landing-nav{border-radius:18px;padding:8px 10px}
+            .landing-brand img{height:44px;max-width:200px}
+            .landing-brand-copy{display:none}
+            .landing-text-btn{display:none}
+            .landing-login-btn{padding:10px 14px}
+            .landing-hero{
+                grid-template-columns:1fr;
+                gap:26px;
+                padding:38px 12px 20px;
+            }
+            .landing-copy{text-align:center;margin:0 auto}
+            .landing-kicker{justify-content:center}
+            .landing-copy h1{font-size:clamp(2.75rem,10vw,4.5rem)}
+            .landing-subtitle{font-size:1.03rem}
+            .landing-cta-row{justify-content:center}
+            .landing-trust{justify-content:center}
+            .landing-visual{min-height:470px}
+            .product-frame{width:min(560px,92%);transform:none}
+            .student-phone{width:160px;height:326px;left:0}
+            .landing-features{grid-template-columns:repeat(2,1fr);padding:8px 8px}
+        }
+        @media(max-width: 620px){
+            .landing-shell{padding:8px}
+            .landing-nav{position:relative}
+            .landing-brand img{height:38px;max-width:160px}
+            .landing-login-btn{font-size:.82rem;padding:9px 12px}
+            .landing-hero{padding:30px 6px 10px}
+            .landing-copy h1{font-size:clamp(2.45rem,12vw,3.5rem);line-height:1.02}
+            .landing-subtitle{font-size:.98rem;margin-top:16px}
+            .landing-cta-row{display:grid;grid-template-columns:1fr;width:min(360px,100%);margin:22px auto 0}
+            .landing-primary,.landing-secondary{width:100%}
+            .landing-trust{gap:10px;font-size:.78rem}
+            .landing-visual{min-height:360px;margin-top:4px}
+            .product-frame{width:96%;border-radius:18px;padding:9px}
+            .product-window{grid-template-columns:76px 1fr 92px}
+            .preview-sidebar,.preview-editor{padding:8px 6px}
+            .preview-row{height:29px;grid-template-columns:18px 1fr;padding:4px}
+            .preview-thumb{width:18px;height:18px}
+            .student-phone{width:128px;height:262px;border-width:6px;border-radius:26px;left:-3px;bottom:-16px}
+            .student-notch{width:52px;height:14px;margin-bottom:4px}
+            .student-science{height:74px}
+            .student-title,.student-question{font-size:.55rem}
+            .student-option{height:23px;margin-top:4px}
+            .student-next{height:26px;margin-top:6px}
+            .landing-features{grid-template-columns:1fr 1fr;gap:2px;padding:4px 0 0}
+            .landing-feature{min-height:72px;padding:10px 8px}
+            .landing-feature strong{font-size:.78rem}
+            .landing-feature span{font-size:.67rem}
+        }
+</style>
 </head>
 <body class="min-h-screen flex flex-col">
 
@@ -751,6 +1146,97 @@
             טוען פעילות לתלמיד...
         </div>
     </div>
+
+    <section id="landing-view" aria-label="דף הבית של MAPI">
+        <div class="landing-shell">
+            <nav class="landing-nav">
+                <div class="landing-brand">
+                    <img src="/mapi-logo.png" alt="MAPI 2.0">
+                    <div class="landing-brand-copy">
+                        <span>תמונה אחת, אלף מילים</span>
+                        <span>למידה אינטראקטיבית מתמונה</span>
+                    </div>
+                </div>
+                <div class="landing-nav-actions">
+                    <button type="button" id="landing-about-btn" class="landing-text-btn">איך זה עובד</button>
+                    <button type="button" id="landing-login-btn" class="landing-login-btn">כניסת מורה</button>
+                </div>
+            </nav>
+
+            <div class="landing-hero">
+                <div class="landing-copy">
+                    <div class="landing-kicker">מדע · חקר · למידה אחרת</div>
+                    <h1>הופכים כל תמונה<br>לחוויית למידה <span class="smart">חכמה</span></h1>
+                    <p class="landing-subtitle">
+                        יוצרים בקלות פעילויות אינטראקטיביות על גבי תמונות, תרשימים ומודלים —
+                        ומשלבים מידע, שאלות, וידאו, התאמה, סידור וחדרי בריחה במקום אחד.
+                    </p>
+                    <div class="landing-cta-row">
+                        <button type="button" id="landing-start-btn" class="landing-primary">
+                            התחילו ליצור פעילות
+                        </button>
+                        <button type="button" id="landing-demo-btn" class="landing-secondary">
+                            צפו בדוגמה
+                        </button>
+                    </div>
+                    <div class="landing-trust">
+                        <span><i data-lucide="mouse-pointer-click" class="w-4 h-4"></i> פשוט ליצור</span>
+                        <span><i data-lucide="smartphone" class="w-4 h-4"></i> מותאם למובייל</span>
+                        <span><i data-lucide="share-2" class="w-4 h-4"></i> שיתוף בקישור</span>
+                    </div>
+                </div>
+
+                <div class="landing-visual" aria-hidden="true">
+                    <div class="landing-lab-glow"></div>
+                    <div class="product-frame">
+                        <div class="product-window">
+                            <div class="preview-sidebar">
+                                <div class="preview-brand">MAPI 2.0</div>
+                                <div class="preview-add">+ הוספת נקודה</div>
+                                <div class="preview-row"><div class="preview-thumb"></div><div><div class="preview-line"></div><div class="preview-line-sm"></div></div></div>
+                                <div class="preview-row"><div class="preview-thumb"></div><div><div class="preview-line"></div><div class="preview-line-sm"></div></div></div>
+                                <div class="preview-row"><div class="preview-thumb"></div><div><div class="preview-line"></div><div class="preview-line-sm"></div></div></div>
+                                <div class="preview-row"><div class="preview-thumb"></div><div><div class="preview-line"></div><div class="preview-line-sm"></div></div></div>
+                            </div>
+                            <div class="preview-canvas">
+                                <span class="preview-pin p1" data-n="1"></span>
+                                <span class="preview-pin p2" data-n="2"></span>
+                                <span class="preview-pin p3" data-n="3"></span>
+                            </div>
+                            <div class="preview-editor">
+                                <strong>עריכת נקודה</strong>
+                                <div class="preview-chip-row"><div class="preview-chip"></div><div class="preview-chip"></div><div class="preview-chip"></div><div class="preview-chip"></div></div>
+                                <div class="preview-field"></div>
+                                <div class="preview-field"></div>
+                                <div class="preview-save"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="student-phone">
+                        <div class="student-notch"></div>
+                        <div class="student-screen">
+                            <div class="student-title">תהליכי התא</div>
+                            <div class="student-progress"><span></span></div>
+                            <div class="student-science"></div>
+                            <div class="student-question">איזה מבנה אחראי על ויסות מעבר חומרים בתא?</div>
+                            <div class="student-option selected"></div>
+                            <div class="student-option"></div>
+                            <div class="student-option"></div>
+                            <div class="student-next"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="landing-how" class="landing-features">
+                <div class="landing-feature"><i data-lucide="image" class="w-7 h-7"></i><div><strong>כל תמונה יכולה ללמד</strong><span>מפה, תרשים, צילום או מודל</span></div></div>
+                <div class="landing-feature"><i data-lucide="shapes" class="w-7 h-7"></i><div><strong>פעילויות מגוונות</strong><span>מידע, שאלות, התאמה, וידאו ועוד</span></div></div>
+                <div class="landing-feature"><i data-lucide="sparkles" class="w-7 h-7"></i><div><strong>למידה פעילה</strong><span>התלמידים חוקרים ומתקדמים בקצב שלהם</span></div></div>
+                <div class="landing-feature"><i data-lucide="bar-chart-3" class="w-7 h-7"></i><div><strong>כלים למורים</strong><span>שמירה, שיתוף ותצוגת תלמיד</span></div></div>
+            </div>
+        </div>
+    </section>
 
     <header id="app-header" class="text-white shadow-lg p-4 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto flex flex-wrap md:flex-nowrap justify-between items-center gap-3">
@@ -1260,6 +1746,28 @@
 
         const clearSharedStudentBoot = () => {
             document.documentElement.classList.remove('shared-student-boot');
+        };
+
+        const showLanding = () => {
+            if (isSharedStudentRequest) return;
+            document.body.classList.add('landing-active');
+        };
+
+        const hideLanding = () => {
+            document.body.classList.remove('landing-active');
+        };
+
+        const openTeacherEntry = () => {
+            teacherIdInput.value = teacherId || '';
+            document.getElementById('teacher-cancel-btn').classList.remove('hidden');
+            teacherModal.classList.remove('hidden');
+            setTimeout(() => teacherIdInput.focus(), 30);
+        };
+
+        const enterTeacherDashboard = async () => {
+            hideLanding();
+            setView('dashboard');
+            if (teacherId) await fetchProjects();
         };
 
         const getStudentSessionStorageKey = () => {
@@ -2191,11 +2699,11 @@
             }
             updateTeacherInfo();
 
-            if (!teacherId && !isSharedStudentRequest) {
-                openTeacherModal(false);
-            }
-
             currentUser = { uid: getLocalUid() };
+
+            if (!isSharedStudentRequest) {
+                showLanding();
+            }
 
             if (isSharedStudentRequest) {
                 const loaded = await openSharedProject();
@@ -2615,6 +3123,7 @@
             updateTeacherInfo();
             projects = [];
             renderProjectsGrid();
+            hideLanding();
             setView('dashboard');
             fetchProjects();
             showToast(`הארכיון נטען עבור ${teacherId}`);
@@ -2626,12 +3135,21 @@
         });
 
         document.getElementById('teacher-cancel-btn').onclick = () => {
-            if (!teacherId) {
-                showToast("חובה לבחור מזהה מורה.");
-                return;
-            }
             teacherModal.classList.add('hidden');
+            if (!document.body.classList.contains('landing-active') && !teacherId) {
+                showLanding();
+            }
         };
+
+
+        document.getElementById('landing-start-btn')?.addEventListener('click', openTeacherEntry);
+        document.getElementById('landing-login-btn')?.addEventListener('click', openTeacherEntry);
+        document.getElementById('landing-about-btn')?.addEventListener('click', () => {
+            document.getElementById('landing-how')?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        });
+        document.getElementById('landing-demo-btn')?.addEventListener('click', () => {
+            showToast('דוגמת תלמיד תתווסף בשלב הבא. בינתיים אפשר להיכנס כמורה וליצור פעילות.');
+        });
 
         const startDrag = (e, pin) => {
             if (currentProject.mode !== 'edit') return;
