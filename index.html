@@ -3564,6 +3564,118 @@
             color:#7A2E6E!important;
             stroke:#7A2E6E!important;
         }
+
+        /* ===== Single green family: sage #667761 ===== */
+        :root {
+            --mapi-green-accent:#667761;
+            --mapi-green-dark:#556451;
+            --mapi-green-soft:#E9EEE8;
+        }
+
+        /* Workflow / saved state */
+        .mapi-flow-step.done {
+            color:var(--mapi-green-accent)!important;
+        }
+        .mapi-flow-step.done span {
+            background:var(--mapi-green-accent)!important;
+            border-color:var(--mapi-green-accent)!important;
+            color:#FFFDF9!important;
+        }
+        .workflow-saved #mobile-save-btn {
+            background:linear-gradient(135deg,var(--mapi-green-accent),var(--mapi-green-dark))!important;
+            box-shadow:0 10px 24px rgba(102,119,97,.20)!important;
+        }
+
+        /* All remaining green/turquoise action accents */
+        #mobile-share-btn i,
+        #mobile-share-btn svg,
+        #progress-bar,
+        .correct-pin {
+            color:var(--mapi-green-accent)!important;
+            stroke:var(--mapi-green-accent)!important;
+        }
+        #progress-bar {
+            background:var(--mapi-green-accent)!important;
+        }
+        .correct-pin {
+            background-color:var(--mapi-green-accent)!important;
+        }
+
+        /* Pins that were teal/green/blue-green now use the same sage family */
+        .pin-info,
+        .pin-mcq,
+        .pin-boolean,
+        .pin-default {
+            background-color:var(--mapi-green-accent)!important;
+        }
+
+        /* Map frame and pulse: remove teal residue */
+        #map-wrapper {
+            border-color:var(--mapi-green-accent)!important;
+            box-shadow:0 18px 40px rgba(102,119,97,.18)!important;
+        }
+        @keyframes pulse-animation {
+            0% { box-shadow:0 0 0 0 rgba(102,119,97,.52); }
+            100% { box-shadow:0 0 0 14px rgba(102,119,97,0); }
+        }
+
+        /* Tailwind teal/green utility residue inside student interactions */
+        .border-teal-500 {
+            border-color:var(--mapi-green-accent)!important;
+        }
+        .bg-teal-50 {
+            background-color:var(--mapi-green-soft)!important;
+        }
+        .text-teal-700,
+        .text-teal-600,
+        .text-teal-500 {
+            color:var(--mapi-green-accent)!important;
+        }
+        .border-green-500,
+        .border-green-600 {
+            border-color:var(--mapi-green-accent)!important;
+        }
+        .bg-green-50,
+        .bg-green-100 {
+            background-color:var(--mapi-green-soft)!important;
+        }
+        .bg-green-500,
+        .bg-green-600 {
+            background-color:var(--mapi-green-accent)!important;
+        }
+        .text-green-600,
+        .text-green-700,
+        .text-green-800 {
+            color:var(--mapi-green-dark)!important;
+        }
+
+        /* Feedback success boxes */
+        #student-feedback.bg-green-100 {
+            background:var(--mapi-green-soft)!important;
+            color:var(--mapi-green-dark)!important;
+            border-color:rgba(102,119,97,.20)!important;
+        }
+
+        /* Old hard-coded dashboard / archive accents */
+        .project-edit-link,
+        .project-card:hover .project-edit-link {
+            color:var(--mapi-green-accent)!important;
+        }
+
+        /* Keep white icons/text readable on sage surfaces */
+        .correct-pin svg,
+        .pin-info svg,
+        .pin-mcq svg,
+        .pin-boolean svg,
+        .pin-default svg,
+        .workflow-saved #mobile-save-btn,
+        .workflow-saved #mobile-save-btn strong,
+        .workflow-saved #mobile-save-btn small,
+        .workflow-saved #mobile-save-btn svg,
+        .workflow-saved #mobile-save-btn i {
+            color:#FFFDF9!important;
+            stroke:#FFFDF9!important;
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
