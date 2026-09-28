@@ -3078,6 +3078,178 @@
                 font-size:1.3rem;
             }
         }
+
+        /* ===== Activity logic choice ===== */
+        .activity-logic-page {
+            width:min(920px,100%);
+            margin:0 auto;
+            padding:4px 0 30px;
+        }
+        .activity-logic-shell {
+            background:linear-gradient(180deg,#FFFDF9 0%,#FAF7F1 100%);
+            border:1px solid #E8E1E7;
+            border-radius:28px;
+            padding:28px;
+            box-shadow:0 16px 40px rgba(95,33,79,.08);
+        }
+        .activity-logic-eyebrow {
+            color:#C9973E;
+            font-size:.76rem;
+            font-weight:900;
+            margin-top:4px;
+        }
+        .activity-logic-shell h2 {
+            margin:5px 0 7px;
+            color:#24364A;
+            font-size:clamp(1.8rem,4vw,2.55rem);
+            font-weight:900;
+        }
+        .activity-logic-lead {
+            margin:0;
+            color:#6F7D8C;
+            line-height:1.65;
+            max-width:720px;
+        }
+        .activity-logic-grid {
+            display:grid;
+            grid-template-columns:repeat(2,minmax(0,1fr));
+            gap:14px;
+            margin-top:24px;
+        }
+        .activity-logic-card {
+            width:100%;
+            min-height:190px;
+            display:grid;
+            grid-template-columns:52px 1fr auto;
+            align-items:start;
+            gap:13px;
+            padding:20px;
+            border-radius:20px;
+            border:1.5px solid #E8E1E7;
+            background:#fff;
+            color:#24364A;
+            text-align:right;
+            transition:.18s ease;
+        }
+        .activity-logic-card:hover {
+            transform:translateY(-2px);
+            border-color:#7A2E6E;
+            box-shadow:0 12px 28px rgba(95,33,79,.10);
+        }
+        .activity-logic-card.escape {
+            background:linear-gradient(160deg,#FFFDF9 0%,#F7EEF4 100%);
+        }
+        .activity-logic-icon {
+            width:48px;height:48px;border-radius:14px;
+            display:grid;place-items:center;
+            background:#EFE4EC;color:#7A2E6E;
+        }
+        .activity-logic-copy strong {
+            display:block;
+            font-size:1.08rem;
+            margin-bottom:7px;
+        }
+        .activity-logic-copy small {
+            display:block;
+            color:#5F6D78;
+            font-size:.82rem;
+            line-height:1.6;
+        }
+        .activity-logic-copy em {
+            display:block;
+            margin-top:10px;
+            color:#8A6E7F;
+            font-size:.72rem;
+            font-style:normal;
+            line-height:1.45;
+        }
+
+        .chosen-logic-badge {
+            display:inline-flex;
+            align-items:center;
+            gap:7px;
+            min-height:34px;
+            padding:7px 11px;
+            border-radius:999px;
+            background:#F4EEE5;
+            border:1px solid #E8E1E7;
+            color:#7A2E6E;
+            font-size:.76rem;
+            font-weight:900;
+        }
+
+        .escape-station-locked {
+            filter:saturate(.15);
+            opacity:.62;
+            box-shadow:none!important;
+        }
+        .escape-station-number {
+            position:absolute;
+            top:-9px;
+            right:-9px;
+            width:20px;
+            height:20px;
+            border-radius:50%;
+            display:grid;
+            place-items:center;
+            background:#24364A;
+            color:#fff;
+            border:2px solid #fff;
+            font-size:.62rem;
+            font-weight:900;
+            line-height:1;
+        }
+
+        .student-final-lock-btn {
+            width:100%;
+            margin-top:14px;
+            min-height:58px;
+            padding:11px 14px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:10px;
+            border:1px solid rgba(201,151,62,.34);
+            border-radius:15px;
+            background:linear-gradient(135deg,#F5E2A9,#C9973E);
+            color:#3F3421;
+            box-shadow:0 10px 24px rgba(201,151,62,.16);
+        }
+        .student-final-lock-btn.hidden { display:none!important; }
+        .student-final-lock-btn span { text-align:right; }
+        .student-final-lock-btn strong { display:block;font-size:.9rem; }
+        .student-final-lock-btn small { display:block;font-size:.68rem;opacity:.82;margin-top:2px; }
+
+        @media(max-width:700px){
+            .activity-logic-page { padding:0; }
+            .activity-logic-shell {
+                min-height:calc(100svh - 72px);
+                border-radius:0;
+                border-left:0;
+                border-right:0;
+                padding:18px 15px 24px;
+                box-shadow:none;
+            }
+            .activity-logic-grid {
+                grid-template-columns:1fr;
+                gap:10px;
+                margin-top:18px;
+            }
+            .activity-logic-card {
+                min-height:0;
+                padding:16px;
+                grid-template-columns:44px 1fr auto;
+            }
+            .activity-logic-icon {
+                width:42px;height:42px;border-radius:12px;
+            }
+        }
+
+        #project-settings-modal #activity-mode-selector,
+        #project-settings-modal #activity-mode-selector + *,
+        #project-settings-modal label:has(+ #activity-mode-selector) {
+            display:none!important;
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -3329,6 +3501,40 @@
             </div>
         </section>
 
+        <section id="activity-logic-view" class="hidden activity-logic-page" aria-label="בחירת מסלול פעילות">
+            <div class="activity-logic-shell">
+                <button type="button" id="logic-back-btn" class="new-setup-back">
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    חזרה לסביבת המורה
+                </button>
+                <div class="activity-logic-eyebrow">פעילות חדשה</div>
+                <h2>איך התלמידים יתקדמו בפעילות?</h2>
+                <p class="activity-logic-lead">זו בחירה של מבנה הפעילות כולו. אחרי הבחירה ממשיכים לפרטי הפעילות ולא חוזרים לבחור סוג מחדש.</p>
+
+                <div class="activity-logic-grid">
+                    <button type="button" id="choose-regular-logic" class="activity-logic-card">
+                        <span class="activity-logic-icon"><i data-lucide="map" class="w-6 h-6"></i></span>
+                        <span class="activity-logic-copy">
+                            <strong>פעילות רגילה</strong>
+                            <small>כל הנקודות פתוחות. התלמידים בוחרים את סדר העבודה ומתקדמים בקצב שלהם.</small>
+                            <em>מתאים לדף עבודה אינטראקטיבי, חקר תמונה, מפה או תרשים.</em>
+                        </span>
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    </button>
+
+                    <button type="button" id="choose-escape-logic" class="activity-logic-card escape">
+                        <span class="activity-logic-icon"><i data-lucide="lock-keyhole" class="w-6 h-6"></i></span>
+                        <span class="activity-logic-copy">
+                            <strong>חדר בריחה</strong>
+                            <small>התחנות נפתחות בהדרגה. פתרון נכון פותח את התחנה הבאה, ובסיום נפתח המנעול הסופי.</small>
+                            <em>מתאים למסלול משימתי עם רמזים וקוד סופי.</em>
+                        </span>
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
         <section id="new-project-setup-view" class="hidden new-project-setup-page" aria-label="התחלת פעילות חדשה">
             <div class="new-setup-shell">
                 <div class="mapi-flow-steps" aria-label="שלבי יצירת פעילות">
@@ -3385,16 +3591,9 @@
                     </div>
 
                     <div class="new-setup-field new-setup-wide">
-                        <label>סוג פעילות</label>
-                        <div class="new-setup-mode-grid">
-                            <button type="button" class="new-activity-mode-btn active" data-new-mode="regular">
-                                <strong>פעילות רגילה</strong>
-                                <span>נקודות מידע ושאלות ללא קוד מנעול</span>
-                            </button>
-                            <button type="button" class="new-activity-mode-btn" data-new-mode="escape">
-                                <strong>חדר בריחה</strong>
-                                <span>איסוף רמזים ופתיחת מנעול סופי</span>
-                            </button>
+                        <div id="chosen-logic-badge" class="chosen-logic-badge">
+                            <i data-lucide="map" class="w-4 h-4"></i>
+                            <span>מסלול שנבחר: פעילות רגילה</span>
                         </div>
                     </div>
 
@@ -3486,6 +3685,10 @@
                         <p>הקובץ יכלול את פרטי התלמיד/ה, השאלות והתשובות שנשמרו במהלך הפעילות.</p>
                     </div>
                     <div id="student-submission-guidance" class="student-submission-guidance hidden"></div>
+                    <button type="button" id="student-final-lock-btn" class="student-final-lock-btn hidden">
+                        <i data-lucide="lock-keyhole" class="w-5 h-5"></i>
+                        <span><strong>פתיחת המנעול הסופי</strong><small>כל התחנות הושלמו. הזינו את הקוד שאספתם.</small></span>
+                    </button>
                     <button type="button" id="student-download-pdf-btn" class="student-download-pdf-btn">
                         <i data-lucide="file-down" class="w-5 h-5"></i>
                         <span><strong>הורדת דף התשובות כ־PDF</strong><small>לשמירה, שליחה או העלאה למערכת הלמידה</small></span>
@@ -3872,6 +4075,7 @@
             pins: [],
             isEscapeRoom: false,
             lockCode: '',
+            escapeUnlocked: false,
             mode: 'edit',
             studentProgress: {},
             studentAnswers: {},
@@ -3987,6 +4191,7 @@
                     document.body.classList.add('landing-active');
                     document.getElementById('dashboard-view')?.classList.remove('hidden');
                     document.getElementById('teacher-guide-view')?.classList.add('hidden');
+                    document.getElementById('activity-logic-view')?.classList.add('hidden');
                     document.getElementById('new-project-setup-view')?.classList.add('hidden');
                     document.getElementById('editor-view')?.classList.add('hidden');
                     document.getElementById('editor-tools')?.classList.add('hidden');
@@ -4000,6 +4205,8 @@
                     setView('editor');
                 } else if (view === 'guide') {
                     setView('guide');
+                } else if (view === 'logic') {
+                    setView('logic');
                 } else if (view === 'new-setup') {
                     setView('new-setup');
                 } else {
@@ -4096,6 +4303,7 @@
                     currentProject.studentAnswers = parsed.studentAnswers && typeof parsed.studentAnswers === 'object'
                         ? parsed.studentAnswers
                         : {};
+                    currentProject.escapeUnlocked = !!parsed.escapeUnlocked;
                 }
             } catch (err) {
                 console.error("Student session read failed:", err);
@@ -4108,6 +4316,7 @@
             const payload = {
                 studentProgress: currentProject.studentProgress || {},
                 studentAnswers: currentProject.studentAnswers || {},
+                escapeUnlocked: !!currentProject.escapeUnlocked,
                 updatedAt: new Date().toISOString()
             };
             try {
@@ -4121,6 +4330,7 @@
         const setView = (view) => {
             document.getElementById('dashboard-view').classList.toggle('hidden', view !== 'dashboard');
             document.getElementById('teacher-guide-view')?.classList.toggle('hidden', view !== 'guide');
+            document.getElementById('activity-logic-view')?.classList.toggle('hidden', view !== 'logic');
             document.getElementById('new-project-setup-view')?.classList.toggle('hidden', view !== 'new-setup');
             document.getElementById('editor-view').classList.toggle('hidden', view !== 'editor');
             document.getElementById('editor-tools').classList.toggle('hidden', view !== 'editor');
@@ -4131,7 +4341,7 @@
             updateCreatorCredit();
             updateStudentExportButtonVisibility();
             if (view === 'editor' && typeof updateWorkflowUI === 'function') updateWorkflowUI();
-            if (!mapiHandlingHistory && (view === 'dashboard' || view === 'editor' || view === 'guide' || view === 'new-setup')) {
+            if (!mapiHandlingHistory && (view === 'dashboard' || view === 'editor' || view === 'guide' || view === 'logic' || view === 'new-setup')) {
                 setHistoryView(view);
             }
         };
@@ -4660,7 +4870,9 @@
                 contentStep?.classList.add('active');
                 kicker = 'שלב 3 מתוך 4';
                 title = 'בניית התוכן';
-                subtitle = 'הוסיפו נקודות למידה על התמונה. כשסיימתם, שמרו את הפעילות בארכיון.';
+                subtitle = currentProject.isEscapeRoom
+                    ? 'הוסיפו תחנות לפי הסדר הרצוי. בחדר בריחה התחנות ייפתחו לתלמיד אחת אחרי השנייה.'
+                    : 'הוסיפו נקודות למידה על התמונה. כשסיימתם, שמרו את הפעילות בארכיון.';
             } else {
                 imageStep?.classList.add('done');
                 contentStep?.classList.add('done');
@@ -4945,9 +5157,35 @@
             return generated;
         };
 
+        const getEscapeStations = () => (currentProject.pins || []).filter((pin) => pin.type !== 'bonus');
+
+        const getEscapeStationIndex = (pin) => getEscapeStations().findIndex((station) => String(station.id) === String(pin?.id));
+
+        const isEscapeStationLocked = (pin) => {
+            if (!currentProject.isEscapeRoom || currentProject.mode !== 'student') return false;
+            const stations = getEscapeStations();
+            const index = stations.findIndex((station) => String(station.id) === String(pin?.id));
+            if (index <= 0) return false;
+            return !currentProject.studentProgress?.[stations[index - 1].id];
+        };
+
+        const areAllEscapeStationsSolved = () => {
+            const stations = getEscapeStations();
+            return stations.length > 0 && stations.every((station) => !!currentProject.studentProgress?.[station.id]);
+        };
+
+        const getNextEscapeStationNumber = () => {
+            const stations = getEscapeStations();
+            const nextIndex = stations.findIndex((station) => !currentProject.studentProgress?.[station.id]);
+            return nextIndex === -1 ? stations.length : nextIndex + 1;
+        };
+
         const updateLockButtonVisibility = () => {
-            const show = currentProject.mode === 'student' && currentProject.isEscapeRoom;
-            document.getElementById('lock-button').classList.toggle('hidden', !show);
+            const ready = currentProject.mode === 'student'
+                && currentProject.isEscapeRoom
+                && areAllEscapeStationsSolved();
+            document.getElementById('lock-button')?.classList.toggle('hidden', !ready);
+            document.getElementById('student-final-lock-btn')?.classList.toggle('hidden', !ready || !!currentProject.escapeUnlocked);
         };
 
         const updateStudentExperienceUI = () => {
@@ -4971,9 +5209,26 @@
 
             if (guidanceEl) {
                 guidanceEl.innerHTML = currentProject.isEscapeRoom
-                    ? '<strong>איך מתקדמים?</strong><span>לחצו על הנקודות, פתרו את המשימות ואספו את הרמזים. לאחר שסיימתם את כל הנקודות, הזינו את קוד המנעול.</span>'
+                    ? '<strong>איך מתקדמים?</strong><span>מתחילים בתחנה 1. רק התחנה הפעילה פתוחה. פתרון נכון פותח את התחנה הבאה ומוסיף רמז לקוד. לאחר השלמת כל התחנות תוכלו לפתוח את המנעול הסופי.</span>'
                     : '<strong>איך מתקדמים?</strong><span>לחצו על הנקודות שבתמונה, קראו את המידע ובצעו את המשימות. עברו על כל הנקודות עד לסיום הפעילות.</span>';
             }
+
+            const finishTitle = document.querySelector('#student-finish-panel .student-finish-copy h3');
+            const finishText = document.querySelector('#student-finish-panel .student-finish-copy p');
+            if (finishTitle && finishText) {
+                if (currentProject.isEscapeRoom && !currentProject.escapeUnlocked) {
+                    finishTitle.textContent = areAllEscapeStationsSolved()
+                        ? 'כל התחנות הושלמו — נשאר לפתוח את המנעול'
+                        : `המשיכו לתחנה ${getNextEscapeStationNumber()}`;
+                    finishText.textContent = areAllEscapeStationsSolved()
+                        ? 'הזינו את הקוד שאספתם לאורך הדרך. לאחר מכן תוכלו להוריד את דף התשובות.'
+                        : 'התחנות נפתחות בהדרגה. פתרון נכון יפתח את התחנה הבאה.';
+                } else {
+                    finishTitle.textContent = 'סיימתם? הורידו את דף התשובות';
+                    finishText.textContent = 'הקובץ יכלול את פרטי התלמיד/ה, השאלות והתשובות שנשמרו במהלך הפעילות.';
+                }
+            }
+            updateLockButtonVisibility();
 
             const submissionText = normalizeOptionalText(currentProject.submissionInstruction);
             if (submissionEl) {
@@ -5006,7 +5261,9 @@
                 btnIcon.setAttribute('data-lucide', 'eye');
                 modeToggle.title = 'תצוגת תלמיד';
                 modeToggle.setAttribute('aria-label', 'תצוגת תלמיד');
-                instructionText.innerText = "לחצו על המפה כדי להוסיף פעילות | גררו נקודה קיימת כדי להזיז אותה";
+                instructionText.innerText = currentProject.isEscapeRoom
+                    ? "חדר בריחה: הוסיפו תחנות לפי סדר ההתקדמות · גררו תחנה כדי למקם אותה"
+                    : "לחצו על התמונה כדי להוסיף נקודת למידה · גררו נקודה קיימת כדי להזיז אותה";
             }
 
             updateLockButtonVisibility();
@@ -5148,8 +5405,6 @@
             lucide.createIcons();
         };
 
-        let newSetupMode = 'regular';
-
         const populateNewSetup = () => {
             document.getElementById('new-project-name-input').value = '';
             document.getElementById('new-creator-name-input').value = normalizeOptionalText(teacherProfile.teacherName);
@@ -5158,11 +5413,14 @@
             document.getElementById('new-student-instruction-input').value = DEFAULT_STUDENT_INSTRUCTION;
             document.getElementById('new-submission-instruction-input').value = '';
             document.getElementById('new-escape-code').value = '';
-            newSetupMode = 'regular';
-            document.getElementById('new-escape-settings').classList.add('hidden');
-            document.querySelectorAll('.new-activity-mode-btn').forEach((btn) => {
-                btn.classList.toggle('active', btn.dataset.newMode === 'regular');
-            });
+            document.getElementById('new-escape-settings').classList.toggle('hidden', !currentProject.isEscapeRoom);
+            const logicBadge = document.getElementById('chosen-logic-badge');
+            if (logicBadge) {
+                logicBadge.innerHTML = currentProject.isEscapeRoom
+                    ? '<i data-lucide="lock-keyhole" class="w-4 h-4"></i><span>מסלול שנבחר: חדר בריחה</span>'
+                    : '<i data-lucide="map" class="w-4 h-4"></i><span>מסלול שנבחר: פעילות רגילה</span>';
+            }
+            lucide.createIcons();
         };
 
         document.getElementById('new-project-btn').onclick = () => {
@@ -5179,27 +5437,41 @@
             mainImage.src = '';
             uploadZone.classList.remove('hidden');
             document.getElementById('canvas-area').classList.add('hidden');
-            populateNewSetup();
             updateWorkflowUI();
+            setView('logic');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        const chooseActivityLogic = (isEscapeRoom) => {
+            currentProject.isEscapeRoom = !!isEscapeRoom;
+            currentProject.lockCode = '';
+            currentProject.escapeUnlocked = false;
+            populateNewSetup();
             setView('new-setup');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
-        document.querySelectorAll('.new-activity-mode-btn').forEach((button) => {
-            button.addEventListener('click', () => {
-                newSetupMode = button.dataset.newMode === 'escape' ? 'escape' : 'regular';
-                document.querySelectorAll('.new-activity-mode-btn').forEach((btn) => {
-                    btn.classList.toggle('active', btn === button);
-                });
-                document.getElementById('new-escape-settings').classList.toggle('hidden', newSetupMode !== 'escape');
-            });
-        });
+        document.getElementById('choose-regular-logic')?.addEventListener('click', () => chooseActivityLogic(false));
+        document.getElementById('choose-escape-logic')?.addEventListener('click', () => chooseActivityLogic(true));
 
-        const returnFromNewSetup = () => {
-            if (!isSharedStudentRequest && history.state?.mapiView === 'new-setup') {
+        const returnFromLogicChoice = () => {
+            if (!isSharedStudentRequest && history.state?.mapiView === 'logic') {
                 history.back();
             } else {
                 setView('dashboard');
+            }
+        };
+        document.getElementById('logic-back-btn')?.addEventListener('click', returnFromLogicChoice);
+
+        const returnFromNewSetup = () => {
+            if (!currentProject.id && !currentProject.image) {
+                setView('logic');
+                return;
+            }
+            if (!isSharedStudentRequest && history.state?.mapiView === 'new-setup') {
+                history.back();
+            } else {
+                setView('editor');
             }
         };
 
@@ -5207,14 +5479,18 @@
         document.getElementById('new-setup-cancel-btn')?.addEventListener('click', returnFromNewSetup);
 
         document.getElementById('new-setup-continue-btn')?.addEventListener('click', () => {
+            if (currentProject.isEscapeRoom && !normalizeOptionalText(document.getElementById('new-escape-code').value)) {
+                showToast("בחדר בריחה צריך להגדיר קוד למנעול הסופי.", 1600);
+                document.getElementById('new-escape-code').focus();
+                return;
+            }
             currentProject.name = normalizeOptionalText(document.getElementById('new-project-name-input').value) || 'פעילות חדשה';
             currentProject.teacherName = normalizeOptionalText(document.getElementById('new-creator-name-input').value);
             currentProject.className = normalizeOptionalText(document.getElementById('new-creator-class-input').value);
             currentProject.schoolName = normalizeOptionalText(document.getElementById('new-creator-school-input').value);
             currentProject.studentInstruction = resolveStudentInstruction(document.getElementById('new-student-instruction-input').value);
             currentProject.submissionInstruction = normalizeOptionalText(document.getElementById('new-submission-instruction-input').value);
-            currentProject.isEscapeRoom = newSetupMode === 'escape';
-            currentProject.lockCode = newSetupMode === 'escape'
+            currentProject.lockCode = currentProject.isEscapeRoom
                 ? normalizeOptionalText(document.getElementById('new-escape-code').value)
                 : '';
 
@@ -5505,6 +5781,14 @@
             }
         };
 
+        document.getElementById('student-final-lock-btn')?.addEventListener('click', () => {
+            if (!areAllEscapeStationsSolved()) {
+                showToast("המנעול ייפתח רק לאחר השלמת כל התחנות.", 1500);
+                return;
+            }
+            document.getElementById('lock-modal')?.classList.remove('hidden');
+        });
+
         document.getElementById('student-download-pdf-btn')?.addEventListener('click', () => {
             studentExportBtn?.click();
         });
@@ -5697,11 +5981,13 @@
             document.getElementById('new-student-instruction-input').value = resolveStudentInstruction(currentProject.studentInstruction);
             document.getElementById('new-submission-instruction-input').value = normalizeOptionalText(currentProject.submissionInstruction);
             document.getElementById('new-escape-code').value = currentProject.lockCode || '';
-            newSetupMode = currentProject.isEscapeRoom ? 'escape' : 'regular';
-            document.querySelectorAll('.new-activity-mode-btn').forEach((btn) => {
-                btn.classList.toggle('active', btn.dataset.newMode === newSetupMode);
-            });
-            document.getElementById('new-escape-settings').classList.toggle('hidden', newSetupMode !== 'escape');
+            document.getElementById('new-escape-settings').classList.toggle('hidden', !currentProject.isEscapeRoom);
+            const logicBadge = document.getElementById('chosen-logic-badge');
+            if (logicBadge) {
+                logicBadge.innerHTML = currentProject.isEscapeRoom
+                    ? '<i data-lucide="lock-keyhole" class="w-4 h-4"></i><span>מסלול שנבחר: חדר בריחה</span>'
+                    : '<i data-lucide="map" class="w-4 h-4"></i><span>מסלול שנבחר: פעילות רגילה</span>';
+            }
             setView('new-setup');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
@@ -5867,8 +6153,10 @@
             currentProject.pins.forEach((pin) => {
                 const isSolved = currentProject.studentProgress[pin.id];
                 const bonusLocked = isBonusLocked(pin);
+                const escapeLocked = isEscapeStationLocked(pin);
+                const escapeStationIndex = currentProject.isEscapeRoom ? getEscapeStationIndex(pin) : -1;
                 const pinEl = document.createElement('div');
-                pinEl.className = `pin w-10 h-10 rounded-full flex items-center justify-center border-4 border-white shadow-xl ${currentProject.mode === 'student' && !isSolved && !bonusLocked ? 'pulse' : ''} ${isSolved ? 'correct-pin' : ''} ${bonusLocked ? 'bonus-locked' : ''}`;
+                pinEl.className = `pin w-10 h-10 rounded-full flex items-center justify-center border-4 border-white shadow-xl ${currentProject.mode === 'student' && !isSolved && !bonusLocked && !escapeLocked ? 'pulse' : ''} ${isSolved ? 'correct-pin' : ''} ${bonusLocked ? 'bonus-locked' : ''} ${escapeLocked ? 'escape-station-locked' : ''}`;
                 pinEl.dataset.id = pin.id;
 
                 const colors = {
@@ -5895,8 +6183,14 @@
                     bonus: 'gift',
                     video: 'video'
                 };
-                const iconName = isSolved ? 'check' : (bonusLocked ? 'lock' : (icons[pin.type] || 'map-pin'));
+                const iconName = isSolved ? 'check' : ((bonusLocked || escapeLocked) ? 'lock' : (icons[pin.type] || 'map-pin'));
                 pinEl.innerHTML = `<i data-lucide="${iconName}" class="w-5 h-5 text-white"></i>`;
+                if (currentProject.isEscapeRoom && escapeStationIndex >= 0) {
+                    const stationBadge = document.createElement('span');
+                    stationBadge.className = 'escape-station-number';
+                    stationBadge.textContent = String(escapeStationIndex + 1);
+                    pinEl.appendChild(stationBadge);
+                }
 
                 if (currentProject.mode === 'edit') {
                     pinEl.addEventListener('mousedown', (e) => startDrag(e, pin));
@@ -5904,6 +6198,10 @@
                 } else {
                     pinEl.onclick = (e) => {
                         e.stopPropagation();
+                        if (escapeLocked) {
+                            showToast(`תחנה ${escapeStationIndex + 1} עדיין נעולה. פתרו קודם את תחנה ${escapeStationIndex}.`, 1500);
+                            return;
+                        }
                         if (bonusLocked) {
                             const remaining = getRemainingRegularPinsForBonus();
                             const suffix = remaining === 1 ? 'נקודה רגילה נוספת' : `${remaining} נקודות רגילות נוספות`;
@@ -5922,8 +6220,9 @@
         };
 
         const updateProgress = () => {
-            const count = currentProject.pins.length;
-            const solved = Object.values(currentProject.studentProgress).filter((v) => v).length;
+            const relevantPins = currentProject.isEscapeRoom ? getEscapeStations() : (currentProject.pins || []);
+            const count = relevantPins.length;
+            const solved = relevantPins.filter((pin) => !!currentProject.studentProgress?.[pin.id]).length;
             document.getElementById('progress-text').innerText = `${solved}/${count}`;
             document.getElementById('progress-bar').style.width = count ? `${(solved / count) * 100}%` : '0%';
         };
@@ -6086,24 +6385,33 @@
                 area.appendChild(explanationBox);
             };
 
-            const markSolved = ({ awardLockSymbol = true } = {}) => {
+            const markSolved = ({ awardLockSymbol = true, correctForEscape = true } = {}) => {
+                if (currentProject.isEscapeRoom && correctForEscape === false) {
+                    showWrong(feedback, "התשובה אינה נכונה. התחנה הבאה עדיין נעולה — נסו שוב.");
+                    persistStudentSession();
+                    renderPins();
+                    return;
+                }
+
                 currentProject.studentProgress[pin.id] = true;
                 feedback.classList.remove('hidden', 'bg-red-100', 'text-red-700');
                 feedback.classList.add('bg-green-100', 'text-green-700');
 
-                let msg = pin.type === 'info' ? "המידע נקרא." : "התשובה נשמרה.";
-                if (currentProject.isEscapeRoom && currentProject.lockCode) {
-                    if (awardLockSymbol) {
-                        const idx = currentProject.pins.indexOf(pin);
+                let msg = pin.type === 'info' ? "המידע נקרא. התחנה הבאה נפתחה." : "מצוין! התחנה הושלמה.";
+                if (currentProject.isEscapeRoom && currentProject.lockCode && awardLockSymbol) {
+                    const idx = getEscapeStationIndex(pin);
+                    if (idx >= 0) {
                         const symbol = currentProject.lockCode[idx % currentProject.lockCode.length];
-                        msg += ` התו שגיליתם: ${symbol}`;
-                    } else {
-                        msg += " לא התקבל תו בנקודה זו.";
+                        msg += ` הרמז שאספתם: ${symbol}`;
                     }
+                }
+                if (currentProject.isEscapeRoom && areAllEscapeStationsSolved()) {
+                    msg += " כל התחנות הושלמו — המנעול הסופי מוכן.";
                 }
                 feedback.innerText = msg;
                 persistStudentSession();
                 renderPins();
+                updateStudentExperienceUI();
             };
 
             if (pin.type === 'info') {
@@ -6158,7 +6466,7 @@
                     const isCorrect = String(selectedIdx) === String(pin.correctIdx);
                     saveStudentAnswer(pin, selected?.text || '', isCorrect);
                     revealExplanation();
-                    markSolved({ awardLockSymbol: isCorrect });
+                    markSolved({ awardLockSymbol: isCorrect, correctForEscape: isCorrect });
                 };
                 area.appendChild(saveBtn);
             } else if (pin.type === 'boolean') {
@@ -6207,7 +6515,7 @@
                     const isCorrect = selectedValue == (pin.correctBool == "true" || pin.correctBool === true);
                     saveStudentAnswer(pin, selected?.text || '', isCorrect);
                     revealExplanation();
-                    markSolved({ awardLockSymbol: isCorrect });
+                    markSolved({ awardLockSymbol: isCorrect, correctForEscape: isCorrect });
                 };
                 area.appendChild(saveBtn);
             } else if (pin.type === 'match') {
@@ -6295,7 +6603,7 @@
                     const isCorrect = rowEntries.every((entry, idx) => entry.select.value === pairs[idx].right);
                     saveStudentAnswer(pin, answerText, isCorrect);
                     revealExplanation();
-                    markSolved({ awardLockSymbol: isCorrect });
+                    markSolved({ awardLockSymbol: isCorrect, correctForEscape: isCorrect });
                 };
                 area.appendChild(saveBtn);
             } else if (pin.type === 'order') {
@@ -6387,7 +6695,7 @@
                         && studentOrder.every((item, idx) => item === configuredItems[idx]);
                     saveStudentAnswer(pin, studentOrder.join(' | '), isCorrect);
                     revealExplanation();
-                    markSolved({ awardLockSymbol: isCorrect });
+                    markSolved({ awardLockSymbol: isCorrect, correctForEscape: isCorrect });
                 };
                 area.appendChild(saveBtn);
             } else if (pin.type === 'video') {
@@ -6913,8 +7221,12 @@
                 return;
             }
             if (val.toLowerCase() === expected.toLowerCase()) {
-                showToast("🏆 כל הכבוד! הצלחתם לפתוח את המנעול!");
+                currentProject.escapeUnlocked = true;
+                persistStudentSession();
+                showToast("🏆 כל הכבוד! המנעול נפתח!", 1800);
                 document.getElementById('lock-modal').classList.add('hidden');
+                updateStudentExperienceUI();
+                updateLockButtonVisibility();
             } else {
                 showToast("קוד שגוי, נסו שוב.");
             }
