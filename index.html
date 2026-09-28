@@ -2797,7 +2797,7 @@
             openPinModal(newPin.id);
         };
 
-        const getPinTypeLabel = (type) => ({
+        const getSidebarPinTypeLabel = (type) => ({
             info: 'מידע',
             open: 'שאלה פתוחה',
             mcq: 'אמריקאית',
@@ -2840,7 +2840,7 @@
                         <span class="mapi-point-index ${solved ? 'solved' : ''}">${solved ? '✓' : index + 1}</span>
                         <span class="mapi-point-copy">
                             <strong>${getPinDisplayTitle(pin, index)}</strong>
-                            <small>${getPinTypeLabel(pin.type)}</small>
+                            <small>${getSidebarPinTypeLabel(pin.type)}</small>
                         </span>
                         <i data-lucide="chevron-left" class="w-4 h-4 mapi-point-chevron"></i>
                     </button>`;
