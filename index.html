@@ -4504,7 +4504,9 @@
                 currentProject.id = id;
                 updateSaveActionsUI();
                 renderProjectsGrid();
-                showToast(forceNew ? "נשמר כפעילות חדשה בארכיון המקומי!" : "השינויים נשמרו בארכיון המקומי!");
+                const mobileSaveState = document.getElementById('mobile-save-state');
+                if (mobileSaveState) mobileSaveState.textContent = 'נשמר בהצלחה';
+                showToast(forceNew ? "הפעילות נשמרה!" : "השינויים נשמרו!");
                 return;
             }
 
@@ -4551,7 +4553,9 @@
             currentProject.id = id;
             updateSaveActionsUI();
             await fetchProjects();
-            showToast(forceNew ? "נשמרה פעילות חדשה בענן!" : "השינויים נשמרו בענן!");
+            const mobileSaveState = document.getElementById('mobile-save-state');
+            if (mobileSaveState) mobileSaveState.textContent = 'נשמר בהצלחה';
+            showToast(forceNew ? "הפעילות נשמרה!" : "השינויים נשמרו!");
         };
 
         const openSaveMapModal = (mode = 'initialSave', suggestedName = '') => {
@@ -4570,8 +4574,11 @@
             }, 20);
         };
 
-        document.getElementById('save-project-btn').onclick = async () => {
-            if (!currentUser) return;
+        const handlePrimarySave = async () => {
+            if (!currentUser) {
+                showToast("לא ניתן לשמור כרגע. נסו להיכנס מחדש לסביבת המורה.");
+                return;
+            }
             if (!teacherId) {
                 openTeacherModal(false);
                 showToast("צריך לבחור מזהה מורה לפני שמירה.");
@@ -4590,6 +4597,9 @@
             }
             await persistCurrentProject({ forceNew: false });
         };
+
+        document.getElementById('save-project-btn').onclick = handlePrimarySave;
+        mobileSaveBtn?.addEventListener('click', handlePrimarySave);
 
         saveAsNewBtn.onclick = () => {
             if (!currentUser || !teacherId || !currentProject.image) return;
@@ -4804,7 +4814,6 @@
         const mobileShareBtn = document.getElementById('mobile-share-btn');
         const mobileMoreBtn = document.getElementById('mobile-more-btn');
 
-        mobileSaveBtn?.addEventListener('click', () => document.getElementById('save-project-btn')?.click());
         mobileSettingsBtn?.addEventListener('click', () => document.getElementById('settings-btn')?.click());
         mobilePreviewBtn?.addEventListener('click', () => document.getElementById('mode-toggle')?.click());
         mobileShareBtn?.addEventListener('click', () => document.getElementById('share-student-btn')?.click());
