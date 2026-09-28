@@ -2556,6 +2556,12 @@
                 backdrop-filter:blur(10px);
             }
         }
+
+        #toast {
+            transition-property: transform, opacity !important;
+            transition-duration: 140ms !important;
+            transition-timing-function: ease-out !important;
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -4024,7 +4030,6 @@
             const initialBytes = estimatePayloadBytes(snapshot);
             if (initialBytes <= 7_500_000) return snapshot;
 
-            showToast("התמונה גדולה, מתבצעת דחיסה לשמירה בענן...");
             const compressed = await compressDataUrlImage(snapshot.image, 2200, 0.8);
             const next = { ...snapshot, image: compressed };
             const nextBytes = estimatePayloadBytes(next);
@@ -4132,7 +4137,7 @@
 
             const { data, error } = await supabase
                 .from(supabaseProjectsTable)
-                .select('id, payload, updated_at')
+                .select('id, payload, image, updated_at')
                 .eq('app_id', appId)
                 .eq('teacher_id', teacherId)
                 .eq('id', requestedProjectId)
@@ -4159,6 +4164,7 @@
             return {
                 ...payload,
                 id: row.id,
+                image: row.image || payload.image || '',
                 updatedAt: row.updated_at || payload.updatedAt,
                 pins: normalizeProjectPins(payload.pins),
                 studentInstruction: resolveStudentInstruction(payload.studentInstruction),
@@ -4403,7 +4409,31 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
 
-        const openProject = (project, options = {}) => {
+        const openProject = async (project, options = {}) => {
+            const forceStudent = !!options.forceStudent;
+            if (!project.image && hasSupabaseConfig && project.id && teacherId) {
+                const { data: imageRow, error: imageError } = await supabase
+                    .from(supabaseProjectsTable)
+                    .select('image')
+                    .eq('app_id', appId)
+                    .eq('teacher_id', teacherId)
+                    .eq('id', project.id)
+                    .maybeSingle();
+
+                if (imageError) {
+                    console.error("Project image load error:", imageError);
+                    showToast("לא הצלחתי לטעון את תמונת הפעילות.");
+                    return;
+                }
+
+                project = { ...project, image: imageRow?.image || '' };
+            }
+
+            if (!project.image) {
+                showToast("לא נמצאה תמונה לפעילות.");
+                return;
+            }
+
             const forceStudent = !!options.forceStudent;
             const readOnly = !!options.readOnly;
             if (!readOnly) restoreEditorToolbarUI();
@@ -4444,9 +4474,18 @@
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = (ev) => {
-                    currentProject.image = ev.target.result;
-                    mainImage.src = ev.target.result;
+                reader.onload = async (ev) => {
+                    let imageData = ev.target.result;
+                    try {
+                        if (typeof imageData === 'string' && imageData.length > 1_800_000) {
+                            imageData = await compressDataUrlImage(imageData, 1800, 0.82);
+                        }
+                    } catch (compressionError) {
+                        console.warn("Image pre-compression skipped:", compressionError);
+                    }
+
+                    currentProject.image = imageData;
+                    mainImage.src = imageData;
                     uploadZone.classList.add('hidden');
                     document.getElementById('canvas-area').classList.remove('hidden');
                 };
@@ -4491,54 +4530,85 @@
                 currentProject.id = id;
                 updateSaveActionsUI();
                 renderProjectsGrid();
-                showToast("הפעילות נשמרה", 900);
+                showToast("הפעילות נשמרה", 700);
                 return;
             }
 
+            const isNewRow = forceNew || !currentProject.id;
             const id = (!forceNew && currentProject.id) || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
             let projectForCloud = storageReadyProject;
-            try {
-                projectForCloud = await prepareProjectForCloudSave(currentProject);
-            } catch (prepError) {
-                const prepMsg = prepError?.message || "שגיאה בהכנת השמירה לענן.";
-                showToast(prepMsg);
-                return;
-            }
-            if (projectForCloud.image !== currentProject.image) {
-                currentProject.image = projectForCloud.image;
-                mainImage.src = projectForCloud.image;
+
+            if (isNewRow) {
+                try {
+                    projectForCloud = await prepareProjectForCloudSave(storageReadyProject);
+                } catch (prepError) {
+                    const prepMsg = prepError?.message || "שגיאה בהכנת השמירה.";
+                    showToast(prepMsg);
+                    return;
+                }
+
+                if (projectForCloud.image !== currentProject.image) {
+                    currentProject.image = projectForCloud.image;
+                    mainImage.src = projectForCloud.image;
+                }
             }
 
+            const imageForStorage = projectForCloud.image;
+            const { image: _ignoredImage, ...projectWithoutImage } = projectForCloud;
             const payload = {
-                ...projectForCloud,
+                ...projectWithoutImage,
                 id,
                 teacherId,
                 ownerUid: currentUser.uid,
                 updatedAt: new Date().toISOString()
             };
-            const payloadBytes = estimatePayloadBytes(payload);
 
-            const { error } = await supabase
-                .from(supabaseProjectsTable)
-                .upsert({
-                    id,
-                    app_id: appId,
-                    teacher_id: teacherId,
-                    payload,
-                    updated_at: payload.updatedAt
-                }, { onConflict: 'id' });
+            let saveError = null;
 
-            if (error) {
-                console.error("Supabase upsert error:", error, { payloadBytes });
-                const errorMsg = error.message ? `שגיאה בשמירה לענן: ${error.message}` : "שגיאה בשמירה לענן";
-                showToast(errorMsg);
+            if (isNewRow) {
+                const { error } = await supabase
+                    .from(supabaseProjectsTable)
+                    .upsert({
+                        id,
+                        app_id: appId,
+                        teacher_id: teacherId,
+                        payload,
+                        image: imageForStorage,
+                        updated_at: payload.updatedAt
+                    }, { onConflict: 'id' });
+                saveError = error;
+            } else {
+                const { error } = await supabase
+                    .from(supabaseProjectsTable)
+                    .update({
+                        payload,
+                        updated_at: payload.updatedAt
+                    })
+                    .eq('id', id)
+                    .eq('app_id', appId)
+                    .eq('teacher_id', teacherId);
+                saveError = error;
+            }
+
+            if (saveError) {
+                console.error("Supabase save error:", saveError);
+                showToast("השמירה נכשלה. נסו שוב.");
                 return;
             }
 
             currentProject.id = id;
             updateSaveActionsUI();
-            showToast("הפעילות נשמרה", 900);
-            fetchProjects().catch((err) => console.error("Archive refresh after save failed:", err));
+            showToast("הפעילות נשמרה", 700);
+
+            // Keep the archive responsive without re-downloading images.
+            const lightweightProject = {
+                ...payload,
+                id,
+                image: currentProject.image,
+                updatedAt: payload.updatedAt
+            };
+            projects = [lightweightProject, ...projects.filter((project) => project.id !== id)];
+            renderProjectsGrid();
         };
 
         const openSaveMapModal = (mode = 'initialSave', suggestedName = '') => {
