@@ -4005,6 +4005,215 @@
                 margin-bottom:10px;
             }
         }
+
+        /* ===== Desktop refinement pass ===== */
+        @media (min-width: 1024px) {
+            body:not(.landing-active) > main {
+                max-width: 1320px!important;
+                padding: 26px 32px 34px!important;
+            }
+
+            #app-header > div {
+                max-width: 1320px!important;
+                flex-wrap: nowrap!important;
+                gap: 18px!important;
+            }
+
+            #editor-tools.mapi-simple-toolbar {
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                flex-wrap:nowrap;
+                gap:8px;
+                min-width:0;
+            }
+
+            .mapi-toolbar-btn {
+                min-height:42px;
+                padding:8px 11px;
+                border-radius:11px;
+                font-size:.78rem;
+                white-space:nowrap;
+            }
+
+            .mapi-toolbar-btn svg {
+                width:17px;
+                height:17px;
+            }
+
+            #teacher-credit-pill {
+                max-width:230px;
+            }
+
+            #dashboard-view {
+                width:min(1180px,100%);
+                margin-inline:auto;
+            }
+
+            .teacher-dashboard-intro {
+                grid-template-columns:minmax(0,1.28fr) minmax(360px,.72fr)!important;
+                gap:24px!important;
+                margin-bottom:26px!important;
+            }
+
+            .teacher-welcome-card {
+                padding:32px 34px!important;
+            }
+
+            .teacher-actions-card {
+                padding:16px!important;
+                gap:12px!important;
+            }
+
+            .teacher-action-btn {
+                min-height:82px!important;
+                padding:14px 15px!important;
+                border-radius:17px!important;
+            }
+
+            .teacher-action-copy strong {
+                font-size:.96rem!important;
+            }
+
+            .teacher-action-copy small {
+                font-size:.76rem!important;
+            }
+
+            .teacher-projects-head {
+                margin-top:6px!important;
+                margin-bottom:16px!important;
+            }
+
+            #projects-grid {
+                gap:18px!important;
+            }
+
+            .project-card {
+                min-height:188px;
+            }
+
+            .teacher-guide-page,
+            .activity-logic-page,
+            .new-project-setup-page {
+                width:min(1040px,100%)!important;
+            }
+
+            .teacher-guide-hero,
+            .activity-logic-shell,
+            .new-setup-shell {
+                padding:32px 34px!important;
+            }
+
+            .activity-logic-grid {
+                gap:18px!important;
+            }
+
+            .activity-logic-card {
+                min-height:210px!important;
+                padding:22px!important;
+            }
+
+            .new-setup-form {
+                gap:16px 18px!important;
+            }
+
+            #editor-view {
+                width:100%;
+                max-width:1240px;
+                margin-inline:auto;
+            }
+
+            .editor-workflow-head {
+                width:min(1120px,100%)!important;
+                padding:15px 20px!important;
+            }
+
+            #upload-zone {
+                width:min(1050px,100%)!important;
+                min-height:320px;
+                padding:54px 36px!important;
+                margin-inline:auto!important;
+                border-radius:24px!important;
+            }
+
+            #canvas-area {
+                width:100%;
+                align-items:center!important;
+            }
+
+            #map-wrapper {
+                max-width:min(1050px,100%)!important;
+                max-height:72vh;
+                margin-inline:auto!important;
+                border-width:6px!important;
+                border-radius:22px!important;
+            }
+
+            #main-image {
+                display:block;
+                width:auto!important;
+                height:auto!important;
+                max-width:100%!important;
+                max-height:72vh!important;
+                object-fit:contain!important;
+            }
+
+            .student-experience-head,
+            .student-finish-panel {
+                width:min(1050px,100%)!important;
+            }
+
+            /* Point editing is a desktop work surface, not a phone-size modal */
+            #pin-modal > div {
+                max-width:780px!important;
+                max-height:88vh!important;
+                border-radius:22px!important;
+            }
+
+            #pin-modal > div > div:first-child {
+                padding:16px 20px!important;
+            }
+
+            #pin-modal > div > div:nth-child(2) {
+                padding:24px 28px!important;
+                gap:18px!important;
+            }
+
+            #type-selector > div {
+                grid-template-columns:repeat(4,minmax(0,1fr))!important;
+                gap:10px!important;
+            }
+
+            .type-btn {
+                min-height:70px;
+                font-size:.76rem!important;
+            }
+
+            #edit-controls {
+                position:sticky;
+                bottom:-24px;
+                z-index:4;
+                margin:6px -28px -24px!important;
+                padding:14px 28px 18px;
+                background:rgba(255,253,249,.97);
+                backdrop-filter:blur(10px);
+                border-top:1px solid #E8E1E7;
+            }
+
+            #pin-save-btn {
+                min-width:150px;
+            }
+        }
+
+        @media (min-width: 1280px) {
+            .teacher-dashboard-intro {
+                grid-template-columns:minmax(0,1.35fr) minmax(390px,.65fr)!important;
+            }
+
+            #projects-grid {
+                grid-template-columns:repeat(3,minmax(0,1fr))!important;
+            }
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
