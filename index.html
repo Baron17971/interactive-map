@@ -1664,6 +1664,143 @@
                 width: min(100vw, 56.25svh);
             }
         }
+
+        /* ===== Simplified teacher toolbar ===== */
+        #editor-tools.mapi-simple-toolbar {
+            display: none;
+            align-items:center;
+            justify-content:center;
+            gap:7px;
+            flex:1 1 auto;
+            min-width:0;
+            overflow:visible;
+            margin-inline:8px;
+        }
+        #editor-tools.mapi-simple-toolbar:not(.hidden) { display:flex; }
+
+        .mapi-toolbar-btn {
+            min-height:42px;
+            border:1px solid rgba(255,255,255,.20);
+            border-radius:12px;
+            background:rgba(255,255,255,.10);
+            color:#f8fffe;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:7px;
+            padding:0 12px;
+            font-size:.86rem;
+            font-weight:800;
+            white-space:nowrap;
+            transition:.18s ease;
+        }
+        .mapi-toolbar-btn:hover {
+            background:rgba(255,255,255,.18);
+            transform:translateY(-1px);
+        }
+        .mapi-save-main {
+            background:linear-gradient(135deg,#14998f,#0f766e);
+            border-color:rgba(255,255,255,.22);
+            box-shadow:0 8px 20px rgba(6,65,60,.24);
+            min-width:100px;
+        }
+        .mapi-share-btn {
+            background:rgba(245,158,11,.16);
+            border-color:rgba(255,207,127,.35);
+        }
+        .mapi-more-wrap { position:relative; }
+        .mapi-more-menu {
+            position:absolute;
+            z-index:80;
+            top:calc(100% + 9px);
+            left:0;
+            width:270px;
+            padding:8px;
+            border-radius:16px;
+            background:#fff;
+            border:1px solid rgba(18,58,55,.13);
+            box-shadow:0 18px 44px rgba(13,42,40,.20);
+            color:#123230;
+        }
+        .mapi-more-menu button {
+            width:100%;
+            display:grid;
+            grid-template-columns:30px 1fr;
+            gap:9px;
+            align-items:center;
+            text-align:right;
+            padding:10px;
+            border-radius:11px;
+            background:transparent;
+            border:0;
+            color:#183d3a;
+        }
+        .mapi-more-menu button:hover { background:#f2f8f6; }
+        .mapi-more-menu button > span { display:block;min-width:0; }
+        .mapi-more-menu strong { display:block;font-size:.84rem; }
+        .mapi-more-menu small { display:block;color:#71817f;font-size:.7rem;line-height:1.35;margin-top:2px; }
+        #student-stats {
+            background:rgba(255,255,255,.12)!important;
+            border:1px solid rgba(255,255,255,.20);
+            color:#fff;
+        }
+        #lock-button { background:#f3c84b;color:#17354a; }
+        #progress-bar { background:#42d3b5!important; }
+
+        @media(max-width:760px){
+            #app-header > div {
+                display:grid!important;
+                grid-template-columns:minmax(0,1fr) auto;
+                gap:8px!important;
+                align-items:center;
+            }
+            #logo-home { grid-column:1;grid-row:1; }
+            #user-info { grid-column:2;grid-row:1;max-width:none!important; }
+            #editor-tools.mapi-simple-toolbar {
+                grid-column:1 / -1;
+                grid-row:2;
+                width:100%;
+                margin:0;
+                display:grid!important;
+                grid-template-columns:repeat(5,minmax(0,1fr));
+                gap:5px;
+                overflow:visible;
+            }
+            #editor-tools.mapi-simple-toolbar.hidden { display:none!important; }
+            .mapi-toolbar-btn {
+                min-width:0;
+                width:100%;
+                min-height:46px;
+                padding:5px 4px;
+                gap:4px;
+                flex-direction:column;
+                border-radius:10px;
+                font-size:.66rem;
+                line-height:1;
+            }
+            .mapi-toolbar-btn svg { width:17px;height:17px; }
+            .mapi-save-main { min-width:0; }
+            .mapi-more-wrap { width:100%; }
+            .mapi-more-wrap > .mapi-toolbar-btn { width:100%; }
+            .mapi-more-menu {
+                position:fixed;
+                left:10px;
+                right:10px;
+                bottom:12px;
+                top:auto;
+                width:auto;
+                border-radius:18px;
+                padding:10px;
+            }
+            #student-stats {
+                grid-column:1 / -1;
+                width:100%;
+                justify-content:center;
+            }
+            #student-export-btn:not(.hidden) {
+                grid-column:auto;
+            }
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -1709,50 +1846,62 @@
                 <span id="brand-tagline">תמונה אחת, אלף מילים</span>
             </div>
 
-            <div id="editor-tools" class="hidden">
-                <div id="toolbar-setup-group" class="toolbar-group">
-                    <button id="teacher-help-btn" class="toolbar-icon-btn toolbar-action-btn" title="הנחיות למורה" aria-label="הנחיות למורה">
-                        <span>הנחיות</span>
-                    </button>
-                    <button id="settings-btn" class="toolbar-icon-btn toolbar-action-btn" title="הגדרות פעילות" aria-label="הגדרות פעילות">
-                        <i data-lucide="settings" class="w-5 h-5"></i>
-                        <span class="sr-only">הגדרות פעילות</span>
-                    </button>
-                </div>
+            <div id="editor-tools" class="hidden mapi-simple-toolbar">
+                <button id="settings-btn" class="mapi-toolbar-btn" title="הגדרות פעילות" aria-label="הגדרות פעילות">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
+                    <span>הגדרות</span>
+                </button>
 
-                <div id="toolbar-publish-group" class="toolbar-group">
-                    <button id="save-project-btn" class="toolbar-icon-btn toolbar-save-btn" title="שמור שינויים" aria-label="שמור שינויים">
-                        <i data-lucide="save" class="w-5 h-5"></i>
-                        <span id="save-project-label" class="sr-only">שמור שינויים</span>
-                    </button>
-                    <button id="save-as-new-btn" class="toolbar-icon-btn toolbar-save-as-btn" title="שמור בשם (יצירת פעילות חדשה)" aria-label="שמור בשם">
-                        <i data-lucide="copy" class="w-5 h-5"></i>
-                        <span class="sr-only">שמור בשם</span>
-                    </button>
-                </div>
+                <button id="save-project-btn" class="mapi-toolbar-btn mapi-save-main" title="שמירת הפעילות" aria-label="שמירת הפעילות">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span id="save-project-label">שמירה</span>
+                </button>
 
-                <div id="toolbar-view-group" class="toolbar-group">
-                    <button id="mode-toggle" class="toolbar-icon-btn toolbar-action-btn" title="תצוגת תלמיד" aria-label="תצוגת תלמיד">
-                        <i data-lucide="eye" id="mode-icon" class="w-5 h-5"></i>
-                        <span id="mode-text" class="sr-only">תצוגת תלמיד</span>
+                <button id="mode-toggle" class="mapi-toolbar-btn" title="תצוגת תלמיד" aria-label="תצוגת תלמיד">
+                    <i data-lucide="eye" id="mode-icon" class="w-4 h-4"></i>
+                    <span id="mode-text">תצוגה</span>
+                </button>
+
+                <button id="share-student-btn" class="mapi-toolbar-btn mapi-share-btn" title="שיתוף לתלמידים" aria-label="שיתוף לתלמידים">
+                    <i data-lucide="share-2" class="w-4 h-4"></i>
+                    <span>שיתוף</span>
+                </button>
+
+                <div id="toolbar-more-wrap" class="mapi-more-wrap">
+                    <button id="toolbar-more-btn" class="mapi-toolbar-btn mapi-more-btn" type="button" aria-haspopup="menu" aria-expanded="false" title="פעולות נוספות">
+                        <i data-lucide="ellipsis" class="w-5 h-5"></i>
+                        <span>עוד</span>
                     </button>
-                    <button id="share-student-btn" class="toolbar-icon-btn toolbar-link-btn" title="קישור לתלמיד" aria-label="קישור לתלמיד">
-                        <span>קישור לתלמיד</span>
-                    </button>
-                    <button id="student-export-btn" class="toolbar-icon-btn toolbar-link-btn hidden" title="ייצוא PDF" aria-label="ייצוא PDF">
-                        <span>ייצוא PDF</span>
-                    </button>
-                    <div id="student-stats" class="hidden flex items-center gap-4 bg-indigo-800 px-4 py-2 rounded-full">
-                        <div class="text-sm font-bold">התקדמות: <span id="progress-text">0/0</span></div>
-                        <div class="w-24 bg-indigo-950 rounded-full h-1.5">
-                            <div id="progress-bar" class="bg-green-400 h-1.5 rounded-full transition-all" style="width: 0%"></div>
-                        </div>
-                        <button id="lock-button" class="hidden bg-yellow-400 text-indigo-900 px-3 py-1 rounded-md font-bold flex items-center gap-1 hover:bg-yellow-300">
-                            <i data-lucide="lock" class="w-4 h-4"></i>
+                    <div id="toolbar-more-menu" class="mapi-more-menu hidden" role="menu">
+                        <button id="save-as-new-btn" type="button" role="menuitem">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                            <span><strong>שמור כעותק חדש</strong><small>יוצר פעילות נוספת בלי לשנות את המקור</small></span>
+                        </button>
+                        <button id="teacher-help-btn" type="button" role="menuitem">
+                            <i data-lucide="circle-help" class="w-4 h-4"></i>
+                            <span><strong>מדריך למורה</strong><small>הסבר על בנייה, שמירה ושיתוף</small></span>
                         </button>
                     </div>
                 </div>
 
+                <button id="student-export-btn" class="mapi-toolbar-btn hidden" title="ייצוא PDF" aria-label="ייצוא PDF">
+                    <i data-lucide="file-down" class="w-4 h-4"></i>
+                    <span>PDF</span>
+                </button>
+
+                <div id="student-stats" class="hidden flex items-center gap-3 px-3 py-2 rounded-full">
+                    <div class="text-sm font-bold"><span id="progress-text">0/0</span></div>
+                    <div class="w-20 bg-slate-200 rounded-full h-1.5">
+                        <div id="progress-bar" class="h-1.5 rounded-full transition-all" style="width: 0%"></div>
+                    </div>
+                    <button id="lock-button" class="hidden px-2 py-1 rounded-md font-bold flex items-center gap-1">
+                        <i data-lucide="lock" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <div id="toolbar-setup-group" class="hidden"></div>
+                <div id="toolbar-publish-group" class="hidden"></div>
+                <div id="toolbar-view-group" class="hidden"></div>
                 <button id="export-btn" class="hidden" aria-hidden="true" tabindex="-1"></button>
             </div>
 
@@ -2853,11 +3002,11 @@
         const updateSaveActionsUI = () => {
             const hasExistingProject = !!currentProject.id;
             const saveProjectBtn = document.getElementById('save-project-btn');
-            saveAsNewBtn.classList.remove('hidden');
-            saveProjectLabel.innerText = 'שמור שינויים';
+            saveAsNewBtn.classList.toggle('hidden', !hasExistingProject);
+            saveProjectLabel.innerText = hasExistingProject ? 'שמירה' : 'שמירה';
             const saveTitle = hasExistingProject
-                ? 'שמירת שינויים בפעילות הנוכחית'
-                : 'זמין רק לפעילות קיימת. לפעילות חדשה השתמשי ב"שמור בשם".';
+                ? 'שמירת השינויים בפעילות'
+                : 'שמירת הפעילות בפעם הראשונה';
             saveProjectBtn.title = saveTitle;
             saveProjectBtn.setAttribute('aria-label', saveTitle);
         };
@@ -2959,32 +3108,16 @@
         };
 
         const restoreEditorToolbarUI = () => {
-            const ids = [
-                'toolbar-setup-group',
-                'toolbar-publish-group',
-                'mode-toggle',
-                'settings-btn',
-                'teacher-help-btn',
-                'save-project-btn',
-                'save-as-new-btn',
-                'share-student-btn'
-            ];
-            ids.forEach((id) => document.getElementById(id).classList.remove('hidden'));
+            ['mode-toggle','settings-btn','teacher-help-btn','save-project-btn','share-student-btn','toolbar-more-wrap']
+                .forEach((id) => document.getElementById(id)?.classList.remove('hidden'));
             studentExportBtn.classList.add('hidden');
+            updateSaveActionsUI();
             updateStudentExportButtonVisibility();
         };
 
         const applyReadOnlyStudentUI = () => {
-            document.getElementById('toolbar-setup-group').classList.add('hidden');
-            document.getElementById('toolbar-publish-group').classList.add('hidden');
-            document.getElementById('mode-toggle').classList.add('hidden');
-            document.getElementById('settings-btn').classList.add('hidden');
-            document.getElementById('teacher-help-btn').classList.add('hidden');
-            document.getElementById('save-project-btn').classList.add('hidden');
-            document.getElementById('save-as-new-btn').classList.add('hidden');
-            document.getElementById('share-student-btn').classList.add('hidden');
-            document.getElementById('export-btn').classList.add('hidden');
-            document.getElementById('exit-editor').classList.add('hidden');
+            ['mode-toggle','settings-btn','teacher-help-btn','save-project-btn','save-as-new-btn','share-student-btn','toolbar-more-wrap','export-btn','exit-editor']
+                .forEach((id) => document.getElementById(id)?.classList.add('hidden'));
             updateStudentExportButtonVisibility();
         };
 
@@ -3441,18 +3574,23 @@
             showToast(forceNew ? "נשמרה פעילות חדשה בענן!" : "השינויים נשמרו בענן!");
         };
 
-        const openSaveMapModal = (mode = 'saveAs', suggestedName = '') => {
+        const openSaveMapModal = (mode = 'initialSave', suggestedName = '') => {
             saveMapModalMode = mode;
-            saveMapModalTitle.innerText = "שמור בשם";
-            saveMapModalSubtitle.innerText = "הפעילות תישמר כפעילות חדשה בארכיון, בלי לדרוס פעילות קיימת.";
-            saveMapConfirmBtn.innerText = "שמור בשם";
-            saveMapNameInput.value = suggestedName || currentProject.name || '';
+            const isCopy = mode === 'saveAs';
+            saveMapModalTitle.innerText = isCopy ? "שמירת עותק חדש" : "שמירת הפעילות";
+            saveMapModalSubtitle.innerText = isCopy
+                ? "העותק יישמר כפעילות חדשה ונפרדת."
+                : "תנו לפעילות שם. מכאן ואילך לחיצה על שמירה תעדכן אותה מיד.";
+            saveMapConfirmBtn.innerText = isCopy ? "שמור עותק" : "שמור פעילות";
+            saveMapNameInput.value = suggestedName || (currentProject.name === 'פעילות חדשה' ? '' : currentProject.name || '');
             saveMapModal.classList.remove('hidden');
-            saveMapNameInput.focus();
-            saveMapNameInput.select();
+            setTimeout(() => {
+                saveMapNameInput.focus();
+                saveMapNameInput.select();
+            }, 20);
         };
 
-        document.getElementById('save-project-btn').onclick = () => {
+        document.getElementById('save-project-btn').onclick = async () => {
             if (!currentUser) return;
             if (!teacherId) {
                 openTeacherModal(false);
@@ -3460,28 +3598,25 @@
                 return;
             }
             if (!currentProject.image) {
-                showToast("צריך להעלות תמונה לפני שמירה");
+                showToast("קודם מעלים תמונה לפעילות.");
                 return;
             }
             if (!currentProject.id) {
-                showToast('אין עדיין פעילות קיימת. השתמשי ב"שמור בשם".');
+                const suggested = currentProject.name && currentProject.name !== 'פעילות חדשה'
+                    ? currentProject.name
+                    : '';
+                openSaveMapModal('initialSave', suggested);
                 return;
             }
-            persistCurrentProject({ forceNew: false });
+            await persistCurrentProject({ forceNew: false });
         };
 
         saveAsNewBtn.onclick = () => {
-            if (!currentUser) return;
-            if (!teacherId) {
-                openTeacherModal(false);
-                showToast("צריך לבחור מזהה מורה לפני שמירה.");
-                return;
-            }
-            if (!currentProject.image) {
-                showToast("צריך להעלות תמונה לפני שמירה");
-                return;
-            }
-            openProjectSettingsModal('saveAs');
+            if (!currentUser || !teacherId || !currentProject.image) return;
+            const suggested = getSuggestedProjectNameForSaveAs();
+            openSaveMapModal('saveAs', suggested);
+            document.getElementById('toolbar-more-menu')?.classList.add('hidden');
+            document.getElementById('toolbar-more-btn')?.setAttribute('aria-expanded','false');
         };
 
         shareStudentBtn.onclick = async () => {
@@ -3562,7 +3697,7 @@
             }
             currentProject.name = mapName;
             saveMapModal.classList.add('hidden');
-            await persistCurrentProject({ forceNew: saveMapModalMode === 'saveAs' });
+            await persistCurrentProject({ forceNew: saveMapModalMode === 'saveAs' || saveMapModalMode === 'initialSave' });
         };
 
         saveMapNameInput.addEventListener('keydown', async (e) => {
@@ -3640,6 +3775,28 @@
         document.getElementById('landing-start-btn')?.addEventListener('click', openTeacherEntry);
         document.getElementById('landing-demo-btn')?.addEventListener('click', () => {
             showToast('דוגמת תלמיד תתווסף בשלב הבא. בינתיים אפשר להיכנס כמורה וליצור פעילות.');
+        });
+
+        const toolbarMoreBtn = document.getElementById('toolbar-more-btn');
+        const toolbarMoreMenu = document.getElementById('toolbar-more-menu');
+
+        toolbarMoreBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const willOpen = toolbarMoreMenu.classList.contains('hidden');
+            toolbarMoreMenu.classList.toggle('hidden', !willOpen);
+            toolbarMoreBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('toolbar-more-wrap')?.contains(e.target)) {
+                toolbarMoreMenu?.classList.add('hidden');
+                toolbarMoreBtn?.setAttribute('aria-expanded','false');
+            }
+        });
+
+        document.getElementById('teacher-help-btn')?.addEventListener('click', () => {
+            toolbarMoreMenu?.classList.add('hidden');
+            toolbarMoreBtn?.setAttribute('aria-expanded','false');
         });
 
         const startDrag = (e, pin) => {
