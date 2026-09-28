@@ -3959,6 +3959,52 @@
         .project-card-escape:hover .project-edit-link {
             color:#7F836F!important;
         }
+
+        /* ===== Demo navigation + clearer escape-room station numbering ===== */
+        .demo-home-btn {
+            display:inline-flex;
+            align-items:center;
+            gap:7px;
+            min-height:38px;
+            margin-bottom:12px;
+            padding:7px 11px;
+            border-radius:11px;
+            border:1px solid #E1D5DE;
+            background:#FFFDF9;
+            color:#7A2E6E;
+            font-size:.76rem;
+            font-weight:900;
+        }
+        .demo-home-btn.hidden { display:none!important; }
+        .demo-home-btn svg {
+            color:#7A2E6E;
+            stroke:#7A2E6E;
+        }
+
+        body.editor-view-active:not(.student-view-active) .escape-station-number {
+            width:29px;
+            height:29px;
+            top:-13px;
+            right:-13px;
+            background:#7A2E6E;
+            color:#FFF8F1;
+            border:3px solid #FFFDF9;
+            font-size:.76rem;
+            box-shadow:0 5px 12px rgba(95,33,79,.24);
+        }
+
+        body.student-view-active .escape-station-number {
+            background:#7F836F;
+            color:#FFFDF9;
+        }
+
+        @media(max-width:700px){
+            .demo-home-btn {
+                width:100%;
+                justify-content:center;
+                margin-bottom:10px;
+            }
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -4362,6 +4408,10 @@
 
             <div id="canvas-area" class="hidden flex flex-col items-center">
                 <section id="student-experience-head" class="student-experience-head hidden" aria-label="הנחיות לתלמיד">
+                    <button type="button" id="demo-home-btn" class="demo-home-btn hidden">
+                        <i data-lucide="home" class="w-4 h-4"></i>
+                        חזרה לדף הבית
+                    </button>
                     <div class="student-experience-badge" id="student-activity-type">פעילות רגילה</div>
                     <h2 id="student-activity-title">שם הפעילות</h2>
                     <div class="student-instruction-box">
@@ -4643,50 +4693,6 @@
         </div>
     </div>
 
-    <div id="teacher-help-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-8">
-            <div class="flex justify-between items-start gap-4 mb-6">
-                <div>
-                    <h3 class="text-2xl font-extrabold text-slate-800">הנחיות למורה</h3>
-                    <p class="text-sm text-slate-500 mt-1">מדריך קצר לכל האפשרויות במערכת.</p>
-                </div>
-                <button id="teacher-help-close-btn" class="text-slate-400 hover:text-slate-700 p-2 rounded-lg border border-slate-200">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            <div class="teacher-guide-list">
-                <div class="teacher-guide-item">
-                    <h4>הגדרות</h4>
-                    <ul>
-                        <li>בכפתור הגדרות אפשר לעדכן שם פעילות.</li>
-                        <li>אפשר להזין הנחיית פתיחה לתלמידים (מוצגת כחלון קופץ במצב תלמיד).</li>
-                        <li>אפשר להזין קרדיט יוצר/ת: שם מורה, כיתה ובית ספר.</li>
-                    </ul>
-                </div>
-                <div class="teacher-guide-item">
-                    <h4>שמירה ופרסום</h4>
-                    <ul>
-                        <li>שמור שינויים: שומר עדכונים לפעילות שכבר קיימת בארכיון.</li>
-                        <li>שמור בשם: יוצר פעילות חדשה, נפתח חלון הגדרות ואז חלון שמירה בשם.</li>
-                        <li>פרסום: אחרי שמירה, לחצי על קישור תלמיד כדי להעתיק קישור צפייה בלבד.</li>
-                        <li>ייצוא: אפשר להוריד את הפעילות כקובץ JSON לגיבוי/שיתוף נוסף.</li>
-                    </ul>
-                </div>
-                <div class="teacher-guide-item">
-                    <h4>סוגי שאלות + מצב חדר בריחה</h4>
-                    <ul>
-                        <li>לחיצה על המפה מוסיפה נקודה חדשה; גרירה משנה מיקום.</li>
-                        <li>סוגי פעילות: מידע, שאלה פתוחה, אמריקאית, נכון/לא נכון, התאמה, סידור, בונוס ונקודת וידאו.</li>
-                        <li>במצב חדר בריחה אפשר להגדיר קוד סופי, והתלמידים צריכים להשלים נקודות כדי לפתוח מנעול.</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="mt-6 flex justify-end">
-                <button id="teacher-help-ok-btn" class="px-6 py-3 rounded-xl font-bold bg-indigo-600 text-white">סגור</button>
-            </div>
-        </div>
-    </div>
-
     <div id="teacher-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 space-y-5">
             <div>
@@ -4765,7 +4771,9 @@
         const requestedTeacherId = (urlParams.get('teacher') || '').trim().toLowerCase();
         const requestedProjectId = (urlParams.get('project') || '').trim();
         const requestedViewMode = (urlParams.get('view') || '').trim().toLowerCase();
+        const requestedDemoMode = (urlParams.get('demo') || '').trim() === '1';
         const isSharedStudentRequest = !!(requestedTeacherId && requestedProjectId && requestedViewMode === 'student');
+        const DEMO_STUDENT_URL = '?teacher=1968&project=96ebac32-7961-4a6f-94ab-5a6341ef3334&view=student&demo=1';
 
         let supabase = null;
 
@@ -4837,7 +4845,6 @@
         const creatorClassInput = document.getElementById('creator-class-input');
         const creatorSchoolInput = document.getElementById('creator-school-input');
         const activityModeButtons = Array.from(document.querySelectorAll('.activity-mode-btn'));
-        const teacherHelpModal = document.getElementById('teacher-help-modal');
         const studentExportMetaModal = document.getElementById('student-export-meta-modal');
         const studentExportNameInput = document.getElementById('student-export-name-input');
         const studentExportClassInput = document.getElementById('student-export-class-input');
@@ -5715,14 +5722,6 @@
             studentInstructionModal.classList.add('hidden');
         };
 
-        const openTeacherHelpModal = () => {
-            teacherHelpModal.classList.remove('hidden');
-        };
-
-        const closeTeacherHelpModal = () => {
-            teacherHelpModal.classList.add('hidden');
-        };
-
         const restoreEditorToolbarUI = () => {
             ['mode-toggle','settings-btn','teacher-help-btn','save-project-btn','share-student-btn','toolbar-more-wrap']
                 .forEach((id) => document.getElementById(id)?.classList.remove('hidden'));
@@ -5901,6 +5900,8 @@
             const studentMode = currentProject.mode === 'student';
             const head = document.getElementById('student-experience-head');
             const finish = document.getElementById('student-finish-panel');
+            const demoHomeBtn = document.getElementById('demo-home-btn');
+            if (demoHomeBtn) demoHomeBtn.classList.toggle('hidden', !(studentMode && requestedDemoMode));
             if (head) head.classList.toggle('hidden', !studentMode);
             if (finish) finish.classList.toggle('hidden', !studentMode);
 
@@ -6583,12 +6584,6 @@
             }
         });
 
-        document.getElementById('teacher-help-close-btn')?.addEventListener('click', closeTeacherHelpModal);
-        document.getElementById('teacher-help-ok-btn')?.addEventListener('click', closeTeacherHelpModal);
-        teacherHelpModal?.addEventListener('click', (e) => {
-            if (e.target === teacherHelpModal) closeTeacherHelpModal();
-        });
-
         document.getElementById('student-instruction-close-btn').onclick = closeStudentInstructionModal;
         studentInstructionModal.addEventListener('click', (e) => {
             if (e.target === studentInstructionModal) {
@@ -6597,7 +6592,6 @@
         });
 
         document.getElementById('exit-editor').onclick = () => {
-            closeTeacherHelpModal();
             closeStudentInstructionModal();
             closeStudentExportMetaModal(null);
             if (!isSharedStudentRequest && history.state?.mapiView === 'editor') {
@@ -6607,7 +6601,6 @@
             }
         };
         document.getElementById('logo-home').onclick = () => {
-            closeTeacherHelpModal();
             closeStudentInstructionModal();
             closeStudentExportMetaModal(null);
             if (!isSharedStudentRequest && history.state?.mapiView === 'editor') {
@@ -6654,7 +6647,11 @@
 
         document.getElementById('landing-start-btn')?.addEventListener('click', openTeacherEntry);
         document.getElementById('landing-demo-btn')?.addEventListener('click', () => {
-            showToast('דוגמת תלמיד תתווסף בשלב הבא. בינתיים אפשר להיכנס כמורה וליצור פעילות.');
+            window.location.href = DEMO_STUDENT_URL;
+        });
+
+        document.getElementById('demo-home-btn')?.addEventListener('click', () => {
+            window.location.href = `${window.location.origin}${window.location.pathname}`;
         });
 
         const toolbarMoreBtn = document.getElementById('toolbar-more-btn');
@@ -6955,7 +6952,11 @@
         const openPinModal = (id) => {
             currentEditingPinId = id;
             const pin = currentProject.pins.find((item) => item.id === id);
-            document.getElementById('pin-modal-title').innerText = "עריכת נקודה";
+            const escapeStationIndex = currentProject.isEscapeRoom ? getEscapeStationIndex(pin) : -1;
+            document.getElementById('pin-modal-title').innerText =
+                currentProject.isEscapeRoom && escapeStationIndex >= 0
+                    ? `תחנה ${escapeStationIndex + 1} · עריכת נקודה`
+                    : "עריכת נקודה";
             document.getElementById('pin-content').value = pin.content;
             document.getElementById('pin-explanation').value = normalizeOptionalText(pin.explanation);
             setPinType(pin.type);
