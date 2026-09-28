@@ -3208,11 +3208,9 @@
 
             if (!hasSupabaseConfig) {
                 if (teacherId) fetchProjects();
-                showToast("מצב מקומי פעיל. שמירה תתבצע בדפדפן זה.");
                 return;
             }
 
-            showToast("מצב ענן פעיל. שמירה מתבצעת ב-Supabase.");
             if (teacherId) fetchProjects();
         };
 
