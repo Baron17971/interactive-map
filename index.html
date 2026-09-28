@@ -1136,6 +1136,166 @@
             .landing-feature strong{font-size:.78rem}
             .landing-feature span{font-size:.67rem}
         }
+
+        /* ===== Teacher dashboard map ===== */
+        .teacher-dashboard-intro {
+            display:grid;
+            grid-template-columns:minmax(0,1.2fr) minmax(320px,.8fr);
+            gap:22px;
+            align-items:stretch;
+            margin-bottom:22px;
+        }
+        .teacher-welcome-card,
+        .teacher-actions-card {
+            background:rgba(255,255,255,.94);
+            border:1px solid rgba(20,110,103,.14);
+            border-radius:24px;
+            box-shadow:0 14px 34px rgba(18,58,55,.09);
+        }
+        .teacher-welcome-card {
+            padding:28px 30px;
+            position:relative;
+            overflow:hidden;
+        }
+        .teacher-welcome-card::after {
+            content:"";
+            position:absolute;
+            width:180px;height:180px;
+            border-radius:50%;
+            left:-55px;bottom:-85px;
+            background:radial-gradient(circle,rgba(138,31,99,.13),rgba(138,31,99,0));
+        }
+        .teacher-welcome-card .eyebrow {
+            color:#b47729;
+            font-size:.78rem;
+            font-weight:800;
+            margin-bottom:7px;
+        }
+        .teacher-welcome-card h2 {
+            margin:0 0 8px;
+            font-size:clamp(1.7rem,2.5vw,2.35rem);
+            color:#123230;
+        }
+        .teacher-welcome-card p {
+            color:#526e6b;
+            max-width:680px;
+            line-height:1.7;
+            font-weight:500;
+        }
+        .teacher-process {
+            display:flex;
+            gap:9px;
+            flex-wrap:wrap;
+            margin-top:18px;
+        }
+        .teacher-process span {
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            padding:7px 10px;
+            border-radius:999px;
+            background:#f5faf8;
+            color:#315a57;
+            font-size:.76rem;
+            font-weight:800;
+            border:1px solid rgba(20,110,103,.10);
+        }
+        .teacher-process b {
+            width:21px;height:21px;border-radius:50%;
+            display:grid;place-items:center;
+            background:#14998f;color:#fff;font-size:.69rem;
+        }
+        .teacher-actions-card {
+            padding:18px;
+            display:grid;
+            grid-template-columns:1fr;
+            gap:10px;
+        }
+        .teacher-action-btn {
+            border:1px solid rgba(20,110,103,.13);
+            border-radius:16px;
+            background:#fff;
+            min-height:76px;
+            display:grid;
+            grid-template-columns:46px 1fr auto;
+            align-items:center;
+            gap:12px;
+            padding:12px 14px;
+            text-align:right;
+            transition:.2s ease;
+            color:#183d3a;
+        }
+        .teacher-action-btn:hover {
+            transform:translateY(-1px);
+            border-color:rgba(20,153,143,.34);
+            box-shadow:0 10px 22px rgba(18,58,55,.08);
+        }
+        .teacher-action-icon {
+            width:44px;height:44px;border-radius:13px;
+            display:grid;place-items:center;
+            background:rgba(20,153,143,.10);
+            color:#0f766e;
+        }
+        .teacher-action-btn.primary .teacher-action-icon {
+            background:rgba(138,31,99,.10);
+            color:#8a1f63;
+        }
+        .teacher-action-copy strong {
+            display:block;
+            color:#123230;
+            font-size:.92rem;
+            margin-bottom:2px;
+        }
+        .teacher-action-copy small {
+            display:block;
+            color:#6b7e7b;
+            font-size:.74rem;
+            line-height:1.35;
+        }
+        .teacher-action-arrow { color:#9aa9a7; }
+        .teacher-projects-head {
+            display:flex;
+            align-items:end;
+            justify-content:space-between;
+            gap:14px;
+            margin:4px 0 14px;
+        }
+        .teacher-projects-head h3 {
+            margin:0;
+            color:#123230;
+            font-size:1.25rem;
+        }
+        .teacher-projects-head p {
+            margin:3px 0 0;
+            color:#6b7e7b;
+            font-size:.82rem;
+        }
+        @media(max-width:900px){
+            .teacher-dashboard-intro{grid-template-columns:1fr}
+            .teacher-actions-card{grid-template-columns:repeat(3,1fr)}
+            .teacher-action-btn{
+                grid-template-columns:1fr;
+                text-align:center;
+                justify-items:center;
+                min-height:124px;
+            }
+            .teacher-action-arrow{display:none}
+        }
+        @media(max-width:620px){
+            .teacher-dashboard-intro{gap:12px;margin-bottom:14px}
+            .teacher-welcome-card{padding:20px 18px;border-radius:20px}
+            .teacher-actions-card{grid-template-columns:1fr;padding:12px;border-radius:20px}
+            .teacher-action-btn{
+                grid-template-columns:42px 1fr auto;
+                text-align:right;
+                justify-items:stretch;
+                min-height:70px;
+                padding:10px 12px;
+            }
+            .teacher-action-arrow{display:block}
+            .teacher-action-icon{width:40px;height:40px}
+            .teacher-projects-head{align-items:start;flex-direction:column}
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -1305,16 +1465,43 @@
     </header>
 
     <main class="flex-grow p-6 max-w-7xl mx-auto w-full">
-        <div id="dashboard-view" class="space-y-8">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <div>
-                    <h2 id="dashboard-greeting" class="text-2xl font-bold text-slate-800">שלום, מורה! 👋</h2>
-                    <p class="text-slate-500">כאן תוכל לנהל את כל הפעילויות האינטראקטיביות שיצרת.</p>
+        <div id="dashboard-view" class="space-y-6">
+            <section class="teacher-dashboard-intro">
+                <div class="teacher-welcome-card">
+                    <div class="eyebrow">סביבת המורה</div>
+                    <h2 id="dashboard-greeting">שלום, מורה! 👋</h2>
+                    <p>מכאן יוצרים פעילות חדשה, חוזרים לפעילויות ששמרת ומקבלים עזרה בכל שלב. הבנייה עצמה נשארת פשוטה: מתחילים מתמונה ומוסיפים עליה נקודות למידה.</p>
+                    <div class="teacher-process" aria-label="שלבי עבודה">
+                        <span><b>1</b> מעלים תמונה</span>
+                        <span><b>2</b> מוסיפים נקודות</span>
+                        <span><b>3</b> שומרים ומשתפים</span>
+                    </div>
                 </div>
-                <button id="new-project-btn" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-md">
-                    <i data-lucide="plus-circle"></i>
-                    יצירת מפה חדשה
-                </button>
+
+                <div class="teacher-actions-card">
+                    <button id="new-project-btn" class="teacher-action-btn primary" type="button">
+                        <span class="teacher-action-icon"><i data-lucide="plus-circle" class="w-5 h-5"></i></span>
+                        <span class="teacher-action-copy"><strong>יצירת פעילות חדשה</strong><small>התחלה מתמונה, תרשים, מפה או מודל</small></span>
+                        <i data-lucide="chevron-left" class="w-4 h-4 teacher-action-arrow"></i>
+                    </button>
+                    <button id="dashboard-projects-btn" class="teacher-action-btn" type="button">
+                        <span class="teacher-action-icon"><i data-lucide="folder-open" class="w-5 h-5"></i></span>
+                        <span class="teacher-action-copy"><strong>הפעילויות שלי</strong><small>פתיחה, עריכה ושיתוף של פעילויות שמורות</small></span>
+                        <i data-lucide="chevron-left" class="w-4 h-4 teacher-action-arrow"></i>
+                    </button>
+                    <button id="dashboard-help-btn" class="teacher-action-btn" type="button">
+                        <span class="teacher-action-icon"><i data-lucide="circle-help" class="w-5 h-5"></i></span>
+                        <span class="teacher-action-copy"><strong>מדריך למורה</strong><small>הסבר קצר על בנייה, שמירה ופרסום</small></span>
+                        <i data-lucide="chevron-left" class="w-4 h-4 teacher-action-arrow"></i>
+                    </button>
+                </div>
+            </section>
+
+            <div class="teacher-projects-head">
+                <div>
+                    <h3>הפעילויות שלי</h3>
+                    <p>כל הפעילויות שנשמרו תחת מזהה המורה הנוכחי.</p>
+                </div>
             </div>
 
             <div id="projects-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -2807,6 +2994,13 @@
             document.getElementById('canvas-area').classList.add('hidden');
             setView('editor');
         };
+
+        document.getElementById('dashboard-projects-btn')?.addEventListener('click', () => {
+            document.getElementById('projects-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        document.getElementById('dashboard-help-btn')?.addEventListener('click', () => {
+            document.getElementById('teacher-help-btn')?.click();
+        });
 
         const openProject = (project, options = {}) => {
             const forceStudent = !!options.forceStudent;
