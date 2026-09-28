@@ -2562,6 +2562,183 @@
             transition-duration: 140ms !important;
             transition-timing-function: ease-out !important;
         }
+
+        /* ===== New activity setup as a full page ===== */
+        .new-project-setup-page {
+            width:min(920px,100%);
+            margin:0 auto;
+            padding:4px 0 30px;
+        }
+        .new-setup-shell {
+            background:linear-gradient(180deg,#FFFDF9 0%,#FAF7F1 100%);
+            border:1px solid #E8E1E7;
+            border-radius:28px;
+            padding:28px;
+            box-shadow:0 16px 40px rgba(95,33,79,.08);
+        }
+        .new-setup-head {
+            margin-bottom:24px;
+        }
+        .new-setup-back {
+            display:inline-flex;
+            align-items:center;
+            gap:7px;
+            min-height:40px;
+            padding:8px 12px;
+            margin-bottom:18px;
+            border-radius:12px;
+            border:1px solid #E8E1E7;
+            background:#fff;
+            color:#5F214F;
+            font-weight:800;
+            font-size:.8rem;
+        }
+        .new-setup-eyebrow {
+            color:#C9973E;
+            font-size:.76rem;
+            font-weight:900;
+            margin-bottom:5px;
+        }
+        .new-setup-head h2 {
+            margin:0 0 7px;
+            color:#24364A;
+            font-size:clamp(1.8rem,4vw,2.55rem);
+            font-weight:900;
+        }
+        .new-setup-head p {
+            margin:0;
+            color:#6F7D8C;
+            line-height:1.65;
+        }
+        .new-setup-form {
+            display:grid;
+            grid-template-columns:repeat(2,minmax(0,1fr));
+            gap:14px;
+        }
+        .new-setup-wide { grid-column:1 / -1; }
+        .new-setup-field label {
+            display:block;
+            margin-bottom:7px;
+            color:#24364A;
+            font-size:.82rem;
+            font-weight:900;
+        }
+        .new-setup-field input,
+        .new-setup-field textarea {
+            width:100%;
+            border:1.5px solid #E8E1E7;
+            border-radius:14px;
+            background:#fff;
+            padding:12px 13px;
+            color:#24364A;
+            outline:none;
+            transition:.18s ease;
+        }
+        .new-setup-field input:focus,
+        .new-setup-field textarea:focus {
+            border-color:#7A2E6E;
+            box-shadow:0 0 0 3px rgba(122,46,110,.08);
+        }
+        .new-setup-field small {
+            display:block;
+            color:#7B858E;
+            font-size:.72rem;
+            margin-top:6px;
+        }
+        .new-setup-mode-grid {
+            display:grid;
+            grid-template-columns:repeat(2,minmax(0,1fr));
+            gap:10px;
+        }
+        .new-activity-mode-btn {
+            text-align:right;
+            padding:14px;
+            border-radius:16px;
+            border:1.5px solid #E8E1E7;
+            background:#fff;
+            color:#24364A;
+        }
+        .new-activity-mode-btn strong {
+            display:block;
+            font-size:.9rem;
+            margin-bottom:3px;
+        }
+        .new-activity-mode-btn span {
+            display:block;
+            color:#6F7D8C;
+            font-size:.72rem;
+            line-height:1.45;
+        }
+        .new-activity-mode-btn.active {
+            border-color:#7A2E6E;
+            background:#F4EAF1;
+            box-shadow:0 0 0 2px rgba(122,46,110,.06);
+        }
+        .new-setup-actions {
+            display:flex;
+            justify-content:flex-end;
+            gap:10px;
+            margin-top:22px;
+        }
+        .new-setup-cancel,
+        .new-setup-continue {
+            min-height:46px;
+            border-radius:14px;
+            padding:10px 18px;
+            font-weight:900;
+        }
+        .new-setup-cancel {
+            border:1px solid #E8E1E7;
+            background:#fff;
+            color:#5F6670;
+        }
+        .new-setup-continue {
+            border:0;
+            background:linear-gradient(135deg,#7A2E6E,#5F214F);
+            color:#fff;
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            justify-content:center;
+            box-shadow:0 10px 24px rgba(122,46,110,.18);
+        }
+
+        @media(max-width:700px){
+            .new-project-setup-page {
+                width:100%;
+                padding:0;
+            }
+            .new-setup-shell {
+                border-radius:0;
+                border-left:0;
+                border-right:0;
+                padding:18px 15px 24px;
+                box-shadow:none;
+                min-height:calc(100svh - 72px);
+            }
+            .new-setup-head {
+                margin-bottom:18px;
+            }
+            .new-setup-form {
+                grid-template-columns:1fr;
+                gap:12px;
+            }
+            .new-setup-wide { grid-column:auto; }
+            .new-setup-mode-grid {
+                grid-template-columns:1fr;
+            }
+            .new-setup-actions {
+                position:sticky;
+                bottom:0;
+                margin:20px -15px -24px;
+                padding:12px 15px calc(12px + env(safe-area-inset-bottom));
+                background:rgba(250,247,241,.96);
+                backdrop-filter:blur(10px);
+                border-top:1px solid #E8E1E7;
+            }
+            .new-setup-cancel { flex:0 0 30%; }
+            .new-setup-continue { flex:1; }
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -2809,6 +2986,76 @@
                 <div>
                     <strong>טיפ פדגוגי</strong>
                     <p>עדיף לבנות מסלול קצר ומדויק של נקודות משמעותיות מאשר להעמיס נקודות רבות. כל נקודה צריכה לגרום לתלמיד להתבונן, לחשוב או לבצע פעולה.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="new-project-setup-view" class="hidden new-project-setup-page" aria-label="התחלת פעילות חדשה">
+            <div class="new-setup-shell">
+                <div class="new-setup-head">
+                    <button type="button" id="new-setup-back-btn" class="new-setup-back">
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        חזרה לסביבת המורה
+                    </button>
+                    <div class="new-setup-eyebrow">פעילות חדשה</div>
+                    <h2>מתחילים בכמה פרטים</h2>
+                    <p>הגדירו את הפעילות לפני בחירת התמונה. אפשר לשנות את הפרטים גם בהמשך.</p>
+                </div>
+
+                <div class="new-setup-form">
+                    <div class="new-setup-field">
+                        <label for="new-project-name-input">שם הפעילות</label>
+                        <input type="text" id="new-project-name-input" placeholder="למשל: הכרת מפת ישראל">
+                    </div>
+
+                    <div class="new-setup-field">
+                        <label for="new-creator-name-input">שם המורה</label>
+                        <input type="text" id="new-creator-name-input" placeholder="למשל: רינה לוי">
+                    </div>
+
+                    <div class="new-setup-field">
+                        <label for="new-creator-class-input">כיתה</label>
+                        <input type="text" id="new-creator-class-input" placeholder='למשל: ה"2'>
+                    </div>
+
+                    <div class="new-setup-field">
+                        <label for="new-creator-school-input">בית ספר</label>
+                        <input type="text" id="new-creator-school-input" placeholder="למשל: נופים">
+                    </div>
+
+                    <div class="new-setup-field new-setup-wide">
+                        <label for="new-student-instruction-input">הנחיית פתיחה לתלמידים</label>
+                        <textarea id="new-student-instruction-input" rows="3" placeholder="כתבו כאן הנחיה קצרה לתלמידים..."></textarea>
+                        <small>ההנחיה תופיע לתלמידים בתחילת הפעילות.</small>
+                    </div>
+
+                    <div class="new-setup-field new-setup-wide">
+                        <label>סוג פעילות</label>
+                        <div class="new-setup-mode-grid">
+                            <button type="button" class="new-activity-mode-btn active" data-new-mode="regular">
+                                <strong>פעילות רגילה</strong>
+                                <span>נקודות מידע ושאלות ללא קוד מנעול</span>
+                            </button>
+                            <button type="button" class="new-activity-mode-btn" data-new-mode="escape">
+                                <strong>חדר בריחה</strong>
+                                <span>איסוף רמזים ופתיחת מנעול סופי</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="new-escape-settings" class="new-setup-field new-setup-wide hidden">
+                        <label for="new-escape-code">קוד המנעול הסופי</label>
+                        <input type="text" id="new-escape-code" placeholder="למשל: GEO-7A">
+                        <small>אפשר להשתמש באותיות ובמספרים.</small>
+                    </div>
+                </div>
+
+                <div class="new-setup-actions">
+                    <button type="button" id="new-setup-cancel-btn" class="new-setup-cancel">ביטול</button>
+                    <button type="button" id="new-setup-continue-btn" class="new-setup-continue">
+                        המשך לבחירת תמונה
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    </button>
                 </div>
             </div>
         </section>
@@ -3335,6 +3582,7 @@
                     document.body.classList.add('landing-active');
                     document.getElementById('dashboard-view')?.classList.remove('hidden');
                     document.getElementById('teacher-guide-view')?.classList.add('hidden');
+                    document.getElementById('new-project-setup-view')?.classList.add('hidden');
                     document.getElementById('editor-view')?.classList.add('hidden');
                     document.getElementById('editor-tools')?.classList.add('hidden');
                     document.getElementById('exit-editor')?.classList.add('hidden');
@@ -3347,6 +3595,8 @@
                     setView('editor');
                 } else if (view === 'guide') {
                     setView('guide');
+                } else if (view === 'new-setup') {
+                    setView('new-setup');
                 } else {
                     setView('dashboard');
                 }
@@ -3464,6 +3714,7 @@
         const setView = (view) => {
             document.getElementById('dashboard-view').classList.toggle('hidden', view !== 'dashboard');
             document.getElementById('teacher-guide-view')?.classList.toggle('hidden', view !== 'guide');
+            document.getElementById('new-project-setup-view')?.classList.toggle('hidden', view !== 'new-setup');
             document.getElementById('editor-view').classList.toggle('hidden', view !== 'editor');
             document.getElementById('editor-tools').classList.toggle('hidden', view !== 'editor');
             document.getElementById('exit-editor').classList.toggle('hidden', view !== 'editor');
@@ -3472,7 +3723,7 @@
             document.body.classList.toggle('student-view-active', studentInEditor);
             updateCreatorCredit();
             updateStudentExportButtonVisibility();
-            if (!mapiHandlingHistory && (view === 'dashboard' || view === 'editor' || view === 'guide')) {
+            if (!mapiHandlingHistory && (view === 'dashboard' || view === 'editor' || view === 'guide' || view === 'new-setup')) {
                 setHistoryView(view);
             }
         };
@@ -4384,6 +4635,22 @@
             lucide.createIcons();
         };
 
+        let newSetupMode = 'regular';
+
+        const populateNewSetup = () => {
+            document.getElementById('new-project-name-input').value = '';
+            document.getElementById('new-creator-name-input').value = normalizeOptionalText(teacherProfile.teacherName);
+            document.getElementById('new-creator-class-input').value = normalizeOptionalText(teacherProfile.className);
+            document.getElementById('new-creator-school-input').value = normalizeOptionalText(teacherProfile.schoolName);
+            document.getElementById('new-student-instruction-input').value = DEFAULT_STUDENT_INSTRUCTION;
+            document.getElementById('new-escape-code').value = '';
+            newSetupMode = 'regular';
+            document.getElementById('new-escape-settings').classList.add('hidden');
+            document.querySelectorAll('.new-activity-mode-btn').forEach((btn) => {
+                btn.classList.toggle('active', btn.dataset.newMode === 'regular');
+            });
+        };
+
         document.getElementById('new-project-btn').onclick = () => {
             isReadOnlyStudentLink = false;
             restoreEditorToolbarUI();
@@ -4398,8 +4665,53 @@
             mainImage.src = '';
             uploadZone.classList.remove('hidden');
             document.getElementById('canvas-area').classList.add('hidden');
-            openProjectSettingsModal('new');
+            populateNewSetup();
+            setView('new-setup');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         };
+
+        document.querySelectorAll('.new-activity-mode-btn').forEach((button) => {
+            button.addEventListener('click', () => {
+                newSetupMode = button.dataset.newMode === 'escape' ? 'escape' : 'regular';
+                document.querySelectorAll('.new-activity-mode-btn').forEach((btn) => {
+                    btn.classList.toggle('active', btn === button);
+                });
+                document.getElementById('new-escape-settings').classList.toggle('hidden', newSetupMode !== 'escape');
+            });
+        });
+
+        const returnFromNewSetup = () => {
+            if (!isSharedStudentRequest && history.state?.mapiView === 'new-setup') {
+                history.back();
+            } else {
+                setView('dashboard');
+            }
+        };
+
+        document.getElementById('new-setup-back-btn')?.addEventListener('click', returnFromNewSetup);
+        document.getElementById('new-setup-cancel-btn')?.addEventListener('click', returnFromNewSetup);
+
+        document.getElementById('new-setup-continue-btn')?.addEventListener('click', () => {
+            currentProject.name = normalizeOptionalText(document.getElementById('new-project-name-input').value) || 'פעילות חדשה';
+            currentProject.teacherName = normalizeOptionalText(document.getElementById('new-creator-name-input').value);
+            currentProject.className = normalizeOptionalText(document.getElementById('new-creator-class-input').value);
+            currentProject.schoolName = normalizeOptionalText(document.getElementById('new-creator-school-input').value);
+            currentProject.studentInstruction = resolveStudentInstruction(document.getElementById('new-student-instruction-input').value);
+            currentProject.isEscapeRoom = newSetupMode === 'escape';
+            currentProject.lockCode = newSetupMode === 'escape'
+                ? normalizeOptionalText(document.getElementById('new-escape-code').value)
+                : '';
+
+            writeTeacherProfile({
+                teacherName: currentProject.teacherName,
+                className: currentProject.className,
+                schoolName: currentProject.schoolName
+            });
+
+            syncModeUI();
+            setView('editor');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
 
         document.getElementById('dashboard-projects-btn')?.addEventListener('click', () => {
             document.getElementById('projects-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -5936,7 +6248,6 @@
 
         const openProjectSettingsModal = (flow = 'settings') => {
             const isSaveAsFlow = flow === 'saveAs';
-            const isNewFlow = flow === 'new';
             projectSettingsFlow = flow;
             document.getElementById('project-name-input').value = isSaveAsFlow
                 ? getSuggestedProjectNameForSaveAs()
@@ -5947,12 +6258,8 @@
             creatorSchoolInput.value = normalizeOptionalText(currentProject.schoolName);
             document.getElementById('escape-code').value = currentProject.lockCode || '';
             setActivityModeUI(currentProject.isEscapeRoom);
-            projectSettingsTitleText.innerText = isNewFlow
-                ? 'התחלת פעילות חדשה'
-                : (isSaveAsFlow ? 'הגדרות לפני שמירה בשם' : 'הגדרות פעילות');
-            projectSettingsApplyBtn.innerText = isNewFlow
-                ? 'המשך לבחירת תמונה'
-                : (isSaveAsFlow ? 'המשך לשמור בשם' : 'אישור');
+            projectSettingsTitleText.innerText = isSaveAsFlow ? 'הגדרות לפני שמירה בשם' : 'הגדרות פעילות';
+            projectSettingsApplyBtn.innerText = isSaveAsFlow ? 'המשך לשמור בשם' : 'אישור';
             projectSettingsModal.classList.remove('hidden');
         };
 
@@ -5988,13 +6295,6 @@
             currentProject.lockCode = document.getElementById('escape-code').value;
             closeSettings();
             syncModeUI();
-            if (flow === 'new') {
-                mainImage.src = '';
-                uploadZone.classList.remove('hidden');
-                document.getElementById('canvas-area').classList.add('hidden');
-                setView('editor');
-                return;
-            }
             if (flow === 'saveAs') {
                 openSaveMapModal('saveAs', currentProject.name || getSuggestedProjectNameForSaveAs());
                 return;
