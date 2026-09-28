@@ -3847,6 +3847,18 @@
             0% { box-shadow:0 0 0 0 rgba(178,181,157,.55); }
             100% { box-shadow:0 0 0 14px rgba(178,181,157,0); }
         }
+
+        #pin-save-btn {
+            background:#B2B59D!important;
+            color:#24364A!important;
+            border:1px solid rgba(127,131,111,.24)!important;
+            box-shadow:0 8px 18px rgba(178,181,157,.26)!important;
+        }
+        #pin-save-btn:hover,
+        #pin-save-btn:active {
+            background:#A8AC94!important;
+            color:#24364A!important;
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -4492,7 +4504,7 @@
                     <button id="delete-pin" class="text-red-500 font-bold flex items-center gap-1 hover:text-red-700 transition-colors">
                         <i data-lucide="trash-2" class="w-4 h-4"></i> מחק נקודה
                     </button>
-                    <button onclick="savePin()" class="bg-indigo-600 text-white px-10 py-3 rounded-xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700">שמור</button>
+                    <button id="pin-save-btn" onclick="savePin()" class="px-10 py-3 rounded-xl font-bold">שמור</button>
                 </div>
             </div>
         </div>
