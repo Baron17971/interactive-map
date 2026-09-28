@@ -854,15 +854,66 @@
                 </div>
             </div>
 
-            <div id="canvas-area" class="hidden flex flex-col items-center">
-                <div class="mb-4 bg-indigo-50 text-indigo-700 px-6 py-2 rounded-full text-sm font-semibold border border-indigo-100" id="instruction-text">
-                    לחצו על המפה כדי להוסיף פעילות | גררו נקודה קיימת כדי להזיז אותה
+            <div id="canvas-area" class="hidden">
+                <div id="editor-workspace" class="mapi-editor-workspace">
+                    <aside id="points-sidebar" class="mapi-points-sidebar">
+                        <div class="mapi-panel-head">
+                            <div>
+                                <p class="mapi-eyebrow">בניית הפעילות</p>
+                                <h3>נקודות למידה</h3>
+                            </div>
+                            <span id="points-count-badge" class="mapi-count-badge">0</span>
+                        </div>
+                        <button id="sidebar-add-point" type="button" class="mapi-add-point-btn">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            הוספת נקודה
+                        </button>
+                        <div id="points-list" class="mapi-points-list">
+                            <div class="mapi-points-empty">
+                                <i data-lucide="map-pin-plus" class="w-6 h-6"></i>
+                                <strong>עדיין אין נקודות</strong>
+                                <span>לחצו על התמונה כדי להוסיף את נקודת הלמידה הראשונה.</span>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <section class="mapi-canvas-column">
+                        <div class="mapi-canvas-topbar">
+                            <div id="instruction-text" class="mapi-instruction">
+                                <i data-lucide="mouse-pointer-click" class="w-4 h-4"></i>
+                                לחצו על התמונה להוספת נקודה · גררו נקודה קיימת כדי להזיז אותה
+                            </div>
+                            <div class="mapi-canvas-actions">
+                                <button type="button" id="workspace-settings-btn" class="mapi-mini-action" title="הגדרות פעילות">
+                                    <i data-lucide="settings" class="w-4 h-4"></i>
+                                    <span>הגדרות</span>
+                                </button>
+                                <button type="button" id="workspace-preview-btn" class="mapi-mini-action" title="תצוגת תלמיד">
+                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                    <span>תצוגה</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mapi-canvas-stage">
+                            <div id="map-wrapper" class="map-container select-none">
+                                <img id="main-image" src="" alt="Map" class="max-w-full h-auto pointer-events-none">
+                                <div id="pins-layer" class="absolute inset-0 pointer-events-auto"></div>
+                            </div>
+                        </div>
+                    </section>
                 </div>
 
-                <div id="map-wrapper" class="map-container shadow-2xl rounded-2xl overflow-hidden border-8 bg-white select-none">
-                    <img id="main-image" src="" alt="Map" class="max-w-full h-auto pointer-events-none">
-                    <div id="pins-layer" class="absolute inset-0 pointer-events-auto"></div>
-                </div>
+                <nav id="mobile-editor-tabs" class="mapi-mobile-tabs" aria-label="ניווט עורך">
+                    <button type="button" class="mapi-mobile-tab active" data-mobile-tab="map">
+                        <i data-lucide="image" class="w-5 h-5"></i><span>תמונה</span>
+                    </button>
+                    <button type="button" class="mapi-mobile-tab" data-mobile-tab="points">
+                        <i data-lucide="map-pin" class="w-5 h-5"></i><span>נקודות</span>
+                    </button>
+                    <button type="button" class="mapi-mobile-tab" data-mobile-tab="settings">
+                        <i data-lucide="settings" class="w-5 h-5"></i><span>הגדרות</span>
+                    </button>
+                </nav>
             </div>
         </div>
     </main>
@@ -1212,6 +1263,11 @@
         const mainImage = document.getElementById('main-image');
         const pinsLayer = document.getElementById('pins-layer');
         const mapWrapper = document.getElementById('map-wrapper');
+        const sidebarAddPoint = document.getElementById('sidebar-add-point');
+        const workspaceSettingsBtn = document.getElementById('workspace-settings-btn');
+        const workspacePreviewBtn = document.getElementById('workspace-preview-btn');
+        const mobileEditorTabs = Array.from(document.querySelectorAll('.mapi-mobile-tab'));
+
         const pinModal = document.getElementById('pin-modal');
         const modeToggle = document.getElementById('mode-toggle');
         const shareStudentBtn = document.getElementById('share-student-btn');
@@ -1367,6 +1423,16 @@
             updateCreatorCredit();
             updateStudentExportButtonVisibility();
         };
+
+        sidebarAddPoint?.addEventListener('click', () => {
+            document.getElementById('instruction-text')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            showToast('לחצו במקום הרצוי על התמונה כדי להוסיף נקודה חדשה.');
+        });
+        workspaceSettingsBtn?.addEventListener('click', () => document.getElementById('settings-btn')?.click());
+        workspacePreviewBtn?.addEventListener('click', () => document.getElementById('mode-toggle')?.click());
+        mobileEditorTabs.forEach((button) => {
+            button.addEventListener('click', () => window.showEditorMobileTab(button.dataset.mobileTab || 'map'));
+        });
 
         const normalizeTeacherId = (value) => value.trim().toLowerCase();
 
@@ -2731,6 +2797,74 @@
             openPinModal(newPin.id);
         };
 
+        const getPinTypeLabel = (type) => ({
+            info: 'מידע',
+            open: 'שאלה פתוחה',
+            mcq: 'אמריקאית',
+            boolean: 'נכון / לא נכון',
+            match: 'התאמה',
+            order: 'סידור',
+            bonus: 'בונוס',
+            video: 'וידאו'
+        }[type] || 'נקודה');
+
+        const getPinDisplayTitle = (pin, index) => {
+            const raw = typeof pin.content === 'string' ? pin.content.trim() : '';
+            if (!raw) return `נקודה ${index + 1}`;
+            const firstLine = raw.split(/\n|\?|\.|!/)[0].trim();
+            return firstLine.length > 34 ? `${firstLine.slice(0, 34)}…` : firstLine;
+        };
+
+        const renderPointsSidebar = () => {
+            const list = document.getElementById('points-list');
+            const badge = document.getElementById('points-count-badge');
+            if (!list || !badge) return;
+            const pins = Array.isArray(currentProject.pins) ? currentProject.pins : [];
+            badge.textContent = String(pins.length);
+            if (!pins.length) {
+                list.innerHTML = `
+                    <div class="mapi-points-empty">
+                        <i data-lucide="map-pin-plus" class="w-6 h-6"></i>
+                        <strong>עדיין אין נקודות</strong>
+                        <span>לחצו על התמונה כדי להוסיף את נקודת הלמידה הראשונה.</span>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            list.innerHTML = pins.map((pin, index) => {
+                const solved = !!currentProject.studentProgress?.[pin.id];
+                const selected = currentEditingPinId === pin.id;
+                return `
+                    <button type="button" class="mapi-point-row ${selected ? 'selected' : ''}" data-point-id="${pin.id}">
+                        <span class="mapi-point-index ${solved ? 'solved' : ''}">${solved ? '✓' : index + 1}</span>
+                        <span class="mapi-point-copy">
+                            <strong>${getPinDisplayTitle(pin, index)}</strong>
+                            <small>${getPinTypeLabel(pin.type)}</small>
+                        </span>
+                        <i data-lucide="chevron-left" class="w-4 h-4 mapi-point-chevron"></i>
+                    </button>`;
+            }).join('');
+
+            list.querySelectorAll('[data-point-id]').forEach((button) => {
+                button.addEventListener('click', () => openPinModal(button.dataset.pointId));
+            });
+            lucide.createIcons();
+        };
+
+        window.showEditorMobileTab = (tab) => {
+            document.querySelectorAll('.mapi-mobile-tab').forEach((button) => {
+                button.classList.toggle('active', button.dataset.mobileTab === tab);
+            });
+            document.body.classList.toggle('mapi-mobile-points-open', tab === 'points');
+            if (tab === 'settings') {
+                document.body.classList.remove('mapi-mobile-points-open');
+                document.getElementById('settings-btn')?.click();
+                document.querySelector('.mapi-mobile-tab[data-mobile-tab="map"]')?.classList.add('active');
+                document.querySelector('.mapi-mobile-tab[data-mobile-tab="settings"]')?.classList.remove('active');
+            }
+        };
+
         const renderPins = () => {
             pinsLayer.innerHTML = '';
             currentProject.pins.forEach((pin) => {
@@ -2788,6 +2922,7 @@
             lucide.createIcons();
             updateProgress();
             updateLockButtonVisibility();
+            renderPointsSidebar();
         };
 
         const updateProgress = () => {
@@ -2815,6 +2950,7 @@
 
         const openPinModal = (id) => {
             currentEditingPinId = id;
+            renderPointsSidebar();
             const pin = currentProject.pins.find((item) => item.id === id);
             document.getElementById('pin-modal-title').innerText = "עריכת נקודה";
             document.getElementById('pin-content').value = pin.content;
