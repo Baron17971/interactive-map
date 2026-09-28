@@ -4214,6 +4214,42 @@
                 grid-template-columns:repeat(3,minmax(0,1fr))!important;
             }
         }
+
+        /* ===== Responsive homepage artwork: desktop + mobile ===== */
+        .landing-poster-picture {
+            display:block;
+            width:100%;
+            height:100%;
+        }
+
+        @media (min-width: 761px) {
+            #landing-view {
+                place-items:center;
+                background:#f8f4ec;
+            }
+
+            .landing-poster {
+                width:min(100vw,177.7778svh)!important;
+                max-width:100vw!important;
+                height:auto!important;
+                aspect-ratio:16 / 9!important;
+                margin:auto!important;
+            }
+
+            .landing-poster-image {
+                width:100%!important;
+                height:100%!important;
+                object-fit:contain!important;
+                object-position:center!important;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .landing-poster {
+                width:min(100vw,56.25svh)!important;
+                aspect-ratio:9 / 16!important;
+            }
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -4227,13 +4263,16 @@
 
     <section id="landing-view" aria-label="דף הבית של MAPI">
         <div class="landing-poster">
-            <img
-                src="/mapi-home-hero.png?v=2"
-                alt="MAPI 2.0 - הופכים כל תמונה לחוויית למידה חכמה"
-                class="landing-poster-image"
-                loading="eager"
-                decoding="async"
-            >
+            <picture class="landing-poster-picture">
+                <source media="(min-width: 761px)" srcset="/mapi-home-desktop.png?v=1">
+                <img
+                    src="/mapi-home-hero.png?v=2"
+                    alt="MAPI 2.0 - הופכים כל תמונה לחוויית למידה חכמה"
+                    class="landing-poster-image"
+                    loading="eager"
+                    decoding="async"
+                >
+            </picture>
             <button
                 type="button"
                 id="landing-start-btn"
