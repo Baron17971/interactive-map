@@ -4599,7 +4599,7 @@
         };
 
         document.getElementById('save-project-btn').onclick = handlePrimarySave;
-        mobileSaveBtn?.addEventListener('click', handlePrimarySave);
+        document.getElementById('mobile-save-btn')?.addEventListener('click', handlePrimarySave);
 
         saveAsNewBtn.onclick = () => {
             if (!currentUser || !teacherId || !currentProject.image) return;
