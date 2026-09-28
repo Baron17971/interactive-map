@@ -1566,6 +1566,104 @@
                 box-shadow: 0 18px 38px rgba(36,54,74,.14);
             }
         }
+
+        /* ===== Poster-only homepage ===== */
+        body.landing-active {
+            margin: 0;
+            min-height: 100svh;
+            overflow: hidden;
+            background: #f8f4ec !important;
+        }
+
+        body.landing-active #app-header,
+        body.landing-active > main {
+            display: none !important;
+        }
+
+        #landing-view {
+            display: none;
+            min-height: 100svh;
+            width: 100%;
+            place-items: center;
+            background: #f8f4ec;
+            overflow: hidden;
+        }
+
+        body.landing-active #landing-view {
+            display: grid !important;
+        }
+
+        .landing-poster {
+            position: relative;
+            width: min(100vw, 56.25svh);
+            max-width: 100vw;
+            aspect-ratio: 9 / 16;
+            margin: 0 auto;
+            overflow: hidden;
+            background: #f8f4ec;
+        }
+
+        .landing-poster-image {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+            margin: 0;
+            border: 0;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        .landing-hotspot {
+            position: absolute;
+            z-index: 5;
+            border: 0;
+            padding: 0;
+            margin: 0;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 14px;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .landing-hotspot:focus-visible {
+            outline: 3px solid rgba(255,255,255,.95);
+            outline-offset: 3px;
+            box-shadow: 0 0 0 6px rgba(15,95,115,.55);
+        }
+
+        .landing-hotspot-start {
+            left: 26.15%;
+            top: 31.70%;
+            width: 50.35%;
+            height: 5.65%;
+        }
+
+        .landing-hotspot-demo {
+            left: 34.25%;
+            top: 38.25%;
+            width: 35.2%;
+            height: 4.55%;
+        }
+
+        @media (max-width: 620px) {
+            #landing-view {
+                min-height: 100svh;
+            }
+
+            .landing-poster {
+                width: min(100vw, 56.25svh);
+                height: auto;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 700px) {
+            .landing-poster {
+                width: min(100vw, 56.25svh);
+            }
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -1578,62 +1676,28 @@
     </div>
 
     <section id="landing-view" aria-label="דף הבית של MAPI">
-        <div class="landing-shell">
-            <nav class="landing-nav">
-                <div class="landing-brand">
-                    <img src="/mapi-logo.png" alt="MAPI 2.0">
-                    <div class="landing-brand-copy">
-                        <span>תמונה אחת, אלף מילים</span>
-                        <span>למידה אינטראקטיבית מתמונה</span>
-                    </div>
-                </div>
-                <div class="landing-nav-actions">
-                    <button type="button" id="landing-about-btn" class="landing-text-btn">איך זה עובד</button>
-                    <button type="button" id="landing-login-btn" class="landing-login-btn">כניסת מורה</button>
-                </div>
-            </nav>
-
-            <div class="landing-hero">
-                <div class="landing-copy">
-                    <div class="landing-kicker">מדע · חקר · למידה אחרת</div>
-                    <h1>הופכים כל תמונה<br>לחוויית למידה <span class="smart">חכמה</span></h1>
-                    <p class="landing-subtitle">
-                        יוצרים בקלות פעילויות אינטראקטיביות על גבי תמונות, תרשימים ומודלים —
-                        ומשלבים מידע, שאלות, וידאו, התאמה, סידור וחדרי בריחה במקום אחד.
-                    </p>
-                    <div class="landing-cta-row">
-                        <button type="button" id="landing-start-btn" class="landing-primary">
-                            התחילו ליצור פעילות
-                        </button>
-                        <button type="button" id="landing-demo-btn" class="landing-secondary">
-                            צפו בדוגמה
-                        </button>
-                    </div>
-                    <div class="landing-trust">
-                        <span><i data-lucide="mouse-pointer-click" class="w-4 h-4"></i> פשוט ליצור</span>
-                        <span><i data-lucide="smartphone" class="w-4 h-4"></i> מותאם למובייל</span>
-                        <span><i data-lucide="share-2" class="w-4 h-4"></i> שיתוף בקישור</span>
-                    </div>
-                </div>
-
-                <div class="landing-visual" aria-hidden="true">
-                    <div class="landing-lab-glow"></div>
-                    <img
-                        class="landing-hero-image"
-                        src="/mapi-home-hero.png?v=1"
-                        alt=""
-                        loading="eager"
-                        decoding="async"
-                    >
-                </div>
-            </div>
-
-            <div id="landing-how" class="landing-features">
-                <div class="landing-feature"><i data-lucide="image" class="w-7 h-7"></i><div><strong>כל תמונה יכולה ללמד</strong><span>מפה, תרשים, צילום או מודל</span></div></div>
-                <div class="landing-feature"><i data-lucide="shapes" class="w-7 h-7"></i><div><strong>פעילויות מגוונות</strong><span>מידע, שאלות, התאמה, וידאו ועוד</span></div></div>
-                <div class="landing-feature"><i data-lucide="sparkles" class="w-7 h-7"></i><div><strong>למידה פעילה</strong><span>התלמידים חוקרים ומתקדמים בקצב שלהם</span></div></div>
-                <div class="landing-feature"><i data-lucide="bar-chart-3" class="w-7 h-7"></i><div><strong>כלים למורים</strong><span>שמירה, שיתוף ותצוגת תלמיד</span></div></div>
-            </div>
+        <div class="landing-poster">
+            <img
+                src="/mapi-home-hero.png?v=2"
+                alt="MAPI 2.0 - הופכים כל תמונה לחוויית למידה חכמה"
+                class="landing-poster-image"
+                loading="eager"
+                decoding="async"
+            >
+            <button
+                type="button"
+                id="landing-start-btn"
+                class="landing-hotspot landing-hotspot-start"
+                aria-label="התחילו ליצור פעילות"
+                title="התחילו ליצור פעילות"
+            ></button>
+            <button
+                type="button"
+                id="landing-demo-btn"
+                class="landing-hotspot landing-hotspot-demo"
+                aria-label="צפו בדוגמה"
+                title="צפו בדוגמה"
+            ></button>
         </div>
     </section>
 
@@ -3576,10 +3640,7 @@
 
 
         document.getElementById('landing-start-btn')?.addEventListener('click', openTeacherEntry);
-        document.getElementById('landing-login-btn')?.addEventListener('click', openTeacherEntry);
-        document.getElementById('landing-about-btn')?.addEventListener('click', () => {
-            document.getElementById('landing-how')?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        });
+                        });
         document.getElementById('landing-demo-btn')?.addEventListener('click', () => {
             showToast('דוגמת תלמיד תתווסף בשלב הבא. בינתיים אפשר להיכנס כמורה וליצור פעילות.');
         });
