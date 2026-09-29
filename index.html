@@ -6598,6 +6598,40 @@
             return !!(normalized.answer || normalized.answerLink || normalized.attachment);
         };
 
+        const applyDemoSampleAnswers = () => {
+            if (!requestedDemoMode || !currentProject?.id) return;
+
+            const demoAnswers = {
+                '260929004': 'מאדים נראה אדמדם בעיקר בגלל תחמוצות ברזל המצויות בקרקע ובאבק שעל פניו — חומר דומה לחלודה בכדור הארץ.',
+                '260929007': 'למדתי שמערכת השמש כוללת לא רק כוכבי לכת, אלא גם ירחים, אסטרואידים, שביטים וגופים קטנים נוספים הנעים סביב השמש.',
+                '260929009': 'בואו לבקר בשבתאי — עולם מרהיב של טבעות עצומות ונוף שאי אפשר לראות בשום מקום אחר במערכת השמש!'
+            };
+
+            currentProject.studentAnswers = currentProject.studentAnswers || {};
+
+            Object.entries(demoAnswers).forEach(([pinId, answer]) => {
+                const pin = (currentProject.pins || []).find((item) => String(item.id) === String(pinId));
+                if (!pin) return;
+
+                const existing = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]);
+                if (hasStudentAnswerContent(existing)) return;
+
+                currentProject.studentAnswers[pin.id] = {
+                    pinId: pin.id,
+                    type: pin.type,
+                    prompt: normalizeOptionalText(pin.content),
+                    answer,
+                    answerLink: '',
+                    attachment: null,
+                    isCorrect: null,
+                    savedAt: new Date().toISOString()
+                };
+                currentProject.studentProgress[pin.id] = true;
+            });
+
+            persistStudentSession();
+        };
+
         const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
@@ -6736,7 +6770,10 @@
   <meta charset="utf-8">
   <title>${escapeHtml(docTitle)}</title>
   <style>
-    body { margin: 0; padding: 18px; font-family: 'Heebo','Assistant',sans-serif; color: #111827; background: #ffffff; }
+    @page { size: A4 portrait; margin: 10mm; }
+    html, body { width: 100%; max-width: 100%; }
+    body { margin: 0; padding: 0; font-family: 'Heebo','Assistant',sans-serif; color: #111827; background: #ffffff; direction: rtl; }
+    body > div { width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; position: static !important; }
     @media print { body { padding: 0; } }
   </style>
 </head>
@@ -6848,7 +6885,7 @@
                     : '';
 
                 return `
-                    <div class="mapi-pdf-answer-card" style="border:1px solid #d7e3e1;border-radius:10px;padding:10px 12px;margin-top:8px;break-inside:avoid;page-break-inside:avoid;">
+                    <div class="mapi-pdf-answer-card" style="border:1px solid #d7e3e1;border-radius:10px;padding:10px 12px;margin-top:8px;break-inside:avoid;page-break-inside:avoid;direction:rtl;text-align:right;max-width:100%;overflow-wrap:anywhere;word-break:break-word;box-sizing:border-box;">
                         <div style="font-weight:700;color:#0f3e3a;">${item.index}. ${escapeHtml(getPinTypeLabel(item.type))}</div>
                         <div style="margin-top:4px;white-space:pre-wrap;line-height:1.55;">${escapeHtml(item.prompt || 'ללא טקסט שאלה')}</div>
                         <div style="margin-top:8px;font-weight:700;color:#24364A;">תשובת תלמיד:</div>
@@ -6863,17 +6900,20 @@
             const report = document.createElement('div');
             report.dir = 'rtl';
             report.style.position = 'fixed';
-            report.style.top = '8px';
-            report.style.left = '8px';
-            report.style.width = '760px';
-            report.style.maxWidth = 'none';
+            report.style.top = '0';
+            report.style.left = '0';
+            report.style.width = '700px';
+            report.style.maxWidth = '700px';
             report.style.maxHeight = 'none';
             report.style.overflow = 'visible';
             report.style.background = '#ffffff';
             report.style.color = '#111827';
-            report.style.padding = '24px';
+            report.style.padding = '22px';
+            report.style.boxSizing = 'border-box';
+            report.style.direction = 'rtl';
+            report.style.textAlign = 'right';
             report.style.fontFamily = "'Heebo','Assistant',sans-serif";
-            report.style.boxShadow = '0 8px 24px rgba(0,0,0,0.18)';
+            report.style.boxShadow = 'none';
             report.style.zIndex = '9999';
             report.innerHTML = `
                 <h1 style="margin:0 0 8px;font-size:24px;color:#0f3e3a;">דוח תשובות תלמיד</h1>
@@ -6908,7 +6948,9 @@
                         useCORS: true,
                         backgroundColor: '#ffffff',
                         scrollX: 0,
-                        scrollY: 0
+                        scrollY: 0,
+                        windowWidth: 760,
+                        width: 700
                     },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
                     pagebreak: {
@@ -7779,6 +7821,7 @@
             imageNeedsSave = false;
             if (isReadOnlyStudentLink && currentProject.mode === 'student') {
                 restoreStudentSession();
+                applyDemoSampleAnswers();
             }
             updateSaveActionsUI();
             syncModeUI();
