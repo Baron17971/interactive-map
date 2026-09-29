@@ -6159,6 +6159,7 @@
         const requestedShareToken = (urlParams.get('share') || '').trim();
         const requestedTeacherId = (urlParams.get('teacher') || '').trim().toLowerCase();
         const requestedProjectId = (urlParams.get('project') || '').trim();
+        const requestedEditProjectId = (urlParams.get('edit') || '').trim();
         const requestedViewMode = (urlParams.get('view') || '').trim().toLowerCase();
         const requestedDemoMode = (urlParams.get('demo') || '').trim() === '1';
         const isCoreSharedStudentRequest = !!(requestedShareToken && requestedViewMode === 'student');
@@ -6342,7 +6343,9 @@
             const { error } = await coreSupabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: 'https://mapi-interactive.vercel.app/',
+                    redirectTo: requestedEditProjectId
+                        ? `https://mapi-interactive.vercel.app/?edit=${encodeURIComponent(requestedEditProjectId)}`
+                        : 'https://mapi-interactive.vercel.app/',
                     queryParams: { access_type: 'offline', prompt: 'select_account' }
                 }
             });
@@ -7844,6 +7847,17 @@
                 hideLanding();
                 setView('dashboard');
                 await fetchProjects();
+
+                if (requestedEditProjectId) {
+                    const requestedProject = projects.find(
+                        (project) => project.storageSource === 'core' && String(project.id) === requestedEditProjectId
+                    );
+                    if (requestedProject) {
+                        await openProject(requestedProject);
+                    } else {
+                        showToast("הפעילות שביקשת לפתוח לא נמצאה בספרייה.");
+                    }
+                }
                 return;
             }
 
