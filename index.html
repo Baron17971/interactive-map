@@ -5627,6 +5627,7 @@
         let settingsEscapeMode = false;
         let isReadOnlyStudentLink = false;
         let hasUnsavedChanges = false;
+        let imageNeedsSave = false;
 
         let draggingPin = null;
         let dragStartX;
@@ -7008,6 +7009,7 @@
             restoreEditorToolbarUI();
             currentProject = createEmptyProject();
             hasUnsavedChanges = false;
+            imageNeedsSave = false;
             currentProject.teacherName = normalizeOptionalText(teacherProfile.teacherName);
             currentProject.className = normalizeOptionalText(teacherProfile.className);
             currentProject.schoolName = normalizeOptionalText(teacherProfile.schoolName);
@@ -7137,6 +7139,7 @@
             };
             isReadOnlyStudentLink = readOnly;
             hasUnsavedChanges = false;
+            imageNeedsSave = false;
             if (isReadOnlyStudentLink && currentProject.mode === 'student') {
                 restoreStudentSession();
             }
@@ -7170,6 +7173,7 @@
 
                     currentProject.image = imageData;
                     mainImage.src = imageData;
+                    imageNeedsSave = true;
                     markProjectDirty();
                     uploadZone.classList.add('hidden');
                     document.getElementById('canvas-area').classList.remove('hidden');
@@ -7221,6 +7225,7 @@
                 writeLocalProjects(next);
                 currentProject.id = id;
                 hasUnsavedChanges = false;
+                imageNeedsSave = false;
                 updateSaveActionsUI();
                 updateWorkflowUI();
                 renderProjectsGrid();
@@ -7272,12 +7277,19 @@
                     }, { onConflict: 'id' });
                 saveError = error;
             } else {
+                const updateValues = {
+                    payload,
+                    updated_at: payload.updatedAt
+                };
+
+                // Keep ordinary saves lightweight, but persist a newly replaced base image.
+                if (imageNeedsSave) {
+                    updateValues.image = imageForStorage;
+                }
+
                 const { error } = await supabase
                     .from(supabaseProjectsTable)
-                    .update({
-                        payload,
-                        updated_at: payload.updatedAt
-                    })
+                    .update(updateValues)
                     .eq('id', id)
                     .eq('app_id', appId)
                     .eq('teacher_id', teacherId);
@@ -7292,6 +7304,7 @@
 
             currentProject.id = id;
             hasUnsavedChanges = false;
+            imageNeedsSave = false;
             updateSaveActionsUI();
             updateWorkflowUI();
             showToast("הפעילות נשמרה", 700);
@@ -7504,6 +7517,7 @@
             restoreEditorToolbarUI();
             currentProject = createEmptyProject();
             hasUnsavedChanges = false;
+            imageNeedsSave = false;
             closeStudentInstructionModal();
             updateSaveActionsUI();
             updateTeacherInfo();
