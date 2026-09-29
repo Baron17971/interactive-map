@@ -4628,6 +4628,79 @@
                 white-space:nowrap!important;
             }
         }
+
+        /* ===== Final usability refinements ===== */
+        .project-kind-badge {
+            display:inline-flex!important;
+            align-items:center!important;
+            gap:6px!important;
+        }
+
+        #save-project-btn.has-unsaved-changes {
+            background:linear-gradient(135deg,#C9973E,#A77728)!important;
+            color:#FFFDF9!important;
+            border-color:rgba(255,255,255,.28)!important;
+            box-shadow:0 8px 20px rgba(169,119,40,.24)!important;
+        }
+
+        #save-project-btn.has-unsaved-changes svg {
+            color:#FFFDF9!important;
+            stroke:#FFFDF9!important;
+        }
+
+        .mobile-save-state.unsaved {
+            background:#F7EDD0!important;
+            color:#8B641F!important;
+            border-color:rgba(201,151,62,.32)!important;
+        }
+
+        .workflow-dirty .mobile-save-primary {
+            background:linear-gradient(135deg,#C9973E,#A77728)!important;
+            box-shadow:0 10px 24px rgba(169,119,40,.20)!important;
+        }
+
+        .escape-station-label {
+            position:absolute;
+            right:50%;
+            top:calc(100% + 8px);
+            transform:translateX(50%);
+            min-width:max-content;
+            padding:4px 8px;
+            border-radius:999px;
+            background:rgba(95,33,79,.94);
+            color:#FFF8F1;
+            border:1px solid rgba(255,255,255,.72);
+            box-shadow:0 5px 14px rgba(95,33,79,.18);
+            font-size:.68rem;
+            font-weight:900;
+            line-height:1;
+            pointer-events:none;
+            z-index:6;
+        }
+
+        @media(max-width:760px){
+            .escape-station-label {
+                display:none!important;
+            }
+        }
+
+        @media(min-width:1024px){
+            .teacher-principle-copy small,
+            .teacher-action-copy small,
+            .teacher-projects-head p,
+            .activity-logic-copy small,
+            .activity-logic-copy em,
+            .new-setup-field small,
+            #editor-stage-subtitle,
+            .student-finish-copy p,
+            .student-submission-guidance p {
+                color:#596774!important;
+            }
+
+            .project-card p {
+                color:#66717B!important;
+            }
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -5432,6 +5505,7 @@
         let currentPinType = 'info';
         let settingsEscapeMode = false;
         let isReadOnlyStudentLink = false;
+        let hasUnsavedChanges = false;
 
         let draggingPin = null;
         let dragStartX;
@@ -6177,22 +6251,49 @@
             const hasExistingProject = !!currentProject.id;
             const saveProjectBtn = document.getElementById('save-project-btn');
             saveAsNewBtn.classList.toggle('hidden', !hasExistingProject);
-            saveProjectLabel.innerText = hasExistingProject ? 'שמירה' : 'שמירה';
-            const saveTitle = hasExistingProject
-                ? 'שמירת השינויים בפעילות'
-                : 'שמירת הפעילות בפעם הראשונה';
+
+            const dirtySavedProject = hasExistingProject && hasUnsavedChanges;
+            saveProjectLabel.innerText = dirtySavedProject ? 'שמירת שינויים' : 'שמירה';
+
+            const saveTitle = !hasExistingProject
+                ? 'שמירת הפעילות בפעם הראשונה'
+                : dirtySavedProject
+                    ? 'יש שינויים שלא נשמרו — לחצו לשמירה'
+                    : 'הפעילות שמורה בארכיון';
+
             saveProjectBtn.title = saveTitle;
             saveProjectBtn.setAttribute('aria-label', saveTitle);
+            saveProjectBtn.classList.toggle('has-unsaved-changes', dirtySavedProject);
+
             const mobileSaveState = document.getElementById('mobile-save-state');
             if (mobileSaveState) {
-                mobileSaveState.textContent = hasExistingProject ? 'נשמר בארכיון' : 'עדיין לא נשמר';
+                mobileSaveState.textContent = !hasExistingProject
+                    ? 'עדיין לא נשמר'
+                    : dirtySavedProject
+                        ? 'יש שינויים שלא נשמרו'
+                        : 'נשמר בארכיון';
+                mobileSaveState.classList.toggle('unsaved', dirtySavedProject);
             }
+        };
+
+        const markProjectDirty = () => {
+            if (isReadOnlyStudentLink || currentProject.mode !== 'edit') return;
+            if (!currentProject.id) return;
+            hasUnsavedChanges = true;
+            updateSaveActionsUI();
+            updateWorkflowUI();
+        };
+
+        const markProjectClean = () => {
+            hasUnsavedChanges = false;
+            updateSaveActionsUI();
         };
 
 
         const updateWorkflowUI = () => {
             const hasImage = !!currentProject.image;
             const isSaved = !!currentProject.id;
+            const dirtySavedProject = isSaved && hasUnsavedChanges;
             const studentMode = currentProject.mode === 'student';
 
             const imageStep = document.getElementById('flow-step-image');
@@ -6219,10 +6320,16 @@
                 contentStep?.classList.add('done');
                 publishStep?.classList.add('active');
                 kicker = studentMode ? 'בדיקת הפעילות' : 'שלב 4 מתוך 4';
-                title = studentMode ? 'תצוגת תלמיד' : 'הפעילות שמורה';
+                title = studentMode
+                    ? 'תצוגת תלמיד'
+                    : dirtySavedProject
+                        ? 'יש שינויים שלא נשמרו'
+                        : 'הפעילות שמורה';
                 subtitle = studentMode
                     ? 'כך התלמידים יראו את הפעילות. חזרו לעריכה כדי לבצע שינויים.'
-                    : 'אפשר עכשיו לבדוק בתצוגת תלמיד או לשלוח את הקישור לתלמידים.';
+                    : dirtySavedProject
+                        ? 'ביצעתם שינוי בפעילות. לחצו על שמירה כדי לעדכן את הגרסה שבארכיון.'
+                        : 'אפשר עכשיו לבדוק בתצוגת תלמיד או לשלוח את הקישור לתלמידים.';
             }
 
             const kickerEl = document.getElementById('editor-stage-kicker');
@@ -6239,16 +6346,28 @@
             const mobileSaveState = document.getElementById('mobile-save-state');
             const mobileActions = document.getElementById('mobile-teacher-actions');
 
-            if (mobileActions) mobileActions.classList.toggle('workflow-saved', isSaved);
+            if (mobileActions) {
+                mobileActions.classList.toggle('workflow-saved', isSaved && !dirtySavedProject);
+                mobileActions.classList.toggle('workflow-dirty', dirtySavedProject);
+            }
             if (mobileKicker) mobileKicker.textContent = isSaved ? 'שלב 4 · בדיקה ושיתוף' : 'שלב 3 · בניית התוכן';
-            if (mobileTitle) mobileTitle.textContent = isSaved
-                ? 'הפעילות שמורה. עכשיו אפשר לבדוק ולשתף'
-                : 'הוסיפו נקודות למידה על התמונה';
+            if (mobileTitle) mobileTitle.textContent = dirtySavedProject
+                ? 'בוצעו שינויים. שמרו לפני השיתוף'
+                : isSaved
+                    ? 'הפעילות שמורה. עכשיו אפשר לבדוק ולשתף'
+                    : 'הוסיפו נקודות למידה על התמונה';
             if (mobileSaveTitle) mobileSaveTitle.textContent = isSaved ? 'שמירת שינויים' : 'שמירה בארכיון';
             if (mobileSaveSubtitle) mobileSaveSubtitle.textContent = isSaved
-                ? 'שומר רק את השינויים האחרונים'
+                ? 'מעדכן את הגרסה האחרונה בארכיון'
                 : 'כשסיימתם לבנות, שמרו את הפעילות';
-            if (mobileSaveState) mobileSaveState.textContent = isSaved ? 'נשמר בארכיון' : 'עדיין לא נשמר';
+            if (mobileSaveState) {
+                mobileSaveState.textContent = !isSaved
+                    ? 'עדיין לא נשמר'
+                    : dirtySavedProject
+                        ? 'יש שינויים שלא נשמרו'
+                        : 'נשמר בארכיון';
+                mobileSaveState.classList.toggle('unsaved', dirtySavedProject);
+            }
 
             document.getElementById('mobile-share-btn')?.classList.toggle('workflow-disabled', !isSaved);
             document.getElementById('share-student-btn')?.classList.toggle('workflow-disabled', !isSaved);
@@ -6692,7 +6811,7 @@
                 card.innerHTML = `
                     <div class="flex flex-col gap-2">
                         <div class="flex justify-between items-start">
-                            <span class="project-kind-badge ${p.isEscapeRoom ? 'escape' : 'regular'}">${p.isEscapeRoom ? 'חדר בריחה' : 'פעילות רגילה'}</span>
+                            <span class="project-kind-badge ${p.isEscapeRoom ? 'escape' : 'regular'}"><i data-lucide="${p.isEscapeRoom ? 'lock-keyhole' : 'map'}" class="w-3.5 h-3.5"></i>${p.isEscapeRoom ? 'חדר בריחה' : 'פעילות רגילה'}</span>
                             <button class="delete-proj project-delete-btn p-1" data-id="${p.id}">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
@@ -6762,6 +6881,7 @@
             isReadOnlyStudentLink = false;
             restoreEditorToolbarUI();
             currentProject = createEmptyProject();
+            hasUnsavedChanges = false;
             currentProject.teacherName = normalizeOptionalText(teacherProfile.teacherName);
             currentProject.className = normalizeOptionalText(teacherProfile.className);
             currentProject.schoolName = normalizeOptionalText(teacherProfile.schoolName);
@@ -6836,6 +6956,7 @@
             });
 
             syncModeUI();
+            markProjectDirty();
             setView('editor');
             updateWorkflowUI();
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -6889,6 +7010,7 @@
                 studentAnswers: {}
             };
             isReadOnlyStudentLink = readOnly;
+            hasUnsavedChanges = false;
             if (isReadOnlyStudentLink && currentProject.mode === 'student') {
                 restoreStudentSession();
             }
@@ -6922,6 +7044,7 @@
 
                     currentProject.image = imageData;
                     mainImage.src = imageData;
+                    markProjectDirty();
                     uploadZone.classList.add('hidden');
                     document.getElementById('canvas-area').classList.remove('hidden');
                     updateWorkflowUI();
@@ -6965,6 +7088,7 @@
                 projects = next;
                 writeLocalProjects(next);
                 currentProject.id = id;
+                hasUnsavedChanges = false;
                 updateSaveActionsUI();
                 updateWorkflowUI();
                 renderProjectsGrid();
@@ -7035,6 +7159,7 @@
             }
 
             currentProject.id = id;
+            hasUnsavedChanges = false;
             updateSaveActionsUI();
             updateWorkflowUI();
             showToast("הפעילות נשמרה", 700);
@@ -7246,6 +7371,7 @@
             isReadOnlyStudentLink = false;
             restoreEditorToolbarUI();
             currentProject = createEmptyProject();
+            hasUnsavedChanges = false;
             closeStudentInstructionModal();
             updateSaveActionsUI();
             updateTeacherInfo();
@@ -7443,6 +7569,7 @@
             if (!hasMovedDuringDrag) {
                 openPinModal(id);
             } else {
+                markProjectDirty();
                 renderPins();
             }
         };
@@ -7475,6 +7602,7 @@
                 correctBool: true
             };
             currentProject.pins.push(newPin);
+            markProjectDirty();
             renderPins();
             openPinModal(newPin.id);
         };
@@ -7521,6 +7649,13 @@
                     stationBadge.className = 'escape-station-number';
                     stationBadge.textContent = String(escapeStationIndex + 1);
                     pinEl.appendChild(stationBadge);
+
+                    if (currentProject.mode === 'edit') {
+                        const stationLabel = document.createElement('span');
+                        stationLabel.className = 'escape-station-label';
+                        stationLabel.textContent = `תחנה ${escapeStationIndex + 1}`;
+                        pinEl.appendChild(stationLabel);
+                    }
                 }
 
                 if (currentProject.mode === 'edit') {
@@ -8421,12 +8556,14 @@
                 pin.videoUrl = normalizeOptionalText(pin.videoUrl);
                 pin.videoRevealSeconds = Math.max(0, Math.floor(Number(pin.videoRevealSeconds) || 0));
             }
+            markProjectDirty();
             renderPins();
             closePinModal();
         };
 
         document.getElementById('delete-pin').onclick = () => {
             currentProject.pins = currentProject.pins.filter((pin) => pin.id !== currentEditingPinId);
+            markProjectDirty();
             renderPins();
             closePinModal();
         };
@@ -8483,6 +8620,7 @@
             currentProject.lockCode = document.getElementById('escape-code').value;
             closeSettings();
             syncModeUI();
+            if (flow !== 'saveAs') markProjectDirty();
             if (flow === 'saveAs') {
                 openSaveMapModal('saveAs', currentProject.name || getSuggestedProjectNameForSaveAs());
                 return;
