@@ -5491,7 +5491,7 @@
             <div class="teacher-projects-head">
                 <div>
                     <h3>הפעילויות שלי</h3>
-                    <p>כל הפעילויות שנשמרו תחת מזהה המורה הנוכחי.</p>
+                    <p>הפעילויות ששמרת בחשבון MyXsite. אפשר לפתוח את הארכיון הישן דרך מסך הכניסה.</p>
                 </div>
             </div>
 
@@ -8586,17 +8586,21 @@
         };
 
         document.getElementById('save-project-btn').onclick = async () => {
-            if (!currentUser) return;
-            if (!teacherId) {
+            if (archiveMode === 'core' && !coreUser) {
+                showToast("כדי לשמור בספריית MyXsite צריך להתחבר עם Google.");
+                await loginWithCoreGoogle();
+                return;
+            }
+            if (archiveMode === 'legacy' && !teacherId) {
                 openTeacherModal(false);
-                showToast("צריך לבחור מזהה מורה לפני שמירה.");
+                showToast("צריך לבחור מזהה מורה ישן לפני שמירה.");
                 return;
             }
             if (!currentProject.image) {
                 showToast("קודם מעלים תמונה לפעילות.");
                 return;
             }
-            if (!currentProject.id) {
+            if (!currentProject.id || (archiveMode === 'core' && currentProject.storageSource !== 'core')) {
                 const suggested = currentProject.name && currentProject.name !== 'פעילות חדשה'
                     ? currentProject.name
                     : '';
@@ -8606,8 +8610,14 @@
             await persistCurrentProject({ forceNew: false });
         };
 
-        saveAsNewBtn.onclick = () => {
-            if (!currentUser || !teacherId || !currentProject.image) return;
+        saveAsNewBtn.onclick = async () => {
+            if (!currentProject.image) return;
+            if (archiveMode === 'core' && !coreUser) {
+                showToast("כדי לשמור עותק בספריית MyXsite צריך להתחבר עם Google.");
+                await loginWithCoreGoogle();
+                return;
+            }
+            if (archiveMode === 'legacy' && !teacherId) return;
             const suggested = getSuggestedProjectNameForSaveAs();
             openSaveMapModal('saveAs', suggested);
             document.getElementById('toolbar-more-menu')?.classList.add('hidden');
@@ -8615,23 +8625,69 @@
         };
 
         shareStudentBtn.onclick = async () => {
-            if (!teacherId) {
-                openTeacherModal(false);
-                showToast("צריך לבחור מזהה מורה לפני יצירת קישור.");
-                return;
-            }
             if (!currentProject.id) {
-                showToast("קודם שומרים את המפה בארכיון ואז משתפים קישור.");
+                showToast("קודם שומרים את הפעילות בספרייה ואז משתפים קישור.");
                 openProjectSettingsModal('saveAs');
                 return;
             }
 
-            const shareUrl = buildStudentShareUrl(currentProject.id);
+            if (currentProject.storageSource === 'core') {
+                if (!coreSupabase || !coreUser) {
+                    showToast("צריך להתחבר ל־MyXsite כדי ליצור קישור.");
+                    await loginWithCoreGoogle();
+                    return;
+                }
+
+                let shareToken = currentProject.shareToken || null;
+                if (!currentProject.isPublished || !shareToken) {
+                    const { data, error } = await coreSupabase
+                        .from('teacher_projects')
+                        .update({ is_published: true })
+                        .eq('id', currentProject.id)
+                        .eq('app_id', coreAppId)
+                        .eq('teacher_id', coreUser.id)
+                        .select('share_token,is_published')
+                        .single();
+
+                    if (error) {
+                        console.error("MyXsite publish error:", error);
+                        showToast("לא הצלחנו להכין קישור לתלמידים.");
+                        return;
+                    }
+
+                    shareToken = data?.share_token || null;
+                    currentProject.shareToken = shareToken;
+                    currentProject.isPublished = !!data?.is_published;
+                    const archiveProject = projects.find((project) => project.id === currentProject.id);
+                    if (archiveProject) {
+                        archiveProject.shareToken = shareToken;
+                        archiveProject.isPublished = currentProject.isPublished;
+                    }
+                }
+
+                if (!shareToken) {
+                    showToast("לא הצלחנו ליצור קישור לתלמידים.");
+                    return;
+                }
+
+                const shareUrl = buildStudentShareUrl(currentProject);
+                const copied = await copyToClipboard(shareUrl);
+                showToast(copied ? "קישור תלמיד הועתק ללוח." : "לא הצלחנו להעתיק אוטומטית.");
+                return;
+            }
+
+            if (!teacherId) {
+                openTeacherModal(false);
+                showToast("צריך לבחור מזהה מורה ישן לפני יצירת קישור.");
+                return;
+            }
+
+            const shareUrl = buildStudentShareUrl(currentProject);
             const copied = await copyToClipboard(shareUrl);
             if (copied) {
                 showToast(hasSupabaseConfig ? "קישור תלמיד הועתק ללוח." : "הקישור הועתק. במצב מקומי הוא יעבוד רק בדפדפן זה.");
             } else {
-                showToast("לא הצלחתי להעתיק אוטומטית. העתיקי ידנית מהשורת כתובת.");
+                showToast("לא הצלחנו להעתיק אוטומטית.");
             }
         };
 
@@ -8758,6 +8814,8 @@
         };
 
         const saveTeacherFromInput = () => {
+            archiveMode = 'legacy';
+            coreUser = null;
             if (!applyTeacherId(teacherIdInput.value)) {
                 showToast("יש להזין מזהה מורה תקין.");
                 return;
@@ -8772,12 +8830,14 @@
             updateTeacherInfo();
             projects = [];
             renderProjectsGrid();
+            teacherModal.classList.add('hidden');
             hideLanding();
             setView('dashboard');
             fetchProjects();
-            showToast(`הארכיון נטען עבור ${teacherId}`);
+            showToast(`נפתח הארכיון הישן: ${teacherId}`);
         };
 
+        document.getElementById('core-google-login-btn')?.addEventListener('click', loginWithCoreGoogle);
         document.getElementById('teacher-save-btn').onclick = saveTeacherFromInput;
         teacherIdInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') saveTeacherFromInput();
