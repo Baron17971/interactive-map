@@ -7867,7 +7867,19 @@
                 feedback.classList.remove('hidden', 'bg-red-100', 'text-red-700');
                 feedback.classList.add('bg-green-100', 'text-green-700');
 
-                let msg = pin.type === 'info' ? "המידע נקרא. התחנה הבאה נפתחה." : "מצוין! התחנה הושלמה.";
+                let msg;
+                if (pin.type === 'info') {
+                    if (currentProject.isEscapeRoom) {
+                        msg = areAllEscapeStationsSolved()
+                            ? "המידע נקרא. התחנה הושלמה."
+                            : "המידע נקרא. התחנה הבאה נפתחה.";
+                    } else {
+                        msg = "המידע נקרא.";
+                    }
+                } else {
+                    msg = "מצוין! התחנה הושלמה.";
+                }
+
                 if (currentProject.isEscapeRoom && currentProject.lockCode && awardLockSymbol) {
                     const idx = getEscapeStationIndex(pin);
                     if (idx >= 0) {
@@ -7885,11 +7897,33 @@
             };
 
             if (pin.type === 'info') {
-                area.innerHTML = `<button id="btn-done" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold">הבנתי, אפשר להמשיך</button>`;
-                document.getElementById('btn-done').onclick = () => {
-                    saveStudentAnswer(pin, 'המידע נקרא');
-                    markSolved();
-                };
+                const alreadySolved = !!currentProject.studentProgress[pin.id];
+
+                if (alreadySolved) {
+                    feedback.classList.remove('hidden', 'bg-red-100', 'text-red-700');
+                    feedback.classList.add('bg-green-100', 'text-green-700');
+
+                    let infoMsg = currentProject.isEscapeRoom
+                        ? "המידע כבר נקרא והתחנה הושלמה."
+                        : "המידע כבר נקרא.";
+
+                    if (currentProject.isEscapeRoom && currentProject.lockCode) {
+                        const idx = getEscapeStationIndex(pin);
+                        if (idx >= 0) {
+                            const symbol = currentProject.lockCode[idx % currentProject.lockCode.length];
+                            infoMsg += ` הרמז שאספתם: ${symbol}`;
+                        }
+                    }
+
+                    feedback.innerText = infoMsg;
+                } else {
+                    area.innerHTML = `<button id="btn-done" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold">הבנתי, אפשר להמשיך</button>`;
+                    document.getElementById('btn-done').onclick = (event) => {
+                        event.currentTarget.remove();
+                        saveStudentAnswer(pin, 'המידע נקרא');
+                        markSolved();
+                    };
+                }
             } else if (pin.type === 'mcq') {
                 const savedEntry = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]);
                 const optionButtons = [];
