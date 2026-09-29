@@ -5491,7 +5491,7 @@
             <div class="teacher-projects-head">
                 <div>
                     <h3>הפעילויות שלי</h3>
-                    <p>כל הפעילויות שנשמרו תחת מזהה המורה הנוכחי.</p>
+                    <p>הפעילויות ששמרת בחשבון MyXsite. אפשר לפתוח את הארכיון הישן דרך מסך הכניסה.</p>
                 </div>
             </div>
 
@@ -6071,16 +6071,24 @@
     <div id="teacher-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 space-y-5">
             <div>
-                <h3 class="text-xl font-bold text-slate-800">בחירת מזהה מורה</h3>
-                <p class="text-slate-500 text-sm mt-1">כל המפות יישמרו תחת מזהה זה בלבד.</p>
+                <h3 class="text-xl font-bold text-slate-800">כניסה ל־MyXsite</h3>
+                <p class="text-slate-500 text-sm mt-1">התחברות עם Google שומרת את הפעילויות בספרייה האישית שלך ב־MyXsite.</p>
+            </div>
+            <button id="core-google-login-btn" type="button" class="w-full bg-white border-2 border-slate-200 text-slate-800 py-3 rounded-xl font-bold flex items-center justify-center gap-2">
+                <span aria-hidden="true" class="font-black text-lg">G</span>
+                <span>המשך עם Google</span>
+            </button>
+            <div class="flex items-center gap-3 text-xs text-slate-400">
+                <span class="h-px bg-slate-200 flex-1"></span><span>ארכיון MAPI הישן</span><span class="h-px bg-slate-200 flex-1"></span>
             </div>
             <div>
-                <label class="block text-sm font-bold text-slate-700 mb-2">מזהה מורה</label>
-                <input type="text" id="teacher-id-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="למשל: mora-rina">
+                <label class="block text-sm font-bold text-slate-700 mb-2">מזהה מורה ישן</label>
+                <input type="text" id="teacher-id-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="למשל: 1968">
+                <p class="text-xs text-slate-400 mt-2">האפשרות הזו נשארת זמנית כדי שלא תאבד גישה לפעילויות הישנות.</p>
             </div>
             <div class="flex gap-3">
                 <button id="teacher-cancel-btn" class="flex-grow bg-slate-100 text-slate-700 py-3 rounded-xl font-bold">ביטול</button>
-                <button id="teacher-save-btn" class="flex-grow bg-indigo-600 text-white py-3 rounded-xl font-bold">שמירה</button>
+                <button id="teacher-save-btn" class="flex-grow bg-indigo-600 text-white py-3 rounded-xl font-bold">פתח ארכיון ישן</button>
             </div>
         </div>
     </div>
@@ -6139,24 +6147,40 @@
         const hasSupabaseConfig = !!(supabaseUrl && supabaseAnonKey);
         const appId = (typeof window !== 'undefined' && window.APP_ID) ? window.APP_ID : 'interactive-map';
         const supabaseProjectsTable = (typeof window !== 'undefined' && window.SUPABASE_PROJECTS_TABLE) ? window.SUPABASE_PROJECTS_TABLE : 'teacher_projects';
+        const coreSupabaseUrl = (typeof window !== 'undefined' && window.XSITE_CORE_SUPABASE_URL) ? window.XSITE_CORE_SUPABASE_URL : '';
+        const coreSupabaseKey = (typeof window !== 'undefined' && window.XSITE_CORE_SUPABASE_KEY) ? window.XSITE_CORE_SUPABASE_KEY : '';
+        const coreAppId = (typeof window !== 'undefined' && window.XSITE_CORE_APP_ID) ? window.XSITE_CORE_APP_ID : 'mapi';
+        const coreSharedProjectUrl = (typeof window !== 'undefined' && window.XSITE_CORE_SHARED_PROJECT_URL) ? window.XSITE_CORE_SHARED_PROJECT_URL : '';
+        const hasCoreSupabaseConfig = !!(coreSupabaseUrl && coreSupabaseKey);
         const teacherIdStorageKey = `map-archive-teacher-id-${appId}`;
         const DEFAULT_STUDENT_INSTRUCTION = "עברו על כל הנקודות במפה, קראו היטב כל משימה וענו בצורה מדויקת. עבדו בקצב שלכם, ואם נתקעתם חזרו לנקודה קודמת ובדקו שוב.";
         const EMPTY_CREATOR_PROFILE = { teacherName: '', className: '', schoolName: '' };
         const urlParams = new URLSearchParams(window.location.search);
+        const requestedShareToken = (urlParams.get('share') || '').trim();
         const requestedTeacherId = (urlParams.get('teacher') || '').trim().toLowerCase();
         const requestedProjectId = (urlParams.get('project') || '').trim();
         const requestedViewMode = (urlParams.get('view') || '').trim().toLowerCase();
         const requestedDemoMode = (urlParams.get('demo') || '').trim() === '1';
-        const isSharedStudentRequest = !!(requestedTeacherId && requestedProjectId && requestedViewMode === 'student');
+        const isCoreSharedStudentRequest = !!(requestedShareToken && requestedViewMode === 'student');
+        const isLegacySharedStudentRequest = !!(requestedTeacherId && requestedProjectId && requestedViewMode === 'student');
+        const isSharedStudentRequest = isCoreSharedStudentRequest || isLegacySharedStudentRequest;
         const DEMO_STUDENT_URL = '?teacher=1968&project=919fa0c3-f295-4a26-8f24-6155c4ee48ff&view=student&demo=1';
 
         let supabase = null;
+        let coreSupabase = null;
 
         if (hasSupabaseConfig) {
             supabase = createClient(supabaseUrl, supabaseAnonKey);
         }
+        if (hasCoreSupabaseConfig) {
+            coreSupabase = createClient(coreSupabaseUrl, coreSupabaseKey, {
+                auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+            });
+        }
 
         let currentUser = null;
+        let coreUser = null;
+        let archiveMode = 'core';
         let teacherId = '';
         let projects = [];
         let teacherProfile = { ...EMPTY_CREATOR_PROFILE };
@@ -6310,17 +6334,36 @@
             }
         };
 
+        const loginWithCoreGoogle = async () => {
+            if (!coreSupabase) {
+                showToast("החיבור ל־MyXsite אינו זמין כרגע.");
+                return;
+            }
+            const { error } = await coreSupabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: `${window.location.origin}${window.location.pathname}`,
+                    queryParams: { access_type: 'offline', prompt: 'select_account' }
+                }
+            });
+            if (error) {
+                console.error("MyXsite Google login error:", error);
+                showToast("לא הצלחנו לפתוח את ההתחברות ל־Google.");
+            }
+        };
+
         const openTeacherEntry = () => {
-            teacherIdInput.value = teacherId || '';
+            teacherIdInput.value = archiveMode === 'legacy' ? (teacherId || '') : '';
             document.getElementById('teacher-cancel-btn').classList.remove('hidden');
             teacherModal.classList.remove('hidden');
-            setTimeout(() => teacherIdInput.focus(), 30);
         };
 
         const enterTeacherDashboard = async () => {
             hideLanding();
             setView('dashboard');
-            if (teacherId) await fetchProjects();
+            if ((archiveMode === 'core' && coreUser) || (archiveMode === 'legacy' && teacherId)) {
+                await fetchProjects();
+            }
         };
 
         const getStudentSessionStorageKey = () => {
@@ -7108,10 +7151,21 @@
                 return;
             }
 
+            if (archiveMode === 'core' && coreUser) {
+                const accountName = normalizeOptionalText(
+                    coreUser.user_metadata?.full_name ||
+                    coreUser.user_metadata?.name ||
+                    coreUser.email ||
+                    ''
+                );
+                badge.innerText = accountName ? `MyXsite • ${accountName}` : 'MyXsite';
+                return;
+            }
+
             const knownName = normalizeOptionalText(currentProject.teacherName || teacherProfile.teacherName);
             badge.innerText = knownName
-                ? `מזהה מורה: ${teacherId || 'לא הוגדר'} • ${knownName}`
-                : `מזהה מורה: ${teacherId || 'לא הוגדר'}`;
+                ? `ארכיון ישן: ${teacherId || 'לא הוגדר'} • ${knownName}`
+                : `ארכיון ישן: ${teacherId || 'לא הוגדר'}`;
         };
 
         const extractFirstName = (fullName) => {
@@ -7123,7 +7177,10 @@
         const updateDashboardGreeting = () => {
             const greetingEl = document.getElementById('dashboard-greeting');
             if (!greetingEl) return;
-            const knownName = normalizeOptionalText(teacherProfile.teacherName || currentProject.teacherName);
+            const coreName = archiveMode === 'core' && coreUser
+                ? normalizeOptionalText(coreUser.user_metadata?.full_name || coreUser.user_metadata?.name || '')
+                : '';
+            const knownName = coreName || normalizeOptionalText(teacherProfile.teacherName || currentProject.teacherName);
             const firstName = extractFirstName(knownName);
             greetingEl.innerText = firstName ? `שלום, ${firstName}! 👋` : 'שלום, מורה! 👋';
         };
@@ -7371,11 +7428,18 @@
             updateStudentExportButtonVisibility();
         };
 
-        const buildStudentShareUrl = (projectId) => {
+        const buildStudentShareUrl = (project) => {
             const baseUrl = `${window.location.origin}${window.location.pathname}`;
+            if (project?.storageSource === 'core' && project?.shareToken) {
+                const params = new URLSearchParams({
+                    share: String(project.shareToken),
+                    view: 'student'
+                });
+                return `${baseUrl}?${params.toString()}`;
+            }
             const params = new URLSearchParams({
                 teacher: teacherId,
-                project: String(projectId),
+                project: String(project?.id || ''),
                 view: 'student'
             });
             return `${baseUrl}?${params.toString()}`;
@@ -7405,6 +7469,46 @@
         };
 
         const openSharedProject = async () => {
+            if (isCoreSharedStudentRequest) {
+                if (!coreSharedProjectUrl) {
+                    showToast("קישור השיתוף אינו זמין כרגע.");
+                    return false;
+                }
+                try {
+                    const response = await fetch(`${coreSharedProjectUrl}?token=${encodeURIComponent(requestedShareToken)}`, {
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    const result = await response.json().catch(() => ({}));
+                    if (!response.ok || !result?.project) {
+                        showToast("לא נמצאה פעילות בקישור הזה.");
+                        return false;
+                    }
+                    const row = result.project;
+                    const payload = row.payload || {};
+                    const project = {
+                        ...payload,
+                        id: row.id,
+                        name: row.title || payload.name || 'פעילות',
+                        image: row.image || payload.image || '',
+                        updatedAt: row.updated_at || payload.updatedAt,
+                        pins: normalizeProjectPins(payload.pins),
+                        studentInstruction: resolveStudentInstruction(payload.studentInstruction),
+                        submissionInstruction: normalizeOptionalText(payload.submissionInstruction),
+                        teacherName: normalizeOptionalText(payload.teacherName),
+                        className: normalizeOptionalText(payload.className),
+                        schoolName: normalizeOptionalText(payload.schoolName),
+                        storageSource: 'core'
+                    };
+                    teacherId = 'shared';
+                    openProject(project, { forceStudent: true, readOnly: true });
+                    return true;
+                } catch (error) {
+                    console.error("Core share-load error:", error);
+                    showToast("שגיאה בטעינת הפעילות מהקישור.");
+                    return false;
+                }
+            }
+
             if (!requestedProjectId || !teacherId) return false;
 
             if (!hasSupabaseConfig) {
@@ -7414,7 +7518,7 @@
                     showToast("לא נמצאה מפה בקישור הזה.");
                     return false;
                 }
-                openProject(localProject, { forceStudent: true, readOnly: true });
+                openProject({ ...localProject, storageSource: 'legacy' }, { forceStudent: true, readOnly: true });
                 return true;
             }
 
@@ -7436,7 +7540,7 @@
                 return false;
             }
 
-            openProject(mapRowToProject(data), { forceStudent: true, readOnly: true });
+            openProject({ ...mapRowToProject(data), storageSource: 'legacy' }, { forceStudent: true, readOnly: true });
             return true;
         };
 
@@ -7449,6 +7553,26 @@
                 id: row.id,
                 image: row.image || payload.image || '',
                 updatedAt: row.updated_at || payload.updatedAt,
+                pins: normalizeProjectPins(payload.pins),
+                studentInstruction: resolveStudentInstruction(payload.studentInstruction),
+                submissionInstruction: normalizeOptionalText(payload.submissionInstruction),
+                teacherName: normalizeOptionalText(payload.teacherName),
+                className: normalizeOptionalText(payload.className),
+                schoolName: normalizeOptionalText(payload.schoolName)
+            };
+        };
+
+        const mapCoreRowToProject = (row) => {
+            const payload = row.payload || {};
+            return {
+                ...payload,
+                id: row.id,
+                name: row.title || payload.name || 'פעילות',
+                image: row.image || payload.image || '',
+                updatedAt: row.updated_at || payload.updatedAt,
+                shareToken: row.share_token || null,
+                isPublished: !!row.is_published,
+                storageSource: 'core',
                 pins: normalizeProjectPins(payload.pins),
                 studentInstruction: resolveStudentInstruction(payload.studentInstruction),
                 submissionInstruction: normalizeOptionalText(payload.submissionInstruction),
@@ -7619,10 +7743,35 @@
         };
 
         const fetchProjects = async () => {
+            if (archiveMode === 'core') {
+                if (!coreSupabase || !coreUser) {
+                    projects = [];
+                    renderProjectsGrid();
+                    return;
+                }
+
+                const { data, error } = await coreSupabase
+                    .from('teacher_projects')
+                    .select('id,title,payload,updated_at,share_token,is_published')
+                    .eq('app_id', coreAppId)
+                    .eq('teacher_id', coreUser.id)
+                    .order('updated_at', { ascending: false });
+
+                if (error) {
+                    console.error("xsite-core archive error:", error);
+                    showToast("שגיאה בטעינת הספרייה מ־MyXsite");
+                    return;
+                }
+
+                projects = (data || []).map(mapCoreRowToProject);
+                renderProjectsGrid();
+                return;
+            }
+
             if (!currentUser || !teacherId) return;
 
             if (!hasSupabaseConfig) {
-                projects = readLocalProjects();
+                projects = readLocalProjects().map((project) => ({ ...project, storageSource: 'legacy' }));
                 renderProjectsGrid();
                 return;
             }
@@ -7636,37 +7785,54 @@
 
             if (error) {
                 console.error("Supabase error:", error);
-                showToast("שגיאה בטעינת הארכיון מהענן");
+                showToast("שגיאה בטעינת הארכיון הישן");
                 return;
             }
 
-            projects = (data || []).map(mapRowToProject);
+            projects = (data || []).map((row) => ({ ...mapRowToProject(row), storageSource: 'legacy' }));
             renderProjectsGrid();
         };
 
         const initAuth = async () => {
             const savedTeacherId = normalizeTeacherId(localStorage.getItem(teacherIdStorageKey) || '');
+
             if (isSharedStudentRequest) {
-                teacherId = requestedTeacherId;
+                teacherId = isCoreSharedStudentRequest ? 'shared' : requestedTeacherId;
                 isReadOnlyStudentLink = true;
+                archiveMode = isCoreSharedStudentRequest ? 'core' : 'legacy';
             } else if (savedTeacherId) {
                 teacherId = savedTeacherId;
             }
-            if (teacherId) {
-                teacherProfile = readTeacherProfile();
-            }
-            updateTeacherInfo();
 
             currentUser = { uid: getLocalUid() };
 
-            if (!isSharedStudentRequest) {
-                showLanding();
+            if (coreSupabase && !isSharedStudentRequest) {
+                const { data: sessionData } = await coreSupabase.auth.getSession();
+                coreUser = sessionData?.session?.user || null;
+                if (coreUser) {
+                    archiveMode = 'core';
+                    teacherId = coreUser.email || coreUser.id;
+                    const accountName = normalizeOptionalText(
+                        coreUser.user_metadata?.full_name ||
+                        coreUser.user_metadata?.name ||
+                        ''
+                    );
+                    if (accountName && !teacherProfile.teacherName) {
+                        teacherProfile.teacherName = accountName;
+                    }
+                }
             }
+
+            if (teacherId && archiveMode === 'legacy') {
+                teacherProfile = readTeacherProfile();
+            }
+
+            updateTeacherInfo();
 
             if (isSharedStudentRequest) {
                 const loaded = await openSharedProject();
                 clearSharedStudentBoot();
-                if (loaded) showToast("נפתחה מפה במצב תלמיד בלבד.");
+                if (loaded) showToast("נפתחה פעילות במצב תלמיד בלבד.");
                 return;
             }
 
@@ -7674,12 +7840,14 @@
             restoreEditorToolbarUI();
             updateSaveActionsUI();
 
-            if (!hasSupabaseConfig) {
-                if (teacherId) fetchProjects();
+            if (coreUser) {
+                hideLanding();
+                setView('dashboard');
+                await fetchProjects();
                 return;
             }
 
-            if (teacherId) fetchProjects();
+            showLanding();
         };
 
         const renderProjectsGrid = () => {
@@ -7724,7 +7892,24 @@
                     e.stopPropagation();
                     if (!confirm("האם למחוק את הפעילות הזו מהארכיון?")) return;
 
-                    if (hasSupabaseConfig) {
+                    if (p.storageSource === 'core') {
+                        if (!coreSupabase || !coreUser) {
+                            showToast("צריך להתחבר ל־MyXsite כדי למחוק פעילות.");
+                            return;
+                        }
+                        const { error } = await coreSupabase
+                            .from('teacher_projects')
+                            .delete()
+                            .eq('id', p.id)
+                            .eq('app_id', coreAppId)
+                            .eq('teacher_id', coreUser.id);
+                        if (error) {
+                            console.error("xsite-core delete error:", error);
+                            showToast("שגיאה במחיקת הפעילות מ־MyXsite");
+                            return;
+                        }
+                        await fetchProjects();
+                    } else if (hasSupabaseConfig) {
                         const { error } = await supabase
                             .from(supabaseProjectsTable)
                             .delete()
@@ -7733,7 +7918,7 @@
                             .eq('teacher_id', teacherId);
                         if (error) {
                             console.error("Supabase delete error:", error);
-                            showToast("שגיאה במחיקת הפעילות מהענן");
+                            showToast("שגיאה במחיקת הפעילות מהארכיון הישן");
                             return;
                         }
                         await fetchProjects();
@@ -7864,7 +8049,23 @@
 
         const openProject = async (project, options = {}) => {
             const forceStudent = !!options.forceStudent;
-            if (!project.image && hasSupabaseConfig && project.id && teacherId) {
+            if (!project.image && project.storageSource === 'core' && coreSupabase && coreUser && project.id) {
+                const { data: imageRow, error: imageError } = await coreSupabase
+                    .from('teacher_projects')
+                    .select('image')
+                    .eq('app_id', coreAppId)
+                    .eq('teacher_id', coreUser.id)
+                    .eq('id', project.id)
+                    .maybeSingle();
+
+                if (imageError) {
+                    console.error("MyXsite project image load error:", imageError);
+                    showToast("לא הצלחנו לטעון את תמונת הפעילות.");
+                    return;
+                }
+
+                project = { ...project, image: imageRow?.image || '' };
+            } else if (!project.image && hasSupabaseConfig && project.id && teacherId) {
                 const { data: imageRow, error: imageError } = await supabase
                     .from(supabaseProjectsTable)
                     .select('image')
@@ -8122,6 +8323,124 @@
         });
 
         const persistCurrentProject = async ({ forceNew = false } = {}) => {
+            if (archiveMode === 'core') {
+                if (!coreUser || !coreSupabase) {
+                    showToast("כדי לשמור בספרייה שלך צריך להתחבר עם Google.");
+                    await loginWithCoreGoogle();
+                    return;
+                }
+                if (!currentProject.image) {
+                    showToast("צריך להעלות תמונה לפני שמירה");
+                    return;
+                }
+
+                const storageReadyProject = {
+                    ...currentProject,
+                    mode: 'edit',
+                    studentProgress: {},
+                    studentAnswers: {},
+                    storageSource: 'core'
+                };
+
+                const isNewRow = forceNew || !currentProject.id || currentProject.storageSource !== 'core';
+                const id = (!forceNew && currentProject.storageSource === 'core' && currentProject.id)
+                    ? currentProject.id
+                    : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+                let projectForCloud = storageReadyProject;
+
+                if (isNewRow || imageNeedsSave) {
+                    try {
+                        projectForCloud = await prepareProjectForCloudSave(storageReadyProject);
+                    } catch (prepError) {
+                        const prepMsg = prepError?.message || "שגיאה בהכנת השמירה.";
+                        showToast(prepMsg);
+                        return;
+                    }
+                    if (projectForCloud.image !== currentProject.image) {
+                        currentProject.image = projectForCloud.image;
+                        mainImage.src = projectForCloud.image;
+                    }
+                }
+
+                const imageForStorage = projectForCloud.image;
+                const { image: _ignoredImage, shareToken: _shareToken, isPublished: _isPublished, ...projectWithoutImage } = projectForCloud;
+                const now = new Date().toISOString();
+                const payload = {
+                    ...projectWithoutImage,
+                    id,
+                    ownerUid: coreUser.id,
+                    updatedAt: now
+                };
+
+                let result = null;
+                let saveError = null;
+
+                if (isNewRow) {
+                    const response = await coreSupabase
+                        .from('teacher_projects')
+                        .insert({
+                            id,
+                            teacher_id: coreUser.id,
+                            app_id: coreAppId,
+                            title: currentProject.name || 'פעילות ללא שם',
+                            payload,
+                            image: imageForStorage,
+                            updated_at: now
+                        })
+                        .select('id,share_token,is_published,updated_at')
+                        .single();
+                    result = response.data;
+                    saveError = response.error;
+                } else {
+                    const updateValues = {
+                        title: currentProject.name || 'פעילות ללא שם',
+                        payload,
+                        updated_at: now
+                    };
+                    if (imageNeedsSave) updateValues.image = imageForStorage;
+                    const response = await coreSupabase
+                        .from('teacher_projects')
+                        .update(updateValues)
+                        .eq('id', id)
+                        .eq('app_id', coreAppId)
+                        .eq('teacher_id', coreUser.id)
+                        .select('id,share_token,is_published,updated_at')
+                        .single();
+                    result = response.data;
+                    saveError = response.error;
+                }
+
+                if (saveError) {
+                    console.error("xsite-core save error:", saveError);
+                    showToast("השמירה ל־MyXsite נכשלה. נסו שוב.");
+                    return;
+                }
+
+                currentProject.id = id;
+                currentProject.storageSource = 'core';
+                currentProject.shareToken = result?.share_token || currentProject.shareToken || null;
+                currentProject.isPublished = !!(result?.is_published ?? currentProject.isPublished);
+                hasUnsavedChanges = false;
+                imageNeedsSave = false;
+                updateSaveActionsUI();
+                updateWorkflowUI();
+                showToast("הפעילות נשמרה בספרייה שלך", 900);
+
+                const lightweightProject = {
+                    ...payload,
+                    id,
+                    name: currentProject.name,
+                    image: currentProject.image,
+                    updatedAt: result?.updated_at || now,
+                    shareToken: currentProject.shareToken,
+                    isPublished: currentProject.isPublished,
+                    storageSource: 'core'
+                };
+                projects = [lightweightProject, ...projects.filter((project) => project.id !== id)];
+                renderProjectsGrid();
+                return;
+            }
+
             if (!currentUser) return;
             if (!teacherId) {
                 openTeacherModal(false);
@@ -8267,17 +8586,21 @@
         };
 
         document.getElementById('save-project-btn').onclick = async () => {
-            if (!currentUser) return;
-            if (!teacherId) {
+            if (archiveMode === 'core' && !coreUser) {
+                showToast("כדי לשמור בספריית MyXsite צריך להתחבר עם Google.");
+                await loginWithCoreGoogle();
+                return;
+            }
+            if (archiveMode === 'legacy' && !teacherId) {
                 openTeacherModal(false);
-                showToast("צריך לבחור מזהה מורה לפני שמירה.");
+                showToast("צריך לבחור מזהה מורה ישן לפני שמירה.");
                 return;
             }
             if (!currentProject.image) {
                 showToast("קודם מעלים תמונה לפעילות.");
                 return;
             }
-            if (!currentProject.id) {
+            if (!currentProject.id || (archiveMode === 'core' && currentProject.storageSource !== 'core')) {
                 const suggested = currentProject.name && currentProject.name !== 'פעילות חדשה'
                     ? currentProject.name
                     : '';
@@ -8287,8 +8610,14 @@
             await persistCurrentProject({ forceNew: false });
         };
 
-        saveAsNewBtn.onclick = () => {
-            if (!currentUser || !teacherId || !currentProject.image) return;
+        saveAsNewBtn.onclick = async () => {
+            if (!currentProject.image) return;
+            if (archiveMode === 'core' && !coreUser) {
+                showToast("כדי לשמור עותק בספריית MyXsite צריך להתחבר עם Google.");
+                await loginWithCoreGoogle();
+                return;
+            }
+            if (archiveMode === 'legacy' && !teacherId) return;
             const suggested = getSuggestedProjectNameForSaveAs();
             openSaveMapModal('saveAs', suggested);
             document.getElementById('toolbar-more-menu')?.classList.add('hidden');
@@ -8296,23 +8625,69 @@
         };
 
         shareStudentBtn.onclick = async () => {
-            if (!teacherId) {
-                openTeacherModal(false);
-                showToast("צריך לבחור מזהה מורה לפני יצירת קישור.");
-                return;
-            }
             if (!currentProject.id) {
-                showToast("קודם שומרים את המפה בארכיון ואז משתפים קישור.");
+                showToast("קודם שומרים את הפעילות בספרייה ואז משתפים קישור.");
                 openProjectSettingsModal('saveAs');
                 return;
             }
 
-            const shareUrl = buildStudentShareUrl(currentProject.id);
+            if (currentProject.storageSource === 'core') {
+                if (!coreSupabase || !coreUser) {
+                    showToast("צריך להתחבר ל־MyXsite כדי ליצור קישור.");
+                    await loginWithCoreGoogle();
+                    return;
+                }
+
+                let shareToken = currentProject.shareToken || null;
+                if (!currentProject.isPublished || !shareToken) {
+                    const { data, error } = await coreSupabase
+                        .from('teacher_projects')
+                        .update({ is_published: true })
+                        .eq('id', currentProject.id)
+                        .eq('app_id', coreAppId)
+                        .eq('teacher_id', coreUser.id)
+                        .select('share_token,is_published')
+                        .single();
+
+                    if (error) {
+                        console.error("MyXsite publish error:", error);
+                        showToast("לא הצלחנו להכין קישור לתלמידים.");
+                        return;
+                    }
+
+                    shareToken = data?.share_token || null;
+                    currentProject.shareToken = shareToken;
+                    currentProject.isPublished = !!data?.is_published;
+                    const archiveProject = projects.find((project) => project.id === currentProject.id);
+                    if (archiveProject) {
+                        archiveProject.shareToken = shareToken;
+                        archiveProject.isPublished = currentProject.isPublished;
+                    }
+                }
+
+                if (!shareToken) {
+                    showToast("לא הצלחנו ליצור קישור לתלמידים.");
+                    return;
+                }
+
+                const shareUrl = buildStudentShareUrl(currentProject);
+                const copied = await copyToClipboard(shareUrl);
+                showToast(copied ? "קישור תלמיד הועתק ללוח." : "לא הצלחנו להעתיק אוטומטית.");
+                return;
+            }
+
+            if (!teacherId) {
+                openTeacherModal(false);
+                showToast("צריך לבחור מזהה מורה ישן לפני יצירת קישור.");
+                return;
+            }
+
+            const shareUrl = buildStudentShareUrl(currentProject);
             const copied = await copyToClipboard(shareUrl);
             if (copied) {
                 showToast(hasSupabaseConfig ? "קישור תלמיד הועתק ללוח." : "הקישור הועתק. במצב מקומי הוא יעבוד רק בדפדפן זה.");
             } else {
-                showToast("לא הצלחתי להעתיק אוטומטית. העתיקי ידנית מהשורת כתובת.");
+                showToast("לא הצלחנו להעתיק אוטומטית.");
             }
         };
 
@@ -8439,6 +8814,8 @@
         };
 
         const saveTeacherFromInput = () => {
+            archiveMode = 'legacy';
+            coreUser = null;
             if (!applyTeacherId(teacherIdInput.value)) {
                 showToast("יש להזין מזהה מורה תקין.");
                 return;
@@ -8453,12 +8830,14 @@
             updateTeacherInfo();
             projects = [];
             renderProjectsGrid();
+            teacherModal.classList.add('hidden');
             hideLanding();
             setView('dashboard');
             fetchProjects();
-            showToast(`הארכיון נטען עבור ${teacherId}`);
+            showToast(`נפתח הארכיון הישן: ${teacherId}`);
         };
 
+        document.getElementById('core-google-login-btn')?.addEventListener('click', loginWithCoreGoogle);
         document.getElementById('teacher-save-btn').onclick = saveTeacherFromInput;
         teacherIdInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') saveTeacherFromInput();
