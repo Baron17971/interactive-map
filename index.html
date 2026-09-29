@@ -6568,6 +6568,31 @@
             persistStudentSession();
         };
 
+        const saveStudentAnswerDraft = (pin, answer, extras = {}) => {
+            if (!pin) return;
+            currentProject.studentAnswers = currentProject.studentAnswers || {};
+            const previous = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]);
+            const normalizedAnswerLink = normalizeOptionalText(extras?.answerLink ?? previous.answerLink);
+            const normalizedAttachment = normalizeStudentAttachment(
+                extras?.attachment !== undefined ? extras.attachment : previous.attachment
+            );
+            const normalizedAnswer = typeof answer === 'string'
+                ? answer
+                : previous.answer;
+
+            currentProject.studentAnswers[pin.id] = {
+                pinId: pin.id,
+                type: pin.type,
+                prompt: normalizeOptionalText(pin.content),
+                answer: normalizedAnswer,
+                answerLink: normalizedAnswerLink,
+                attachment: normalizedAttachment,
+                isCorrect: previous.isCorrect,
+                savedAt: new Date().toISOString()
+            };
+            persistStudentSession();
+        };
+
         const hasStudentAnswerContent = (entry) => {
             const normalized = normalizeStudentAnswerEntry(entry);
             return !!(normalized.answer || normalized.answerLink || normalized.attachment);
@@ -9588,6 +9613,20 @@
 
                 renderOpenAttachment();
 
+                let openDraftTimer = null;
+                const persistOpenDraft = () => {
+                    if (openDraftTimer) clearTimeout(openDraftTimer);
+                    openDraftTimer = setTimeout(() => {
+                        saveStudentAnswerDraft(pin, answerInput.value, {
+                            answerLink: answerLinkInput.value,
+                            attachment: selectedAttachment
+                        });
+                    }, 250);
+                };
+
+                answerInput.addEventListener('input', persistOpenDraft);
+                answerLinkInput.addEventListener('input', persistOpenDraft);
+
                 answerFileInput.addEventListener('change', async () => {
                     const file = answerFileInput.files?.[0];
                     if (!file) return;
@@ -9605,6 +9644,10 @@
                             dataUrl
                         };
                         renderOpenAttachment();
+                        saveStudentAnswerDraft(pin, answerInput.value, {
+                            answerLink: answerLinkInput.value,
+                            attachment: selectedAttachment
+                        });
                     } catch {
                         answerFileInput.value = '';
                         showWrong(feedback, "לא הצלחתי לקרוא את הקובץ. נסו קובץ אחר.");
@@ -9615,9 +9658,17 @@
                     selectedAttachment = null;
                     answerFileInput.value = '';
                     renderOpenAttachment();
+                    saveStudentAnswerDraft(pin, answerInput.value, {
+                        answerLink: answerLinkInput.value,
+                        attachment: null
+                    });
                 };
 
                 document.getElementById('btn-submit').onclick = () => {
+                    if (openDraftTimer) {
+                        clearTimeout(openDraftTimer);
+                        openDraftTimer = null;
+                    }
                     const answerText = answerInput.value.trim();
                     const answerLink = normalizeOptionalText(answerLinkInput.value);
                     if (!answerText && !answerLink && !selectedAttachment) {
