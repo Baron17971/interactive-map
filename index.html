@@ -7428,11 +7428,18 @@
             updateStudentExportButtonVisibility();
         };
 
-        const buildStudentShareUrl = (projectId) => {
+        const buildStudentShareUrl = (project) => {
             const baseUrl = `${window.location.origin}${window.location.pathname}`;
+            if (project?.storageSource === 'core' && project?.shareToken) {
+                const params = new URLSearchParams({
+                    share: String(project.shareToken),
+                    view: 'student'
+                });
+                return `${baseUrl}?${params.toString()}`;
+            }
             const params = new URLSearchParams({
                 teacher: teacherId,
-                project: String(projectId),
+                project: String(project?.id || ''),
                 view: 'student'
             });
             return `${baseUrl}?${params.toString()}`;
@@ -7788,27 +7795,44 @@
 
         const initAuth = async () => {
             const savedTeacherId = normalizeTeacherId(localStorage.getItem(teacherIdStorageKey) || '');
+
             if (isSharedStudentRequest) {
-                teacherId = requestedTeacherId;
+                teacherId = isCoreSharedStudentRequest ? 'shared' : requestedTeacherId;
                 isReadOnlyStudentLink = true;
+                archiveMode = isCoreSharedStudentRequest ? 'core' : 'legacy';
             } else if (savedTeacherId) {
                 teacherId = savedTeacherId;
             }
-            if (teacherId) {
-                teacherProfile = readTeacherProfile();
-            }
-            updateTeacherInfo();
 
             currentUser = { uid: getLocalUid() };
 
-            if (!isSharedStudentRequest) {
-                showLanding();
+            if (coreSupabase && !isSharedStudentRequest) {
+                const { data: sessionData } = await coreSupabase.auth.getSession();
+                coreUser = sessionData?.session?.user || null;
+                if (coreUser) {
+                    archiveMode = 'core';
+                    teacherId = coreUser.email || coreUser.id;
+                    const accountName = normalizeOptionalText(
+                        coreUser.user_metadata?.full_name ||
+                        coreUser.user_metadata?.name ||
+                        ''
+                    );
+                    if (accountName && !teacherProfile.teacherName) {
+                        teacherProfile.teacherName = accountName;
+                    }
+                }
             }
+
+            if (teacherId && archiveMode === 'legacy') {
+                teacherProfile = readTeacherProfile();
+            }
+
+            updateTeacherInfo();
 
             if (isSharedStudentRequest) {
                 const loaded = await openSharedProject();
                 clearSharedStudentBoot();
-                if (loaded) showToast("נפתחה מפה במצב תלמיד בלבד.");
+                if (loaded) showToast("נפתחה פעילות במצב תלמיד בלבד.");
                 return;
             }
 
@@ -7816,12 +7840,14 @@
             restoreEditorToolbarUI();
             updateSaveActionsUI();
 
-            if (!hasSupabaseConfig) {
-                if (teacherId) fetchProjects();
+            if (coreUser) {
+                hideLanding();
+                setView('dashboard');
+                await fetchProjects();
                 return;
             }
 
-            if (teacherId) fetchProjects();
+            showLanding();
         };
 
         const renderProjectsGrid = () => {
@@ -7866,7 +7892,24 @@
                     e.stopPropagation();
                     if (!confirm("האם למחוק את הפעילות הזו מהארכיון?")) return;
 
-                    if (hasSupabaseConfig) {
+                    if (p.storageSource === 'core') {
+                        if (!coreSupabase || !coreUser) {
+                            showToast("צריך להתחבר ל־MyXsite כדי למחוק פעילות.");
+                            return;
+                        }
+                        const { error } = await coreSupabase
+                            .from('teacher_projects')
+                            .delete()
+                            .eq('id', p.id)
+                            .eq('app_id', coreAppId)
+                            .eq('teacher_id', coreUser.id);
+                        if (error) {
+                            console.error("xsite-core delete error:", error);
+                            showToast("שגיאה במחיקת הפעילות מ־MyXsite");
+                            return;
+                        }
+                        await fetchProjects();
+                    } else if (hasSupabaseConfig) {
                         const { error } = await supabase
                             .from(supabaseProjectsTable)
                             .delete()
@@ -7875,7 +7918,7 @@
                             .eq('teacher_id', teacherId);
                         if (error) {
                             console.error("Supabase delete error:", error);
-                            showToast("שגיאה במחיקת הפעילות מהענן");
+                            showToast("שגיאה במחיקת הפעילות מהארכיון הישן");
                             return;
                         }
                         await fetchProjects();
@@ -8006,7 +8049,23 @@
 
         const openProject = async (project, options = {}) => {
             const forceStudent = !!options.forceStudent;
-            if (!project.image && hasSupabaseConfig && project.id && teacherId) {
+            if (!project.image && project.storageSource === 'core' && coreSupabase && coreUser && project.id) {
+                const { data: imageRow, error: imageError } = await coreSupabase
+                    .from('teacher_projects')
+                    .select('image')
+                    .eq('app_id', coreAppId)
+                    .eq('teacher_id', coreUser.id)
+                    .eq('id', project.id)
+                    .maybeSingle();
+
+                if (imageError) {
+                    console.error("MyXsite project image load error:", imageError);
+                    showToast("לא הצלחנו לטעון את תמונת הפעילות.");
+                    return;
+                }
+
+                project = { ...project, image: imageRow?.image || '' };
+            } else if (!project.image && hasSupabaseConfig && project.id && teacherId) {
                 const { data: imageRow, error: imageError } = await supabase
                     .from(supabaseProjectsTable)
                     .select('image')
