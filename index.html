@@ -4816,6 +4816,280 @@
         body.student-view-active #editor-image-tools {
             display:none!important;
         }
+
+        /* ===== Teacher questions overview ===== */
+        .editor-image-actions {
+            display:flex;
+            align-items:center;
+            gap:8px;
+            flex:0 0 auto;
+        }
+
+        .all-questions-btn,
+        .replace-image-btn {
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            min-height:40px;
+            padding:8px 13px;
+            border-radius:12px;
+            font-size:.82rem;
+            font-weight:900;
+            white-space:nowrap;
+        }
+
+        .all-questions-btn {
+            border:1px solid #D8C6D3;
+            background:#7A2E6E;
+            color:#FFF8F1;
+            box-shadow:0 6px 16px rgba(95,33,79,.14);
+        }
+
+        .all-questions-btn:hover {
+            background:#68265E;
+        }
+
+        .all-questions-btn svg {
+            color:#FFF8F1;
+            stroke:#FFF8F1;
+        }
+
+        .questions-overview-shell {
+            width:min(900px,96vw);
+            max-height:90vh;
+            overflow:hidden;
+            display:flex;
+            flex-direction:column;
+            border-radius:22px;
+            background:#FAF7F1;
+            border:1px solid #E5DCE2;
+            box-shadow:0 24px 70px rgba(36,54,74,.22);
+        }
+
+        .questions-overview-head {
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap:18px;
+            padding:20px 22px 17px;
+            border-bottom:1px solid #E8E1E7;
+            background:linear-gradient(145deg,#FFFDF9,#F7EFF5);
+        }
+
+        .questions-overview-kicker {
+            display:block;
+            color:#7A2E6E;
+            font-size:.72rem;
+            font-weight:900;
+            margin-bottom:3px;
+        }
+
+        .questions-overview-head h3 {
+            margin:0;
+            color:#24364A;
+            font-size:1.28rem;
+            font-weight:900;
+        }
+
+        .questions-overview-head p {
+            margin:4px 0 0;
+            color:#66717B;
+            font-size:.82rem;
+            font-weight:600;
+        }
+
+        .questions-overview-close {
+            width:38px;
+            height:38px;
+            flex:0 0 38px;
+            display:grid;
+            place-items:center;
+            border-radius:11px;
+            border:1px solid #E4D9E1;
+            background:#FFFDF9;
+            color:#7A2E6E;
+        }
+
+        .questions-overview-list {
+            overflow-y:auto;
+            padding:16px;
+            display:grid;
+            gap:12px;
+        }
+
+        .question-overview-card {
+            padding:15px 16px;
+            border-radius:16px;
+            background:#FFF;
+            border:1px solid #E8E1E7;
+            box-shadow:0 6px 18px rgba(36,54,74,.05);
+        }
+
+        .question-overview-card-head {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            margin-bottom:10px;
+        }
+
+        .question-overview-identity,
+        .question-overview-actions {
+            display:flex;
+            align-items:center;
+            gap:7px;
+            flex-wrap:wrap;
+        }
+
+        .question-overview-number,
+        .question-overview-type {
+            display:inline-flex;
+            align-items:center;
+            min-height:28px;
+            padding:5px 9px;
+            border-radius:999px;
+            font-size:.7rem;
+            font-weight:900;
+        }
+
+        .question-overview-number {
+            background:#F1E7EE;
+            color:#7A2E6E;
+        }
+
+        .question-overview-type {
+            background:#EEF1E8;
+            color:#626753;
+        }
+
+        .question-overview-actions button {
+            display:inline-flex;
+            align-items:center;
+            gap:5px;
+            min-height:34px;
+            padding:6px 9px;
+            border-radius:10px;
+            font-size:.72rem;
+            font-weight:900;
+        }
+
+        .question-overview-locate {
+            background:#F3F4EE;
+            color:#626753;
+            border:1px solid #DDE0D4;
+        }
+
+        .question-overview-edit {
+            background:#7A2E6E;
+            color:#FFF8F1;
+            border:1px solid #7A2E6E;
+        }
+
+        .question-overview-content {
+            margin:0;
+            color:#24364A;
+            font-size:.96rem;
+            line-height:1.55;
+            font-weight:700;
+            white-space:pre-wrap;
+        }
+
+        .question-overview-meta,
+        .question-overview-explanation {
+            display:grid;
+            grid-template-columns:110px 1fr;
+            gap:10px;
+            margin-top:10px;
+            padding:10px 12px;
+            border-radius:12px;
+            background:#F8F7F4;
+            color:#586575;
+            font-size:.78rem;
+            line-height:1.5;
+        }
+
+        .question-overview-meta strong,
+        .question-overview-explanation strong {
+            color:#7A2E6E;
+        }
+
+        .questions-overview-empty {
+            min-height:180px;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            gap:6px;
+            color:#66717B;
+            text-align:center;
+        }
+
+        .questions-overview-empty strong {
+            color:#24364A;
+            font-size:1rem;
+        }
+
+        .overview-pin-focus {
+            z-index:80!important;
+            animation:overview-pin-focus 1.4s ease both!important;
+        }
+
+        @keyframes overview-pin-focus {
+            0%,100% { box-shadow:0 0 0 0 rgba(201,151,62,0); }
+            30%,65% { box-shadow:0 0 0 16px rgba(201,151,62,.34); }
+        }
+
+        @media(max-width:760px){
+            .editor-image-actions {
+                width:100%;
+                display:grid;
+                grid-template-columns:1fr 1fr;
+            }
+
+            .all-questions-btn,
+            .replace-image-btn {
+                width:100%;
+            }
+
+            .questions-overview-shell {
+                width:100%;
+                max-height:94vh;
+                border-radius:18px;
+            }
+
+            .questions-overview-head {
+                padding:16px;
+            }
+
+            .questions-overview-list {
+                padding:10px;
+            }
+
+            .question-overview-card-head {
+                align-items:flex-start;
+                flex-direction:column;
+            }
+
+            .question-overview-actions {
+                width:100%;
+            }
+
+            .question-overview-actions button {
+                flex:1;
+                justify-content:center;
+            }
+
+            .question-overview-meta,
+            .question-overview-explanation {
+                grid-template-columns:1fr;
+                gap:3px;
+            }
+        }
+
+        body.student-view-active #questions-overview-modal {
+            display:none!important;
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -5242,10 +5516,16 @@
                     חזרה לעריכת הפעילות
                 </button>
                 <div class="editor-image-tools" id="editor-image-tools">
-                    <button type="button" id="replace-image-btn" class="replace-image-btn">
-                        <i data-lucide="image-plus" class="w-4 h-4"></i>
-                        החלפת תמונה
-                    </button>
+                    <div class="editor-image-actions">
+                        <button type="button" id="all-questions-btn" class="all-questions-btn">
+                            <i data-lucide="list-checks" class="w-4 h-4"></i>
+                            כל השאלות
+                        </button>
+                        <button type="button" id="replace-image-btn" class="replace-image-btn">
+                            <i data-lucide="image-plus" class="w-4 h-4"></i>
+                            החלפת תמונה
+                        </button>
+                    </div>
                     <div class="mb-0 bg-indigo-50 text-indigo-700 px-6 py-2 rounded-full text-sm font-semibold border border-indigo-100" id="instruction-text">
                         לחצו על התמונה כדי להוסיף נקודת למידה · גררו נקודה קיימת כדי להזיז אותה
                     </div>
@@ -5386,6 +5666,22 @@
                     <button id="project-settings-apply-btn" onclick="applySettings()" class="flex-grow bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-indigo-200 shadow-lg">אישור</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="questions-overview-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="questions-overview-shell">
+            <div class="questions-overview-head">
+                <div>
+                    <span class="questions-overview-kicker">בדיקת פעילות</span>
+                    <h3>כל השאלות והנקודות</h3>
+                    <p id="questions-overview-summary"></p>
+                </div>
+                <button type="button" id="questions-overview-close" class="questions-overview-close" aria-label="סגירה">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div id="questions-overview-list" class="questions-overview-list"></div>
         </div>
     </div>
 
@@ -7963,6 +8259,173 @@
             bonus: 'בונוס',
             video: 'וידאו'
         };
+
+        const questionsOverviewModal = document.getElementById('questions-overview-modal');
+        const questionsOverviewList = document.getElementById('questions-overview-list');
+        const questionsOverviewSummary = document.getElementById('questions-overview-summary');
+
+        const getPinAnswerSummary = (pin) => {
+            if (pin.type === 'mcq') {
+                const options = normalizeMcqOptions(pin.options).filter(Boolean);
+                const correctIndex = Number(pin.correctIdx);
+                return {
+                    label: 'אפשרויות',
+                    value: options.map((option, index) => `${index === correctIndex ? '✓ ' : ''}${option}`).join(' · ')
+                };
+            }
+
+            if (pin.type === 'boolean') {
+                const isTrue = pin.correctBool === true || pin.correctBool === 'true';
+                return { label: 'תשובה נכונה', value: isTrue ? 'נכון' : 'לא נכון' };
+            }
+
+            if (pin.type === 'match') {
+                const pairs = normalizeMatchPairs(pin.matchPairs)
+                    .filter((pair) => normalizeOptionalText(pair.left) || normalizeOptionalText(pair.right))
+                    .map((pair) => `${normalizeOptionalText(pair.left)} ↔ ${normalizeOptionalText(pair.right)}`);
+                return { label: 'התאמות', value: pairs.join(' · ') };
+            }
+
+            if (pin.type === 'order') {
+                const items = normalizeOrderItems(pin.orderItems).filter(Boolean);
+                return { label: 'סדר נכון', value: items.join(' ← ') };
+            }
+
+            if (pin.type === 'video') {
+                const url = normalizeOptionalText(pin.videoUrl);
+                const reveal = Math.max(0, Math.floor(Number(pin.videoRevealSeconds) || 0));
+                const value = [url, reveal ? `שאלה לאחר ${formatSecondsLabel(reveal)}` : ''].filter(Boolean).join(' · ');
+                return { label: 'וידאו', value };
+            }
+
+            if (pin.type === 'open' || pin.type === 'bonus') {
+                return { label: 'סוג תשובה', value: 'תשובה פתוחה של התלמיד/ה' };
+            }
+
+            return { label: '', value: '' };
+        };
+
+        const closeQuestionsOverview = () => {
+            questionsOverviewModal?.classList.add('hidden');
+        };
+
+        const focusPinOnMap = (pinId) => {
+            closeQuestionsOverview();
+            mapWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            window.setTimeout(() => {
+                const pinEl = pinsLayer.querySelector(`.pin[data-id="${pinId}"]`);
+                if (!pinEl) return;
+                pinEl.classList.add('overview-pin-focus');
+                window.setTimeout(() => pinEl.classList.remove('overview-pin-focus'), 1500);
+            }, 450);
+        };
+
+        const openQuestionsOverview = () => {
+            if (isReadOnlyStudentLink || currentProject.mode !== 'edit') return;
+            questionsOverviewList.innerHTML = '';
+
+            const pins = currentProject.pins || [];
+            questionsOverviewSummary.textContent = currentProject.isEscapeRoom
+                ? `${pins.length} תחנות · מוצגות לפי סדר ההתקדמות בחדר הבריחה`
+                : `${pins.length} נקודות למידה בפעילות`;
+
+            if (!pins.length) {
+                const empty = document.createElement('div');
+                empty.className = 'questions-overview-empty';
+                empty.innerHTML = '<strong>עדיין אין נקודות בפעילות</strong><span>הוסיפו נקודה על התמונה והיא תופיע כאן לבדיקה ועריכה.</span>';
+                questionsOverviewList.appendChild(empty);
+            } else {
+                pins.forEach((pin, index) => {
+                    const card = document.createElement('article');
+                    card.className = 'question-overview-card';
+
+                    const head = document.createElement('div');
+                    head.className = 'question-overview-card-head';
+
+                    const identity = document.createElement('div');
+                    identity.className = 'question-overview-identity';
+
+                    const number = document.createElement('span');
+                    number.className = 'question-overview-number';
+                    number.textContent = currentProject.isEscapeRoom ? `תחנה ${index + 1}` : `נקודה ${index + 1}`;
+
+                    const type = document.createElement('span');
+                    type.className = `question-overview-type type-${pin.type || 'info'}`;
+                    type.textContent = typeLabels[pin.type] || 'נקודה';
+
+                    identity.appendChild(number);
+                    identity.appendChild(type);
+
+                    const actions = document.createElement('div');
+                    actions.className = 'question-overview-actions';
+
+                    const locateBtn = document.createElement('button');
+                    locateBtn.type = 'button';
+                    locateBtn.className = 'question-overview-locate';
+                    locateBtn.innerHTML = '<i data-lucide="locate-fixed" class="w-4 h-4"></i><span>הצג על התמונה</span>';
+                    locateBtn.addEventListener('click', () => focusPinOnMap(pin.id));
+
+                    const editBtn = document.createElement('button');
+                    editBtn.type = 'button';
+                    editBtn.className = 'question-overview-edit';
+                    editBtn.innerHTML = '<i data-lucide="pencil" class="w-4 h-4"></i><span>עריכה</span>';
+                    editBtn.addEventListener('click', () => {
+                        closeQuestionsOverview();
+                        openPinModal(pin.id);
+                    });
+
+                    actions.appendChild(locateBtn);
+                    actions.appendChild(editBtn);
+                    head.appendChild(identity);
+                    head.appendChild(actions);
+
+                    const content = document.createElement('p');
+                    content.className = 'question-overview-content';
+                    content.textContent = normalizeOptionalText(pin.content) || 'ללא תוכן';
+
+                    card.appendChild(head);
+                    card.appendChild(content);
+
+                    const answerSummary = getPinAnswerSummary(pin);
+                    if (answerSummary.value) {
+                        const meta = document.createElement('div');
+                        meta.className = 'question-overview-meta';
+
+                        const metaLabel = document.createElement('strong');
+                        metaLabel.textContent = answerSummary.label;
+
+                        const metaValue = document.createElement('span');
+                        metaValue.textContent = answerSummary.value;
+
+                        meta.appendChild(metaLabel);
+                        meta.appendChild(metaValue);
+                        card.appendChild(meta);
+                    }
+
+                    const explanation = normalizeOptionalText(pin.explanation);
+                    if (explanation) {
+                        const explanationBox = document.createElement('div');
+                        explanationBox.className = 'question-overview-explanation';
+                        explanationBox.innerHTML = '<strong>הסבר לתלמיד</strong>';
+                        const explanationText = document.createElement('span');
+                        explanationText.textContent = explanation;
+                        explanationBox.appendChild(explanationText);
+                        card.appendChild(explanationBox);
+                    }
+
+                    questionsOverviewList.appendChild(card);
+                });
+            }
+
+            questionsOverviewModal.classList.remove('hidden');
+            lucide.createIcons();
+        };
+
+        document.getElementById('all-questions-btn')?.addEventListener('click', openQuestionsOverview);
+        document.getElementById('questions-overview-close')?.addEventListener('click', closeQuestionsOverview);
+        questionsOverviewModal?.addEventListener('click', (event) => {
+            if (event.target === questionsOverviewModal) closeQuestionsOverview();
+        });
 
         const openStudentModal = (id) => {
             const pin = currentProject.pins.find((item) => item.id === id);
