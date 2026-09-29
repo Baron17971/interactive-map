@@ -6342,7 +6342,7 @@
             const { error } = await coreSupabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${window.location.origin}${window.location.pathname}`,
+                    redirectTo: 'https://mapi-interactive.vercel.app/',
                     queryParams: { access_type: 'offline', prompt: 'select_account' }
                 }
             });
