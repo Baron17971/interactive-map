@@ -6071,16 +6071,24 @@
     <div id="teacher-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 space-y-5">
             <div>
-                <h3 class="text-xl font-bold text-slate-800">בחירת מזהה מורה</h3>
-                <p class="text-slate-500 text-sm mt-1">כל המפות יישמרו תחת מזהה זה בלבד.</p>
+                <h3 class="text-xl font-bold text-slate-800">כניסה ל־MyXsite</h3>
+                <p class="text-slate-500 text-sm mt-1">התחברות עם Google שומרת את הפעילויות בספרייה האישית שלך ב־MyXsite.</p>
+            </div>
+            <button id="core-google-login-btn" type="button" class="w-full bg-white border-2 border-slate-200 text-slate-800 py-3 rounded-xl font-bold flex items-center justify-center gap-2">
+                <span aria-hidden="true" class="font-black text-lg">G</span>
+                <span>המשך עם Google</span>
+            </button>
+            <div class="flex items-center gap-3 text-xs text-slate-400">
+                <span class="h-px bg-slate-200 flex-1"></span><span>ארכיון MAPI הישן</span><span class="h-px bg-slate-200 flex-1"></span>
             </div>
             <div>
-                <label class="block text-sm font-bold text-slate-700 mb-2">מזהה מורה</label>
-                <input type="text" id="teacher-id-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="למשל: mora-rina">
+                <label class="block text-sm font-bold text-slate-700 mb-2">מזהה מורה ישן</label>
+                <input type="text" id="teacher-id-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="למשל: 1968">
+                <p class="text-xs text-slate-400 mt-2">האפשרות הזו נשארת זמנית כדי שלא תאבד גישה לפעילויות הישנות.</p>
             </div>
             <div class="flex gap-3">
                 <button id="teacher-cancel-btn" class="flex-grow bg-slate-100 text-slate-700 py-3 rounded-xl font-bold">ביטול</button>
-                <button id="teacher-save-btn" class="flex-grow bg-indigo-600 text-white py-3 rounded-xl font-bold">שמירה</button>
+                <button id="teacher-save-btn" class="flex-grow bg-indigo-600 text-white py-3 rounded-xl font-bold">פתח ארכיון ישן</button>
             </div>
         </div>
     </div>
@@ -6139,24 +6147,40 @@
         const hasSupabaseConfig = !!(supabaseUrl && supabaseAnonKey);
         const appId = (typeof window !== 'undefined' && window.APP_ID) ? window.APP_ID : 'interactive-map';
         const supabaseProjectsTable = (typeof window !== 'undefined' && window.SUPABASE_PROJECTS_TABLE) ? window.SUPABASE_PROJECTS_TABLE : 'teacher_projects';
+        const coreSupabaseUrl = (typeof window !== 'undefined' && window.XSITE_CORE_SUPABASE_URL) ? window.XSITE_CORE_SUPABASE_URL : '';
+        const coreSupabaseKey = (typeof window !== 'undefined' && window.XSITE_CORE_SUPABASE_KEY) ? window.XSITE_CORE_SUPABASE_KEY : '';
+        const coreAppId = (typeof window !== 'undefined' && window.XSITE_CORE_APP_ID) ? window.XSITE_CORE_APP_ID : 'mapi';
+        const coreSharedProjectUrl = (typeof window !== 'undefined' && window.XSITE_CORE_SHARED_PROJECT_URL) ? window.XSITE_CORE_SHARED_PROJECT_URL : '';
+        const hasCoreSupabaseConfig = !!(coreSupabaseUrl && coreSupabaseKey);
         const teacherIdStorageKey = `map-archive-teacher-id-${appId}`;
         const DEFAULT_STUDENT_INSTRUCTION = "עברו על כל הנקודות במפה, קראו היטב כל משימה וענו בצורה מדויקת. עבדו בקצב שלכם, ואם נתקעתם חזרו לנקודה קודמת ובדקו שוב.";
         const EMPTY_CREATOR_PROFILE = { teacherName: '', className: '', schoolName: '' };
         const urlParams = new URLSearchParams(window.location.search);
+        const requestedShareToken = (urlParams.get('share') || '').trim();
         const requestedTeacherId = (urlParams.get('teacher') || '').trim().toLowerCase();
         const requestedProjectId = (urlParams.get('project') || '').trim();
         const requestedViewMode = (urlParams.get('view') || '').trim().toLowerCase();
         const requestedDemoMode = (urlParams.get('demo') || '').trim() === '1';
-        const isSharedStudentRequest = !!(requestedTeacherId && requestedProjectId && requestedViewMode === 'student');
+        const isCoreSharedStudentRequest = !!(requestedShareToken && requestedViewMode === 'student');
+        const isLegacySharedStudentRequest = !!(requestedTeacherId && requestedProjectId && requestedViewMode === 'student');
+        const isSharedStudentRequest = isCoreSharedStudentRequest || isLegacySharedStudentRequest;
         const DEMO_STUDENT_URL = '?teacher=1968&project=919fa0c3-f295-4a26-8f24-6155c4ee48ff&view=student&demo=1';
 
         let supabase = null;
+        let coreSupabase = null;
 
         if (hasSupabaseConfig) {
             supabase = createClient(supabaseUrl, supabaseAnonKey);
         }
+        if (hasCoreSupabaseConfig) {
+            coreSupabase = createClient(coreSupabaseUrl, coreSupabaseKey, {
+                auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+            });
+        }
 
         let currentUser = null;
+        let coreUser = null;
+        let archiveMode = 'core';
         let teacherId = '';
         let projects = [];
         let teacherProfile = { ...EMPTY_CREATOR_PROFILE };
