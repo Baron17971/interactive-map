@@ -6723,6 +6723,21 @@
             setTimeout(() => popup.print(), 350);
         };
 
+        const waitForPdfReportImages = async (root) => {
+            const images = Array.from(root?.querySelectorAll?.('img') || []);
+            if (!images.length) return;
+
+            await Promise.all(images.map((img) => {
+                if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+                return new Promise((resolve) => {
+                    const done = () => resolve();
+                    img.addEventListener('load', done, { once: true });
+                    img.addEventListener('error', done, { once: true });
+                    window.setTimeout(done, 2500);
+                });
+            }));
+        };
+
         const downloadStudentAnswers = async () => {
             if (!currentProject.id) {
                 showToast("אין פעילות פתוחה לייצוא PDF.");
@@ -6744,8 +6759,16 @@
             const answers = questions.map((pin, index) => {
                 const entry = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]);
                 const hasAnyAnswer = hasStudentAnswerContent(entry);
-                const answerText = entry.answer || 'לא ניתנה תשובת טקסט';
+                const answerText = entry.answer || (hasAnyAnswer ? 'לא ניתנה תשובת טקסט' : 'לא ניתנה תשובה');
                 const statusText = hasAnyAnswer ? 'נשמרה תשובה' : 'ללא תשובה';
+                const attachment = entry.attachment;
+                const attachmentIsImage = !!(
+                    attachment &&
+                    (
+                        normalizeOptionalText(attachment.type).startsWith('image/') ||
+                        String(attachment.dataUrl || '').startsWith('data:image/')
+                    )
+                );
                 return {
                     index: index + 1,
                     pinId: pin.id,
@@ -6753,7 +6776,10 @@
                     prompt: normalizeOptionalText(pin.content),
                     answer: answerText,
                     answerLink: entry.answerLink || '',
-                    attachmentName: entry.attachment?.name || '',
+                    attachmentName: attachment?.name || '',
+                    attachmentType: attachment?.type || '',
+                    attachmentDataUrl: attachment?.dataUrl || '',
+                    attachmentIsImage,
                     hasAnyAnswer,
                     isCorrect: entry.isCorrect,
                     savedAt: entry.savedAt,
@@ -6772,17 +6798,42 @@
                 normalizeOptionalText(currentProject.className),
                 normalizeOptionalText(currentProject.schoolName)
             ].filter(Boolean).join(' | ');
-            const questionBlocks = answers.map((item) => `
-                <div style="border:1px solid #d7e3e1;border-radius:10px;padding:10px 12px;margin-top:8px;">
-                    <div style="font-weight:700;color:#0f3e3a;">${item.index}. ${escapeHtml(getPinTypeLabel(item.type))}</div>
-                    <div style="margin-top:4px;white-space:pre-wrap;">${escapeHtml(item.prompt || 'ללא טקסט שאלה')}</div>
-                    <div style="margin-top:8px;font-weight:700;">תשובת תלמיד:</div>
-                    <div style="white-space:pre-wrap;">${escapeHtml(item.answer)}</div>
-                    ${item.answerLink ? `<div style="margin-top:6px;font-size:12px;color:#4f6e6b;"><strong>קישור:</strong> ${escapeHtml(item.answerLink)}</div>` : ''}
-                    ${item.attachmentName ? `<div style="margin-top:6px;font-size:12px;color:#4f6e6b;"><strong>קובץ מצורף:</strong> ${escapeHtml(item.attachmentName)}</div>` : ''}
-                    <div style="margin-top:6px;font-size:12px;color:#4f6e6b;">סטטוס: ${escapeHtml(item.statusText)}</div>
-                </div>
-            `).join('');
+            const questionBlocks = answers.map((item) => {
+                const answerStatus = item.isCorrect === true
+                    ? ' · תשובה נכונה'
+                    : item.isCorrect === false
+                        ? ' · תשובה שגויה'
+                        : '';
+
+                const attachmentHtml = item.attachmentName
+                    ? item.attachmentIsImage && item.attachmentDataUrl
+                        ? `
+                            <div style="margin-top:10px;">
+                                <div style="font-size:12px;color:#596774;margin-bottom:6px;"><strong>תמונה מצורפת:</strong> ${escapeHtml(item.attachmentName)}</div>
+                                <div style="border:1px solid #e1d8df;border-radius:10px;padding:7px;background:#faf7f1;text-align:center;">
+                                    <img
+                                        src="${escapeHtml(item.attachmentDataUrl)}"
+                                        alt="${escapeHtml(item.attachmentName)}"
+                                        style="display:block;max-width:100%;max-height:360px;width:auto;height:auto;margin:0 auto;border-radius:8px;object-fit:contain;"
+                                    >
+                                </div>
+                            </div>
+                        `
+                        : `<div style="margin-top:7px;font-size:12px;color:#596774;"><strong>קובץ מצורף:</strong> ${escapeHtml(item.attachmentName)}</div>`
+                    : '';
+
+                return `
+                    <div class="mapi-pdf-answer-card" style="border:1px solid #d7e3e1;border-radius:10px;padding:10px 12px;margin-top:8px;break-inside:avoid;page-break-inside:avoid;">
+                        <div style="font-weight:700;color:#0f3e3a;">${item.index}. ${escapeHtml(getPinTypeLabel(item.type))}</div>
+                        <div style="margin-top:4px;white-space:pre-wrap;line-height:1.55;">${escapeHtml(item.prompt || 'ללא טקסט שאלה')}</div>
+                        <div style="margin-top:8px;font-weight:700;color:#24364A;">תשובת תלמיד:</div>
+                        <div style="white-space:pre-wrap;line-height:1.55;">${escapeHtml(item.answer)}</div>
+                        ${item.answerLink ? `<div style="margin-top:7px;font-size:12px;color:#596774;overflow-wrap:anywhere;"><strong>קישור:</strong> ${escapeHtml(item.answerLink)}</div>` : ''}
+                        ${attachmentHtml}
+                        <div style="margin-top:7px;font-size:12px;color:#596774;">סטטוס: ${escapeHtml(item.statusText + answerStatus)}</div>
+                    </div>
+                `;
+            }).join('');
 
             const report = document.createElement('div');
             report.dir = 'rtl';
@@ -6821,6 +6872,8 @@
                 if (document.fonts && document.fonts.ready) {
                     await document.fonts.ready;
                 }
+                await waitForPdfReportImages(report);
+
                 const options = {
                     margin: [8, 8, 8, 8],
                     filename: fileName,
@@ -6833,7 +6886,10 @@
                         scrollY: 0
                     },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                    pagebreak: { mode: ['css', 'legacy'] }
+                    pagebreak: {
+                        mode: ['css', 'legacy'],
+                        avoid: ['.mapi-pdf-answer-card', 'img']
+                    }
                 };
                 const worker = window.html2pdf().set(options).from(report).toPdf();
                 const pdf = await worker.get('pdf');
