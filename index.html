@@ -4756,6 +4756,66 @@
                 height:21px!important;
             }
         }
+
+        /* ===== Teacher image replacement control ===== */
+        .editor-image-tools {
+            width:min(1050px,100%);
+            margin:0 auto 14px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            flex-wrap:wrap;
+        }
+        .editor-image-tools.hidden { display:none!important; }
+
+        .replace-image-btn {
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            min-height:40px;
+            padding:8px 13px;
+            border-radius:12px;
+            border:1px solid #E1D5DE;
+            background:#FFFDF9;
+            color:#7A2E6E;
+            font-size:.82rem;
+            font-weight:900;
+            box-shadow:0 6px 16px rgba(95,33,79,.06);
+            white-space:nowrap;
+        }
+        .replace-image-btn:hover {
+            background:#F8EEF5;
+            border-color:#D9C4D2;
+        }
+        .replace-image-btn svg {
+            color:#7A2E6E;
+            stroke:#7A2E6E;
+        }
+
+        .editor-image-tools #instruction-text {
+            flex:1 1 520px;
+            text-align:center;
+        }
+
+        @media(max-width:760px){
+            .editor-image-tools {
+                width:100%;
+                flex-direction:column;
+                align-items:stretch;
+                gap:8px;
+            }
+            .replace-image-btn { width:100%; }
+            .editor-image-tools #instruction-text {
+                flex:1 1 auto;
+                width:100%;
+            }
+        }
+
+        body.student-view-active #editor-image-tools {
+            display:none!important;
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -5181,8 +5241,14 @@
                     <i data-lucide="arrow-right" class="w-4 h-4"></i>
                     חזרה לעריכת הפעילות
                 </button>
-                <div class="mb-4 bg-indigo-50 text-indigo-700 px-6 py-2 rounded-full text-sm font-semibold border border-indigo-100" id="instruction-text">
-                    לחצו על התמונה כדי להוסיף נקודת למידה · גררו נקודה קיימת כדי להזיז אותה
+                <div class="editor-image-tools" id="editor-image-tools">
+                    <button type="button" id="replace-image-btn" class="replace-image-btn">
+                        <i data-lucide="image-plus" class="w-4 h-4"></i>
+                        החלפת תמונה
+                    </button>
+                    <div class="mb-0 bg-indigo-50 text-indigo-700 px-6 py-2 rounded-full text-sm font-semibold border border-indigo-100" id="instruction-text">
+                        לחצו על התמונה כדי להוסיף נקודת למידה · גררו נקודה קיימת כדי להזיז אותה
+                    </div>
                 </div>
 
                 <div id="map-wrapper" class="map-container shadow-2xl rounded-2xl overflow-hidden border-8 bg-white select-none">
@@ -6432,6 +6498,11 @@
                 settingsBtn.title = 'עריכת פרטי הפעילות';
                 settingsBtn.setAttribute('aria-label','עריכת פרטי הפעילות');
             }
+
+            const imageTools = document.getElementById('editor-image-tools');
+            if (imageTools) {
+                imageTools.classList.toggle('hidden', studentMode || !hasImage || isReadOnlyStudentLink);
+            }
         };
 
         const getSuggestedProjectNameForSaveAs = () => {
@@ -7109,6 +7180,12 @@
         };
 
         uploadZone.onclick = () => fileInput.click();
+
+        document.getElementById('replace-image-btn')?.addEventListener('click', () => {
+            if (isReadOnlyStudentLink || currentProject.mode !== 'edit') return;
+            fileInput.value = '';
+            fileInput.click();
+        });
 
         const persistCurrentProject = async ({ forceNew = false } = {}) => {
             if (!currentUser) return;
