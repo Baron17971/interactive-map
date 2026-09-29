@@ -5640,6 +5640,13 @@
                     <div class="new-setup-field">
                         <label for="new-project-subject-input">מקצוע</label>
                         <input type="text" id="new-project-subject-input" list="mapi-subject-options" placeholder="בחרו מקצוע או הקלידו אחר">
+                        <datalist id="mapi-subject-options">
+                            <option value="מתמטיקה"></option><option value="עברית"></option><option value="אנגלית"></option>
+                            <option value="מדעים"></option><option value="ביולוגיה"></option><option value="ביוטכנולוגיה"></option>
+                            <option value="כימיה"></option><option value="פיזיקה"></option><option value="היסטוריה"></option>
+                            <option value="אזרחות"></option><option value="תנ״ך"></option><option value="ספרות"></option>
+                            <option value="גאוגרפיה"></option><option value="מחשבים"></option><option value="אמנות"></option><option value="מוזיקה"></option>
+                        </datalist>
                     </div>
 
                     <div class="new-setup-field">
@@ -6121,16 +6128,9 @@
                 <p id="save-map-modal-subtitle" class="text-slate-500 text-sm mt-1">הזיני שם למפה לפני שמירה בארכיון.</p>
             </div>
             <div>
-                <label class="block text-sm font-bold text-slate-700 mb-2">שם הפעילות</label>
+                <label class="block text-sm font-bold text-slate-700 mb-2">שם העותק</label>
                 <input type="text" id="save-map-name-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="למשל: מפת ישראל - מחוזות">
             </div>
-            <datalist id="mapi-subject-options">
-                <option value="מתמטיקה"></option><option value="עברית"></option><option value="אנגלית"></option>
-                <option value="מדעים"></option><option value="ביולוגיה"></option><option value="ביוטכנולוגיה"></option>
-                <option value="כימיה"></option><option value="פיזיקה"></option><option value="היסטוריה"></option>
-                <option value="אזרחות"></option><option value="תנ״ך"></option><option value="ספרות"></option>
-                <option value="גאוגרפיה"></option><option value="מחשבים"></option><option value="אמנות"></option><option value="מוזיקה"></option>
-            </datalist>
             <div class="flex gap-3">
                 <button id="save-map-cancel-btn" class="flex-grow bg-slate-100 text-slate-700 py-3 rounded-xl font-bold">ביטול</button>
                 <button id="save-map-confirm-btn" class="flex-grow bg-indigo-600 text-white py-3 rounded-xl font-bold">שמירה בארכיון</button>
