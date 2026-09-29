@@ -2624,6 +2624,7 @@
             font-weight:900;
         }
         .new-setup-field input,
+        .new-setup-field select,
         .new-setup-field textarea {
             width:100%;
             border:1.5px solid #E8E1E7;
@@ -2635,6 +2636,7 @@
             transition:.18s ease;
         }
         .new-setup-field input:focus,
+        .new-setup-field select:focus,
         .new-setup-field textarea:focus {
             border-color:#7A2E6E;
             box-shadow:0 0 0 3px rgba(122,46,110,.08);
@@ -3326,8 +3328,6 @@
 
         #teacher-id-input,
         #save-map-name-input,
-        #save-map-subject-input,
-        #save-map-grade-select,
         #student-export-name-input,
         #student-export-class-input,
         #project-settings-modal input,
@@ -3342,8 +3342,6 @@
 
         #teacher-id-input:focus,
         #save-map-name-input:focus,
-        #save-map-subject-input:focus,
-        #save-map-grade-select:focus,
         #student-export-name-input:focus,
         #student-export-class-input:focus,
         #project-settings-modal input:focus,
@@ -5539,7 +5537,7 @@
                     <span class="teacher-guide-icon"><i data-lucide="settings" class="w-5 h-5"></i></span>
                     <div>
                         <h3>3. מגדירים את הפעילות</h3>
-                        <p>ב"הגדרות" אפשר לעדכן שם פעילות, הנחיית פתיחה לתלמידים, שם המורה, כיתה ובית ספר, וגם לבחור מצב רגיל או חדר בריחה.</p>
+                        <p>ב"הגדרות" אפשר לעדכן שם פעילות, מקצוע, כיתה, הנחיית פתיחה לתלמידים, שם המורה ובית הספר, וגם לבחור מצב רגיל או חדר בריחה.</p>
                     </div>
                 </article>
 
@@ -5640,13 +5638,23 @@
                     </div>
 
                     <div class="new-setup-field">
-                        <label for="new-creator-name-input">שם המורה</label>
-                        <input type="text" id="new-creator-name-input" placeholder="למשל: רינה לוי">
+                        <label for="new-project-subject-input">מקצוע</label>
+                        <input type="text" id="new-project-subject-input" list="mapi-subject-options" placeholder="בחרו מקצוע או הקלידו אחר">
                     </div>
 
                     <div class="new-setup-field">
-                        <label for="new-creator-class-input">כיתה</label>
-                        <input type="text" id="new-creator-class-input" placeholder='למשל: ה"2'>
+                        <label for="new-project-grade-select">כיתה</label>
+                        <select id="new-project-grade-select">
+                            <option value="">בחרו כיתה</option>
+                            <option value="1">א׳</option><option value="2">ב׳</option><option value="3">ג׳</option><option value="4">ד׳</option>
+                            <option value="5">ה׳</option><option value="6">ו׳</option><option value="7">ז׳</option><option value="8">ח׳</option>
+                            <option value="9">ט׳</option><option value="10">י׳</option><option value="11">י״א</option><option value="12">י״ב</option>
+                        </select>
+                    </div>
+
+                    <div class="new-setup-field">
+                        <label for="new-creator-name-input">שם המורה</label>
+                        <input type="text" id="new-creator-name-input" placeholder="למשל: רינה לוי">
                     </div>
 
                     <div class="new-setup-field">
@@ -5872,12 +5880,21 @@
                     <input type="text" id="project-name-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="למשל: הכרת מפת ישראל">
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2">שם המורה</label>
-                    <input type="text" id="creator-name-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="למשל: רינה לוי">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">מקצוע</label>
+                    <input type="text" id="project-subject-input" list="mapi-subject-options" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="בחרו מקצוע או הקלידו אחר">
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">כיתה</label>
-                    <input type="text" id="creator-class-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder='למשל: ה"2'>
+                    <select id="project-grade-select" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all bg-white">
+                        <option value="">בחרו כיתה</option>
+                        <option value="1">א׳</option><option value="2">ב׳</option><option value="3">ג׳</option><option value="4">ד׳</option>
+                        <option value="5">ה׳</option><option value="6">ו׳</option><option value="7">ז׳</option><option value="8">ח׳</option>
+                        <option value="9">ט׳</option><option value="10">י׳</option><option value="11">י״א</option><option value="12">י״ב</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">שם המורה</label>
+                    <input type="text" id="creator-name-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="למשל: רינה לוי">
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">בית ספר</label>
@@ -6107,26 +6124,13 @@
                 <label class="block text-sm font-bold text-slate-700 mb-2">שם הפעילות</label>
                 <input type="text" id="save-map-name-input" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="למשל: מפת ישראל - מחוזות">
             </div>
-            <div>
-                <label class="block text-sm font-bold text-slate-700 mb-2">מקצוע</label>
-                <input type="text" id="save-map-subject-input" list="mapi-subject-options" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all" placeholder="בחרו מקצוע או הקלידו אחר">
-                <datalist id="mapi-subject-options">
-                    <option value="מתמטיקה"></option><option value="עברית"></option><option value="אנגלית"></option>
-                    <option value="מדעים"></option><option value="ביולוגיה"></option><option value="ביוטכנולוגיה"></option>
-                    <option value="כימיה"></option><option value="פיזיקה"></option><option value="היסטוריה"></option>
-                    <option value="אזרחות"></option><option value="תנ״ך"></option><option value="ספרות"></option>
-                    <option value="גאוגרפיה"></option><option value="מחשבים"></option><option value="אמנות"></option><option value="מוזיקה"></option>
-                </datalist>
-            </div>
-            <div>
-                <label class="block text-sm font-bold text-slate-700 mb-2">כיתה</label>
-                <select id="save-map-grade-select" class="w-full border-2 border-slate-100 rounded-xl p-3 outline-none focus:border-indigo-600 transition-all bg-white">
-                    <option value="">בחרו כיתה</option>
-                    <option value="1">א׳</option><option value="2">ב׳</option><option value="3">ג׳</option><option value="4">ד׳</option>
-                    <option value="5">ה׳</option><option value="6">ו׳</option><option value="7">ז׳</option><option value="8">ח׳</option>
-                    <option value="9">ט׳</option><option value="10">י׳</option><option value="11">י״א</option><option value="12">י״ב</option>
-                </select>
-            </div>
+            <datalist id="mapi-subject-options">
+                <option value="מתמטיקה"></option><option value="עברית"></option><option value="אנגלית"></option>
+                <option value="מדעים"></option><option value="ביולוגיה"></option><option value="ביוטכנולוגיה"></option>
+                <option value="כימיה"></option><option value="פיזיקה"></option><option value="היסטוריה"></option>
+                <option value="אזרחות"></option><option value="תנ״ך"></option><option value="ספרות"></option>
+                <option value="גאוגרפיה"></option><option value="מחשבים"></option><option value="אמנות"></option><option value="מוזיקה"></option>
+            </datalist>
             <div class="flex gap-3">
                 <button id="save-map-cancel-btn" class="flex-grow bg-slate-100 text-slate-700 py-3 rounded-xl font-bold">ביטול</button>
                 <button id="save-map-confirm-btn" class="flex-grow bg-indigo-600 text-white py-3 rounded-xl font-bold">שמירה בארכיון</button>
@@ -6263,8 +6267,6 @@
         const teacherIdInput = document.getElementById('teacher-id-input');
         const saveMapModal = document.getElementById('save-map-modal');
         const saveMapNameInput = document.getElementById('save-map-name-input');
-        const saveMapSubjectInput = document.getElementById('save-map-subject-input');
-        const saveMapGradeSelect = document.getElementById('save-map-grade-select');
         const saveMapModalTitle = document.getElementById('save-map-modal-title');
         const saveMapModalSubtitle = document.getElementById('save-map-modal-subtitle');
         const saveMapConfirmBtn = document.getElementById('save-map-confirm-btn');
@@ -6272,7 +6274,8 @@
         const studentInstructionText = document.getElementById('student-instruction-text');
         const studentInstructionInput = document.getElementById('student-instruction-input');
         const creatorNameInput = document.getElementById('creator-name-input');
-        const creatorClassInput = document.getElementById('creator-class-input');
+        const projectSubjectInput = document.getElementById('project-subject-input');
+        const projectGradeSelect = document.getElementById('project-grade-select');
         const creatorSchoolInput = document.getElementById('creator-school-input');
         const activityModeButtons = Array.from(document.querySelectorAll('.activity-mode-btn'));
         const studentExportMetaModal = document.getElementById('student-export-meta-modal');
@@ -6516,6 +6519,17 @@
         const normalizeTeacherId = (value) => value.trim().toLowerCase();
 
         const normalizeOptionalText = (value) => (typeof value === 'string' ? value.trim() : '');
+        const GRADE_LABELS = {1:'א׳',2:'ב׳',3:'ג׳',4:'ד׳',5:'ה׳',6:'ו׳',7:'ז׳',8:'ח׳',9:'ט׳',10:'י׳',11:'י״א',12:'י״ב'};
+        const gradeLabel = (grade) => GRADE_LABELS[Number(grade)] || '';
+        const gradeNumberFromText = (value) => {
+            const text = normalizeOptionalText(value).replaceAll('"','״').replaceAll("'","׳");
+            if (!text) return null;
+            const compact = text.replace(/[׳״]/g,'').replace(/[0-9\s-].*$/,'');
+            const match = Object.entries(GRADE_LABELS).find(([,label]) =>
+                label === text || label.replace(/[׳״]/g,'') === compact
+            );
+            return match ? Number(match[0]) : null;
+        };
         const MAX_STUDENT_ATTACHMENT_BYTES = 1024 * 1024;
 
         const REGULAR_QUESTION_TYPES = ['open', 'mcq', 'boolean', 'match', 'order', 'video'];
@@ -7600,7 +7614,7 @@
                 id: row.id,
                 name: row.title || payload.name || 'פעילות',
                 subject: normalizeOptionalText(row.subject || payload.subject),
-                grade: Number(row.grade || payload.grade) || null,
+                grade: Number(row.grade || payload.grade) || gradeNumberFromText(payload.className) || null,
                 image: row.image || payload.image || '',
                 updatedAt: row.updated_at || payload.updatedAt,
                 shareToken: row.share_token || null,
@@ -7981,8 +7995,9 @@
 
         const populateNewSetup = () => {
             document.getElementById('new-project-name-input').value = '';
+            document.getElementById('new-project-subject-input').value = normalizeOptionalText(currentProject.subject);
+            document.getElementById('new-project-grade-select').value = currentProject.grade ? String(currentProject.grade) : '';
             document.getElementById('new-creator-name-input').value = normalizeOptionalText(teacherProfile.teacherName);
-            document.getElementById('new-creator-class-input').value = normalizeOptionalText(teacherProfile.className);
             document.getElementById('new-creator-school-input').value = normalizeOptionalText(teacherProfile.schoolName);
             document.getElementById('new-student-instruction-input').value = DEFAULT_STUDENT_INSTRUCTION;
             document.getElementById('new-submission-instruction-input').value = '';
@@ -8055,14 +8070,34 @@
         document.getElementById('new-setup-cancel-btn')?.addEventListener('click', returnFromNewSetup);
 
         document.getElementById('new-setup-continue-btn')?.addEventListener('click', () => {
+            const activityName = normalizeOptionalText(document.getElementById('new-project-name-input').value);
+            const subject = normalizeOptionalText(document.getElementById('new-project-subject-input').value);
+            const grade = Number(document.getElementById('new-project-grade-select').value);
+            if (!activityName) {
+                showToast("יש להזין שם פעילות.", 1500);
+                document.getElementById('new-project-name-input').focus();
+                return;
+            }
+            if (!subject) {
+                showToast("יש לבחור או להקליד מקצוע.", 1500);
+                document.getElementById('new-project-subject-input').focus();
+                return;
+            }
+            if (!(grade >= 1 && grade <= 12)) {
+                showToast("יש לבחור כיתה מא׳ עד י״ב.", 1500);
+                document.getElementById('new-project-grade-select').focus();
+                return;
+            }
             if (currentProject.isEscapeRoom && !normalizeOptionalText(document.getElementById('new-escape-code').value)) {
                 showToast("בחדר בריחה צריך להגדיר קוד למנעול הסופי.", 1600);
                 document.getElementById('new-escape-code').focus();
                 return;
             }
-            currentProject.name = normalizeOptionalText(document.getElementById('new-project-name-input').value) || 'פעילות חדשה';
+            currentProject.name = activityName;
+            currentProject.subject = subject;
+            currentProject.grade = grade;
             currentProject.teacherName = normalizeOptionalText(document.getElementById('new-creator-name-input').value);
-            currentProject.className = normalizeOptionalText(document.getElementById('new-creator-class-input').value);
+            currentProject.className = gradeLabel(grade);
             currentProject.schoolName = normalizeOptionalText(document.getElementById('new-creator-school-input').value);
             currentProject.studentInstruction = resolveStudentInstruction(document.getElementById('new-student-instruction-input').value);
             currentProject.submissionInstruction = normalizeOptionalText(document.getElementById('new-submission-instruction-input').value);
@@ -8620,14 +8655,10 @@
         const openSaveMapModal = (mode = 'initialSave', suggestedName = '') => {
             saveMapModalMode = mode;
             const isCopy = mode === 'saveAs';
-            saveMapModalTitle.innerText = isCopy ? "שמירת עותק חדש" : "שמירת הפעילות";
-            saveMapModalSubtitle.innerText = isCopy
-                ? "העותק יישמר כפעילות חדשה ונפרדת."
-                : "תנו לפעילות שם. מכאן ואילך לחיצה על שמירה תעדכן אותה מיד.";
-            saveMapConfirmBtn.innerText = isCopy ? "שמור עותק" : "שמור פעילות";
-            saveMapNameInput.value = suggestedName || (currentProject.name === 'פעילות חדשה' ? '' : currentProject.name || '');
-            saveMapSubjectInput.value = normalizeOptionalText(currentProject.subject);
-            saveMapGradeSelect.value = currentProject.grade ? String(currentProject.grade) : '';
+            saveMapModalTitle.innerText = "שמירת עותק חדש";
+            saveMapModalSubtitle.innerText = "תנו לעותק שם חדש. המקצוע והכיתה נשארים כפי שהוגדרו בפעילות.";
+            saveMapConfirmBtn.innerText = "שמור עותק";
+            saveMapNameInput.value = suggestedName || getSuggestedProjectNameForSaveAs();
             saveMapModal.classList.remove('hidden');
             setTimeout(() => {
                 saveMapNameInput.focus();
@@ -8650,18 +8681,16 @@
                 showToast("קודם מעלים תמונה לפעילות.");
                 return;
             }
-            if (!currentProject.id || (archiveMode === 'core' && currentProject.storageSource !== 'core')) {
-                const suggested = currentProject.name && currentProject.name !== 'פעילות חדשה'
-                    ? currentProject.name
-                    : '';
-                openSaveMapModal('initialSave', suggested);
+            if (!normalizeOptionalText(currentProject.name) || currentProject.name === 'פעילות חדשה' ||
+                !normalizeOptionalText(currentProject.subject) ||
+                !(Number(currentProject.grade) >= 1 && Number(currentProject.grade) <= 12)) {
+                openProjectSettingsModal('classify');
+                showToast("השלימו את שם הפעילות, המקצוע והכיתה לפני השמירה.", 1800);
                 return;
             }
-            if (archiveMode === 'core' && (!normalizeOptionalText(currentProject.subject) || !(Number(currentProject.grade) >= 1 && Number(currentProject.grade) <= 12))) {
-                openSaveMapModal('classify', currentProject.name || '');
-                return;
-            }
-            await persistCurrentProject({ forceNew: false });
+            await persistCurrentProject({
+                forceNew: !currentProject.id || (archiveMode === 'core' && currentProject.storageSource !== 'core')
+            });
         };
 
         saveAsNewBtn.onclick = async () => {
@@ -8807,28 +8836,14 @@
 
         document.getElementById('save-map-confirm-btn').onclick = async () => {
             const mapName = saveMapNameInput.value.trim();
-            const subject = normalizeOptionalText(saveMapSubjectInput.value);
-            const grade = Number(saveMapGradeSelect.value);
             if (!mapName) {
-                showToast("יש להזין שם פעילות.");
+                showToast("יש להזין שם לעותק.");
                 saveMapNameInput.focus();
                 return;
             }
-            if (!subject) {
-                showToast("יש לבחור או להקליד מקצוע.");
-                saveMapSubjectInput.focus();
-                return;
-            }
-            if (!(grade >= 1 && grade <= 12)) {
-                showToast("יש לבחור כיתה מא׳ עד י״ב.");
-                saveMapGradeSelect.focus();
-                return;
-            }
             currentProject.name = mapName;
-            currentProject.subject = subject;
-            currentProject.grade = grade;
             saveMapModal.classList.add('hidden');
-            await persistCurrentProject({ forceNew: saveMapModalMode === 'saveAs' || saveMapModalMode === 'initialSave' });
+            await persistCurrentProject({ forceNew: true });
         };
 
         saveMapNameInput.addEventListener('keydown', async (e) => {
@@ -8955,8 +8970,9 @@
         const openCurrentProjectDetails = () => {
             if (isReadOnlyStudentLink) return;
             document.getElementById('new-project-name-input').value = currentProject.name === 'פעילות חדשה' ? '' : (currentProject.name || '');
+            document.getElementById('new-project-subject-input').value = normalizeOptionalText(currentProject.subject);
+            document.getElementById('new-project-grade-select').value = currentProject.grade ? String(currentProject.grade) : '';
             document.getElementById('new-creator-name-input').value = normalizeOptionalText(currentProject.teacherName);
-            document.getElementById('new-creator-class-input').value = normalizeOptionalText(currentProject.className);
             document.getElementById('new-creator-school-input').value = normalizeOptionalText(currentProject.schoolName);
             document.getElementById('new-student-instruction-input').value = resolveStudentInstruction(currentProject.studentInstruction);
             document.getElementById('new-submission-instruction-input').value = normalizeOptionalText(currentProject.submissionInstruction);
@@ -10339,18 +10355,24 @@
 
         const openProjectSettingsModal = (flow = 'settings') => {
             const isSaveAsFlow = flow === 'saveAs';
+            const isClassifyFlow = flow === 'classify';
             projectSettingsFlow = flow;
             document.getElementById('project-name-input').value = isSaveAsFlow
                 ? getSuggestedProjectNameForSaveAs()
                 : (currentProject.name || "פעילות חדשה");
             studentInstructionInput.value = resolveStudentInstruction(currentProject.studentInstruction);
+            projectSubjectInput.value = normalizeOptionalText(currentProject.subject);
+            projectGradeSelect.value = currentProject.grade ? String(currentProject.grade) : '';
             creatorNameInput.value = normalizeOptionalText(currentProject.teacherName);
-            creatorClassInput.value = normalizeOptionalText(currentProject.className);
             creatorSchoolInput.value = normalizeOptionalText(currentProject.schoolName);
             document.getElementById('escape-code').value = currentProject.lockCode || '';
             setActivityModeUI(currentProject.isEscapeRoom);
-            projectSettingsTitleText.innerText = isSaveAsFlow ? 'הגדרות לפני שמירה בשם' : 'הגדרות פעילות';
-            projectSettingsApplyBtn.innerText = isSaveAsFlow ? 'המשך לשמור בשם' : 'אישור';
+            projectSettingsTitleText.innerText = isSaveAsFlow
+                ? 'הגדרות לפני שמירה בשם'
+                : (isClassifyFlow ? 'השלמת פרטי הפעילות' : 'הגדרות פעילות');
+            projectSettingsApplyBtn.innerText = isSaveAsFlow
+                ? 'המשך לשמור בשם'
+                : (isClassifyFlow ? 'שמור והמשך' : 'אישור');
             projectSettingsModal.classList.remove('hidden');
         };
 
@@ -10370,10 +10392,30 @@
         };
         window.applySettings = () => {
             const flow = projectSettingsFlow;
-            currentProject.name = document.getElementById('project-name-input').value || "פעילות חדשה";
+            const activityName = normalizeOptionalText(document.getElementById('project-name-input').value);
+            const subject = normalizeOptionalText(projectSubjectInput.value);
+            const grade = Number(projectGradeSelect.value);
+            if (!activityName) {
+                showToast("יש להזין שם פעילות.");
+                document.getElementById('project-name-input').focus();
+                return;
+            }
+            if (!subject) {
+                showToast("יש לבחור או להקליד מקצוע.");
+                projectSubjectInput.focus();
+                return;
+            }
+            if (!(grade >= 1 && grade <= 12)) {
+                showToast("יש לבחור כיתה מא׳ עד י״ב.");
+                projectGradeSelect.focus();
+                return;
+            }
+            currentProject.name = activityName;
+            currentProject.subject = subject;
+            currentProject.grade = grade;
             currentProject.studentInstruction = resolveStudentInstruction(studentInstructionInput.value);
             currentProject.teacherName = normalizeOptionalText(creatorNameInput.value);
-            currentProject.className = normalizeOptionalText(creatorClassInput.value);
+            currentProject.className = gradeLabel(grade);
             currentProject.schoolName = normalizeOptionalText(creatorSchoolInput.value);
             writeTeacherProfile({
                 teacherName: currentProject.teacherName,
@@ -10385,8 +10427,14 @@
             closeSettings();
             syncModeUI();
             if (flow !== 'saveAs') markProjectDirty();
+            if (flow === 'classify') {
+                persistCurrentProject({
+                    forceNew: !currentProject.id || (archiveMode === 'core' && currentProject.storageSource !== 'core')
+                });
+                return;
+            }
             if (flow === 'saveAs') {
-                openSaveMapModal('saveAs', currentProject.name || getSuggestedProjectNameForSaveAs());
+                openSaveMapModal('saveAs', getSuggestedProjectNameForSaveAs());
                 return;
             }
             showToast("ההגדרות עודכנו", 1200);
