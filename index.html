@@ -7171,6 +7171,7 @@
                         console.warn("Image pre-compression skipped:", compressionError);
                     }
 
+                    const replacingExistingImage = !!currentProject.image;
                     currentProject.image = imageData;
                     mainImage.src = imageData;
                     imageNeedsSave = true;
@@ -7178,6 +7179,10 @@
                     uploadZone.classList.add('hidden');
                     document.getElementById('canvas-area').classList.remove('hidden');
                     updateWorkflowUI();
+
+                    if (replacingExistingImage) {
+                        showToast('התמונה הוחלפה — יש לשמור את הפעילות', 2200);
+                    }
                 };
                 reader.readAsDataURL(file);
             }
@@ -7187,6 +7192,15 @@
 
         document.getElementById('replace-image-btn')?.addEventListener('click', () => {
             if (isReadOnlyStudentLink || currentProject.mode !== 'edit') return;
+
+            const hasExistingImage = !!currentProject.image;
+            if (hasExistingImage) {
+                const approved = window.confirm(
+                    'החלפת התמונה תשמור את כל נקודות הלמידה במיקומים היחסיים שלהן. ייתכן שתצטרכו להזיז אותן מעט לאחר ההחלפה. להמשיך?'
+                );
+                if (!approved) return;
+            }
+
             fileInput.value = '';
             fileInput.click();
         });
