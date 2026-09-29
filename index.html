@@ -4284,6 +4284,29 @@
                 height:7.6%!important;
             }
         }
+
+        /* ===== Larger learning-point icons on desktop only ===== */
+        @media (min-width: 1024px) {
+            #map-wrapper .pin {
+                width:52px!important;
+                height:52px!important;
+                border-width:4px!important;
+            }
+
+            #map-wrapper .pin > svg,
+            #map-wrapper .pin > i {
+                width:25px!important;
+                height:25px!important;
+            }
+
+            #map-wrapper .pin:hover {
+                transform:translate(-50%, -50%) scale(1.12);
+            }
+
+            #map-wrapper .pin.dragging {
+                transform:translate(-50%, -50%) scale(1.22);
+            }
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
