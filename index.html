@@ -7429,6 +7429,46 @@
         };
 
         const openSharedProject = async () => {
+            if (isCoreSharedStudentRequest) {
+                if (!coreSharedProjectUrl) {
+                    showToast("קישור השיתוף אינו זמין כרגע.");
+                    return false;
+                }
+                try {
+                    const response = await fetch(`${coreSharedProjectUrl}?token=${encodeURIComponent(requestedShareToken)}`, {
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    const result = await response.json().catch(() => ({}));
+                    if (!response.ok || !result?.project) {
+                        showToast("לא נמצאה פעילות בקישור הזה.");
+                        return false;
+                    }
+                    const row = result.project;
+                    const payload = row.payload || {};
+                    const project = {
+                        ...payload,
+                        id: row.id,
+                        name: row.title || payload.name || 'פעילות',
+                        image: row.image || payload.image || '',
+                        updatedAt: row.updated_at || payload.updatedAt,
+                        pins: normalizeProjectPins(payload.pins),
+                        studentInstruction: resolveStudentInstruction(payload.studentInstruction),
+                        submissionInstruction: normalizeOptionalText(payload.submissionInstruction),
+                        teacherName: normalizeOptionalText(payload.teacherName),
+                        className: normalizeOptionalText(payload.className),
+                        schoolName: normalizeOptionalText(payload.schoolName),
+                        storageSource: 'core'
+                    };
+                    teacherId = 'shared';
+                    openProject(project, { forceStudent: true, readOnly: true });
+                    return true;
+                } catch (error) {
+                    console.error("Core share-load error:", error);
+                    showToast("שגיאה בטעינת הפעילות מהקישור.");
+                    return false;
+                }
+            }
+
             if (!requestedProjectId || !teacherId) return false;
 
             if (!hasSupabaseConfig) {
@@ -7438,7 +7478,7 @@
                     showToast("לא נמצאה מפה בקישור הזה.");
                     return false;
                 }
-                openProject(localProject, { forceStudent: true, readOnly: true });
+                openProject({ ...localProject, storageSource: 'legacy' }, { forceStudent: true, readOnly: true });
                 return true;
             }
 
@@ -7460,7 +7500,7 @@
                 return false;
             }
 
-            openProject(mapRowToProject(data), { forceStudent: true, readOnly: true });
+            openProject({ ...mapRowToProject(data), storageSource: 'legacy' }, { forceStudent: true, readOnly: true });
             return true;
         };
 
@@ -7473,6 +7513,26 @@
                 id: row.id,
                 image: row.image || payload.image || '',
                 updatedAt: row.updated_at || payload.updatedAt,
+                pins: normalizeProjectPins(payload.pins),
+                studentInstruction: resolveStudentInstruction(payload.studentInstruction),
+                submissionInstruction: normalizeOptionalText(payload.submissionInstruction),
+                teacherName: normalizeOptionalText(payload.teacherName),
+                className: normalizeOptionalText(payload.className),
+                schoolName: normalizeOptionalText(payload.schoolName)
+            };
+        };
+
+        const mapCoreRowToProject = (row) => {
+            const payload = row.payload || {};
+            return {
+                ...payload,
+                id: row.id,
+                name: row.title || payload.name || 'פעילות',
+                image: row.image || payload.image || '',
+                updatedAt: row.updated_at || payload.updatedAt,
+                shareToken: row.share_token || null,
+                isPublished: !!row.is_published,
+                storageSource: 'core',
                 pins: normalizeProjectPins(payload.pins),
                 studentInstruction: resolveStudentInstruction(payload.studentInstruction),
                 submissionInstruction: normalizeOptionalText(payload.submissionInstruction),
@@ -7643,10 +7703,35 @@
         };
 
         const fetchProjects = async () => {
+            if (archiveMode === 'core') {
+                if (!coreSupabase || !coreUser) {
+                    projects = [];
+                    renderProjectsGrid();
+                    return;
+                }
+
+                const { data, error } = await coreSupabase
+                    .from('teacher_projects')
+                    .select('id,title,payload,updated_at,share_token,is_published')
+                    .eq('app_id', coreAppId)
+                    .eq('teacher_id', coreUser.id)
+                    .order('updated_at', { ascending: false });
+
+                if (error) {
+                    console.error("xsite-core archive error:", error);
+                    showToast("שגיאה בטעינת הספרייה מ־MyXsite");
+                    return;
+                }
+
+                projects = (data || []).map(mapCoreRowToProject);
+                renderProjectsGrid();
+                return;
+            }
+
             if (!currentUser || !teacherId) return;
 
             if (!hasSupabaseConfig) {
-                projects = readLocalProjects();
+                projects = readLocalProjects().map((project) => ({ ...project, storageSource: 'legacy' }));
                 renderProjectsGrid();
                 return;
             }
@@ -7660,11 +7745,11 @@
 
             if (error) {
                 console.error("Supabase error:", error);
-                showToast("שגיאה בטעינת הארכיון מהענן");
+                showToast("שגיאה בטעינת הארכיון הישן");
                 return;
             }
 
-            projects = (data || []).map(mapRowToProject);
+            projects = (data || []).map((row) => ({ ...mapRowToProject(row), storageSource: 'legacy' }));
             renderProjectsGrid();
         };
 
