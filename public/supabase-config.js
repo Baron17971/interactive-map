@@ -11,3 +11,10 @@ window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXB
 window.SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co";
 window.SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
 */
+
+
+/* MyXsite core: shared teacher identity, library and licensing. */
+window.XSITE_CORE_SUPABASE_URL = "https://zydhfhfhspflvhlpmokj.supabase.co";
+window.XSITE_CORE_SUPABASE_KEY = "sb_publishable_DJN48TNChvPce3MZ7bDaiw_5Q8Eam6x";
+window.XSITE_CORE_APP_ID = "mapi";
+window.XSITE_CORE_SHARED_PROJECT_URL = "https://zydhfhfhspflvhlpmokj.supabase.co/functions/v1/shared-project";
