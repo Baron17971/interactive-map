@@ -6602,28 +6602,51 @@
             if (!requestedDemoMode || !currentProject?.id) return;
 
             const demoAnswers = {
-                '260929004': 'מאדים נראה אדמדם בעיקר בגלל תחמוצות ברזל המצויות בקרקע ובאבק שעל פניו — חומר דומה לחלודה בכדור הארץ.',
-                '260929007': 'למדתי שמערכת השמש כוללת לא רק כוכבי לכת, אלא גם ירחים, אסטרואידים, שביטים וגופים קטנים נוספים הנעים סביב השמש.',
-                '260929009': 'בואו לבקר בשבתאי — עולם מרהיב של טבעות עצומות ונוף שאי אפשר לראות בשום מקום אחר במערכת השמש!'
+                '260929002': { answer: 'כוכב חמה', isCorrect: true },
+                '260929003': { answer: 'נכון', isCorrect: true },
+                '260929004': {
+                    answer: 'מאדים נראה אדמדם בעיקר בגלל תחמוצות ברזל המצויות בקרקע ובאבק שעל פניו — חומר דומה לחלודה בכדור הארץ.',
+                    isCorrect: null
+                },
+                '260929005': {
+                    answer: 'צדק => כוכב הלכת הגדול ביותר | שבתאי => מערכת טבעות בולטת | כדור הארץ => מים נוזליים בשפע על פני השטח | מאדים => פני שטח אדמדמים',
+                    isCorrect: true
+                },
+                '260929006': {
+                    answer: 'כוכב חמה | נוגה | כדור הארץ | מאדים | צדק | שבתאי',
+                    isCorrect: true
+                },
+                '260929007': {
+                    answer: 'למדתי שמערכת השמש כוללת לא רק כוכבי לכת, אלא גם ירחים, אסטרואידים, שביטים וגופים קטנים נוספים הנעים סביב השמש.',
+                    isCorrect: null
+                },
+                '260929009': {
+                    answer: 'בואו לבקר בשבתאי — עולם מרהיב של טבעות עצומות ונוף שאי אפשר לראות בשום מקום אחר במערכת השמש!',
+                    isCorrect: null
+                }
             };
 
             currentProject.studentAnswers = currentProject.studentAnswers || {};
 
-            Object.entries(demoAnswers).forEach(([pinId, answer]) => {
+            Object.entries(demoAnswers).forEach(([pinId, sample]) => {
                 const pin = (currentProject.pins || []).find((item) => String(item.id) === String(pinId));
                 if (!pin) return;
 
                 const existing = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]);
-                if (hasStudentAnswerContent(existing)) return;
+                const looksLikePlaceholder =
+                    !hasStudentAnswerContent(existing) ||
+                    ['תשובה', 'answer'].includes(normalizeOptionalText(existing.answer).toLowerCase());
+
+                if (!looksLikePlaceholder) return;
 
                 currentProject.studentAnswers[pin.id] = {
                     pinId: pin.id,
                     type: pin.type,
                     prompt: normalizeOptionalText(pin.content),
-                    answer,
+                    answer: sample.answer,
                     answerLink: '',
                     attachment: null,
-                    isCorrect: null,
+                    isCorrect: sample.isCorrect,
                     savedAt: new Date().toISOString()
                 };
                 currentProject.studentProgress[pin.id] = true;
@@ -6830,8 +6853,8 @@
             }
 
             // If an open / bonus / video text answer is currently visible, capture the draft as well.
-            const openAnswerInput = document.getElementById('student-open-answer');
-            const openAnswerLink = document.getElementById('student-open-link');
+            const openAnswerInput = document.getElementById('ans-txt');
+            const openAnswerLink = document.getElementById('ans-link');
             if (openAnswerInput && currentEditingPinId != null) {
                 const pin = (currentProject.pins || []).find((item) => String(item.id) === String(currentEditingPinId));
                 if (pin && ['open', 'bonus', 'video'].includes(pin.type)) {
@@ -6879,7 +6902,12 @@
                 const entry = normalizeStudentAnswerEntry(rawAnswerEntry);
                 const hasAnyAnswer = hasStudentAnswerContent(entry);
                 const answerText = entry.answer || (hasAnyAnswer ? 'לא ניתנה תשובת טקסט' : 'לא ניתנה תשובה');
-                const statusText = hasAnyAnswer ? 'נשמרה תשובה' : 'ללא תשובה';
+                const isCompleted = !!currentProject.studentProgress?.[pin.id];
+                const statusText = isCompleted
+                    ? 'נשמרה תשובה'
+                    : hasAnyAnswer
+                        ? 'טיוטה שנשמרה'
+                        : 'ללא תשובה';
                 const attachment = entry.attachment;
                 const attachmentIsImage = !!(
                     attachment &&
@@ -9020,6 +9048,7 @@
         });
 
         const openStudentModal = (id) => {
+            currentEditingPinId = id;
             const pin = currentProject.pins.find((item) => item.id === id);
             document.getElementById('pin-modal-title').innerText = typeLabels[pin.type];
             document.getElementById('pin-content').value = pin.type === 'video'
@@ -9158,6 +9187,7 @@
                     btn.onclick = () => {
                         selectedIdx = i;
                         optionButtons.forEach((entry) => setOptionState(entry.btn, entry.index === i));
+                        saveStudentAnswerDraft(pin, opt);
                     };
                     optionButtons.push({ btn, index: i, text: opt });
                     area.appendChild(btn);
@@ -9207,6 +9237,7 @@
                     btn.onclick = () => {
                         selectedValue = choice.v;
                         choiceButtons.forEach((entry) => setChoiceState(entry.btn, entry.value === choice.v));
+                        saveStudentAnswerDraft(pin, choice.t);
                     };
                     choiceButtons.push({ btn, value: choice.v, text: choice.t });
                     area.appendChild(btn);
@@ -9296,6 +9327,15 @@
                         }
                     }
 
+                    select.addEventListener('change', () => {
+                        const draftText = rowEntries
+                            .concat([{ left: pair.left, select }])
+                            .filter((entry) => entry.select.value)
+                            .map((entry) => `${entry.left} => ${entry.select.value}`)
+                            .join(' | ');
+                        if (draftText) saveStudentAnswerDraft(pin, draftText);
+                    });
+
                     rowEntries.push({ left: pair.left, select });
                     row.appendChild(leftCell);
                     row.appendChild(arrow);
@@ -9378,6 +9418,7 @@
                         upBtn.disabled = index === 0;
                         upBtn.onclick = () => {
                             [studentOrder[index - 1], studentOrder[index]] = [studentOrder[index], studentOrder[index - 1]];
+                            saveStudentAnswerDraft(pin, studentOrder.join(' | '));
                             renderOrderRows();
                         };
 
@@ -9388,6 +9429,7 @@
                         downBtn.disabled = index === studentOrder.length - 1;
                         downBtn.onclick = () => {
                             [studentOrder[index], studentOrder[index + 1]] = [studentOrder[index + 1], studentOrder[index]];
+                            saveStudentAnswerDraft(pin, studentOrder.join(' | '));
                             renderOrderRows();
                         };
 
