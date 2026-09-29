@@ -6334,17 +6334,36 @@
             }
         };
 
+        const loginWithCoreGoogle = async () => {
+            if (!coreSupabase) {
+                showToast("החיבור ל־MyXsite אינו זמין כרגע.");
+                return;
+            }
+            const { error } = await coreSupabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: `${window.location.origin}${window.location.pathname}`,
+                    queryParams: { access_type: 'offline', prompt: 'select_account' }
+                }
+            });
+            if (error) {
+                console.error("MyXsite Google login error:", error);
+                showToast("לא הצלחנו לפתוח את ההתחברות ל־Google.");
+            }
+        };
+
         const openTeacherEntry = () => {
-            teacherIdInput.value = teacherId || '';
+            teacherIdInput.value = archiveMode === 'legacy' ? (teacherId || '') : '';
             document.getElementById('teacher-cancel-btn').classList.remove('hidden');
             teacherModal.classList.remove('hidden');
-            setTimeout(() => teacherIdInput.focus(), 30);
         };
 
         const enterTeacherDashboard = async () => {
             hideLanding();
             setView('dashboard');
-            if (teacherId) await fetchProjects();
+            if ((archiveMode === 'core' && coreUser) || (archiveMode === 'legacy' && teacherId)) {
+                await fetchProjects();
+            }
         };
 
         const getStudentSessionStorageKey = () => {
@@ -7132,10 +7151,21 @@
                 return;
             }
 
+            if (archiveMode === 'core' && coreUser) {
+                const accountName = normalizeOptionalText(
+                    coreUser.user_metadata?.full_name ||
+                    coreUser.user_metadata?.name ||
+                    coreUser.email ||
+                    ''
+                );
+                badge.innerText = accountName ? `MyXsite • ${accountName}` : 'MyXsite';
+                return;
+            }
+
             const knownName = normalizeOptionalText(currentProject.teacherName || teacherProfile.teacherName);
             badge.innerText = knownName
-                ? `מזהה מורה: ${teacherId || 'לא הוגדר'} • ${knownName}`
-                : `מזהה מורה: ${teacherId || 'לא הוגדר'}`;
+                ? `ארכיון ישן: ${teacherId || 'לא הוגדר'} • ${knownName}`
+                : `ארכיון ישן: ${teacherId || 'לא הוגדר'}`;
         };
 
         const extractFirstName = (fullName) => {
@@ -7147,7 +7177,10 @@
         const updateDashboardGreeting = () => {
             const greetingEl = document.getElementById('dashboard-greeting');
             if (!greetingEl) return;
-            const knownName = normalizeOptionalText(teacherProfile.teacherName || currentProject.teacherName);
+            const coreName = archiveMode === 'core' && coreUser
+                ? normalizeOptionalText(coreUser.user_metadata?.full_name || coreUser.user_metadata?.name || '')
+                : '';
+            const knownName = coreName || normalizeOptionalText(teacherProfile.teacherName || currentProject.teacherName);
             const firstName = extractFirstName(knownName);
             greetingEl.innerText = firstName ? `שלום, ${firstName}! 👋` : 'שלום, מורה! 👋';
         };
@@ -8231,6 +8264,124 @@
         });
 
         const persistCurrentProject = async ({ forceNew = false } = {}) => {
+            if (archiveMode === 'core') {
+                if (!coreUser || !coreSupabase) {
+                    showToast("כדי לשמור בספרייה שלך צריך להתחבר עם Google.");
+                    await loginWithCoreGoogle();
+                    return;
+                }
+                if (!currentProject.image) {
+                    showToast("צריך להעלות תמונה לפני שמירה");
+                    return;
+                }
+
+                const storageReadyProject = {
+                    ...currentProject,
+                    mode: 'edit',
+                    studentProgress: {},
+                    studentAnswers: {},
+                    storageSource: 'core'
+                };
+
+                const isNewRow = forceNew || !currentProject.id || currentProject.storageSource !== 'core';
+                const id = (!forceNew && currentProject.storageSource === 'core' && currentProject.id)
+                    ? currentProject.id
+                    : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+                let projectForCloud = storageReadyProject;
+
+                if (isNewRow || imageNeedsSave) {
+                    try {
+                        projectForCloud = await prepareProjectForCloudSave(storageReadyProject);
+                    } catch (prepError) {
+                        const prepMsg = prepError?.message || "שגיאה בהכנת השמירה.";
+                        showToast(prepMsg);
+                        return;
+                    }
+                    if (projectForCloud.image !== currentProject.image) {
+                        currentProject.image = projectForCloud.image;
+                        mainImage.src = projectForCloud.image;
+                    }
+                }
+
+                const imageForStorage = projectForCloud.image;
+                const { image: _ignoredImage, shareToken: _shareToken, isPublished: _isPublished, ...projectWithoutImage } = projectForCloud;
+                const now = new Date().toISOString();
+                const payload = {
+                    ...projectWithoutImage,
+                    id,
+                    ownerUid: coreUser.id,
+                    updatedAt: now
+                };
+
+                let result = null;
+                let saveError = null;
+
+                if (isNewRow) {
+                    const response = await coreSupabase
+                        .from('teacher_projects')
+                        .insert({
+                            id,
+                            teacher_id: coreUser.id,
+                            app_id: coreAppId,
+                            title: currentProject.name || 'פעילות ללא שם',
+                            payload,
+                            image: imageForStorage,
+                            updated_at: now
+                        })
+                        .select('id,share_token,is_published,updated_at')
+                        .single();
+                    result = response.data;
+                    saveError = response.error;
+                } else {
+                    const updateValues = {
+                        title: currentProject.name || 'פעילות ללא שם',
+                        payload,
+                        updated_at: now
+                    };
+                    if (imageNeedsSave) updateValues.image = imageForStorage;
+                    const response = await coreSupabase
+                        .from('teacher_projects')
+                        .update(updateValues)
+                        .eq('id', id)
+                        .eq('app_id', coreAppId)
+                        .eq('teacher_id', coreUser.id)
+                        .select('id,share_token,is_published,updated_at')
+                        .single();
+                    result = response.data;
+                    saveError = response.error;
+                }
+
+                if (saveError) {
+                    console.error("xsite-core save error:", saveError);
+                    showToast("השמירה ל־MyXsite נכשלה. נסו שוב.");
+                    return;
+                }
+
+                currentProject.id = id;
+                currentProject.storageSource = 'core';
+                currentProject.shareToken = result?.share_token || currentProject.shareToken || null;
+                currentProject.isPublished = !!(result?.is_published ?? currentProject.isPublished);
+                hasUnsavedChanges = false;
+                imageNeedsSave = false;
+                updateSaveActionsUI();
+                updateWorkflowUI();
+                showToast("הפעילות נשמרה בספרייה שלך", 900);
+
+                const lightweightProject = {
+                    ...payload,
+                    id,
+                    name: currentProject.name,
+                    image: currentProject.image,
+                    updatedAt: result?.updated_at || now,
+                    shareToken: currentProject.shareToken,
+                    isPublished: currentProject.isPublished,
+                    storageSource: 'core'
+                };
+                projects = [lightweightProject, ...projects.filter((project) => project.id !== id)];
+                renderProjectsGrid();
+                return;
+            }
+
             if (!currentUser) return;
             if (!teacherId) {
                 openTeacherModal(false);
