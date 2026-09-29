@@ -6800,6 +6800,57 @@
             }));
         };
 
+        const syncStudentAnswersBeforeExport = () => {
+            currentProject.studentAnswers = currentProject.studentAnswers || {};
+
+            // Merge the latest persisted student session back into memory.
+            const key = getStudentSessionStorageKey();
+            if (key) {
+                try {
+                    const raw = localStorage.getItem(key);
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        const persistedAnswers = parsed?.studentAnswers && typeof parsed.studentAnswers === 'object'
+                            ? parsed.studentAnswers
+                            : {};
+                        currentProject.studentAnswers = {
+                            ...persistedAnswers,
+                            ...currentProject.studentAnswers
+                        };
+                        if (parsed?.studentProgress && typeof parsed.studentProgress === 'object') {
+                            currentProject.studentProgress = {
+                                ...parsed.studentProgress,
+                                ...(currentProject.studentProgress || {})
+                            };
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Could not merge persisted student answers before export:', err);
+                }
+            }
+
+            // If an open / bonus / video text answer is currently visible, capture the draft as well.
+            const openAnswerInput = document.getElementById('student-open-answer');
+            const openAnswerLink = document.getElementById('student-open-link');
+            if (openAnswerInput && currentEditingPinId != null) {
+                const pin = (currentProject.pins || []).find((item) => String(item.id) === String(currentEditingPinId));
+                if (pin && ['open', 'bonus', 'video'].includes(pin.type)) {
+                    const liveAnswer = typeof openAnswerInput.value === 'string' ? openAnswerInput.value : '';
+                    const liveLink = openAnswerLink && typeof openAnswerLink.value === 'string' ? openAnswerLink.value : '';
+                    const previous = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]);
+
+                    if (normalizeOptionalText(liveAnswer) || normalizeOptionalText(liveLink) || previous.attachment) {
+                        saveStudentAnswerDraft(pin, liveAnswer, {
+                            answerLink: liveLink,
+                            attachment: previous.attachment
+                        });
+                    }
+                }
+            }
+
+            persistStudentSession();
+        };
+
         const downloadStudentAnswers = async () => {
             if (!currentProject.id) {
                 showToast("אין פעילות פתוחה לייצוא PDF.");
@@ -6810,6 +6861,8 @@
                 return;
             }
 
+            syncStudentAnswersBeforeExport();
+
             const meta = readStudentMeta();
             const studentMeta = await requestStudentMeta(meta);
             if (!studentMeta) return;
@@ -6819,7 +6872,11 @@
 
             const questions = (currentProject.pins || []).filter((pin) => pin.type !== 'info');
             const answers = questions.map((pin, index) => {
-                const entry = normalizeStudentAnswerEntry(currentProject.studentAnswers?.[pin.id]);
+                const rawAnswerEntry =
+                    currentProject.studentAnswers?.[pin.id] ??
+                    currentProject.studentAnswers?.[String(pin.id)] ??
+                    Object.entries(currentProject.studentAnswers || {}).find(([key]) => String(key) === String(pin.id))?.[1];
+                const entry = normalizeStudentAnswerEntry(rawAnswerEntry);
                 const hasAnyAnswer = hasStudentAnswerContent(entry);
                 const answerText = entry.answer || (hasAnyAnswer ? 'לא ניתנה תשובת טקסט' : 'לא ניתנה תשובה');
                 const statusText = hasAnyAnswer ? 'נשמרה תשובה' : 'ללא תשובה';
@@ -6899,16 +6956,16 @@
 
             const report = document.createElement('div');
             report.dir = 'rtl';
-            report.style.position = 'fixed';
+            report.style.position = 'absolute';
             report.style.top = '0';
-            report.style.left = '0';
-            report.style.width = '700px';
-            report.style.maxWidth = '700px';
+            report.style.left = '-10000px';
+            report.style.width = '640px';
+            report.style.maxWidth = '640px';
             report.style.maxHeight = 'none';
             report.style.overflow = 'visible';
             report.style.background = '#ffffff';
             report.style.color = '#111827';
-            report.style.padding = '22px';
+            report.style.padding = '20px';
             report.style.boxSizing = 'border-box';
             report.style.direction = 'rtl';
             report.style.textAlign = 'right';
@@ -6940,7 +6997,7 @@
                 await waitForPdfReportImages(report);
 
                 const options = {
-                    margin: [8, 8, 8, 8],
+                    margin: [10, 10, 10, 10],
                     filename: fileName,
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: {
@@ -6949,8 +7006,8 @@
                         backgroundColor: '#ffffff',
                         scrollX: 0,
                         scrollY: 0,
-                        windowWidth: 760,
-                        width: 700
+                        windowWidth: 720,
+                        width: 640
                     },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
                     pagebreak: {
