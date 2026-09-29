@@ -4701,6 +4701,61 @@
                 color:#66717B!important;
             }
         }
+
+        /* ===== Pin placement refinement: keep the image target visible ===== */
+        @media (min-width: 1024px) {
+            #map-wrapper .pin {
+                width:48px!important;
+                height:48px!important;
+                transform:translate(-50%, calc(-50% - 13px))!important;
+                overflow:visible!important;
+            }
+
+            #map-wrapper .pin::after {
+                content:"";
+                position:absolute;
+                left:50%;
+                top:calc(100% + 3px);
+                width:2px;
+                height:13px;
+                transform:translateX(-50%);
+                background:rgba(36,54,74,.45);
+                border-radius:999px;
+                pointer-events:none;
+            }
+
+            #map-wrapper .pin > svg,
+            #map-wrapper .pin > i {
+                width:23px!important;
+                height:23px!important;
+            }
+
+            #map-wrapper .pin:hover {
+                transform:translate(-50%, calc(-50% - 13px)) scale(1.10)!important;
+            }
+
+            #map-wrapper .pin.dragging {
+                transform:translate(-50%, calc(-50% - 13px)) scale(1.18)!important;
+            }
+
+            body.student-view-active #map-wrapper .pin::after {
+                background:rgba(36,54,74,.38);
+            }
+        }
+
+        @media (min-width: 761px) and (max-width: 1023px) {
+            #map-wrapper .pin {
+                width:44px!important;
+                height:44px!important;
+                transform:translate(-50%, calc(-50% - 9px))!important;
+            }
+
+            #map-wrapper .pin > svg,
+            #map-wrapper .pin > i {
+                width:21px!important;
+                height:21px!important;
+            }
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
