@@ -5090,6 +5090,236 @@
         body.student-view-active #questions-overview-modal {
             display:none!important;
         }
+
+        /* ===== MAPI template gallery ===== */
+        .template-entry-wrap {
+            display:flex;
+            align-items:center;
+            gap:10px;
+            margin-top:2px;
+        }
+        .template-entry-wrap > span {
+            color:#8A9098;
+            font-size:.78rem;
+            font-weight:700;
+        }
+        .template-entry-btn,
+        .template-gallery-editor-btn {
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            min-height:42px;
+            padding:9px 14px;
+            border-radius:12px;
+            font-weight:900;
+        }
+        .template-entry-btn {
+            background:#7A2E6E;
+            color:#FFF8F1;
+            border:1px solid #7A2E6E;
+            box-shadow:0 8px 20px rgba(95,33,79,.14);
+        }
+        .template-gallery-editor-btn {
+            background:#F3F4EE;
+            color:#626753;
+            border:1px solid #DDE0D4;
+            font-size:.82rem;
+        }
+        .template-gallery-editor-btn svg {
+            color:#626753;
+            stroke:#626753;
+        }
+
+        .template-gallery-shell {
+            width:min(1060px,96vw);
+            max-height:92vh;
+            overflow:hidden;
+            display:flex;
+            flex-direction:column;
+            border-radius:22px;
+            background:#FAF7F1;
+            border:1px solid #E5DCE2;
+            box-shadow:0 24px 70px rgba(36,54,74,.22);
+        }
+        .template-gallery-head {
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap:18px;
+            padding:20px 22px 16px;
+            background:linear-gradient(145deg,#FFFDF9,#F7EFF5);
+            border-bottom:1px solid #E8E1E7;
+        }
+        .template-gallery-head span {
+            display:block;
+            color:#7A2E6E;
+            font-size:.72rem;
+            font-weight:900;
+            margin-bottom:3px;
+        }
+        .template-gallery-head h3 {
+            margin:0;
+            color:#24364A;
+            font-size:1.3rem;
+            font-weight:900;
+        }
+        .template-gallery-head p {
+            margin:4px 0 0;
+            color:#66717B;
+            font-size:.82rem;
+            font-weight:600;
+        }
+        .template-gallery-close {
+            width:38px;
+            height:38px;
+            flex:0 0 38px;
+            display:grid;
+            place-items:center;
+            border-radius:11px;
+            border:1px solid #E4D9E1;
+            background:#FFFDF9;
+            color:#7A2E6E;
+        }
+        .template-gallery-filters {
+            display:flex;
+            gap:7px;
+            padding:12px 16px 4px;
+            overflow-x:auto;
+            scrollbar-width:none;
+        }
+        .template-gallery-filters::-webkit-scrollbar { display:none; }
+        .template-filter-btn {
+            flex:0 0 auto;
+            min-height:34px;
+            padding:6px 12px;
+            border-radius:999px;
+            border:1px solid #E2D9DF;
+            background:#FFF;
+            color:#66717B;
+            font-size:.73rem;
+            font-weight:900;
+        }
+        .template-filter-btn.active {
+            background:#7A2E6E;
+            color:#FFF8F1;
+            border-color:#7A2E6E;
+        }
+        .template-gallery-grid {
+            overflow-y:auto;
+            padding:14px 16px 18px;
+            display:grid;
+            grid-template-columns:repeat(3,minmax(0,1fr));
+            gap:14px;
+        }
+        .template-gallery-card {
+            overflow:hidden;
+            border-radius:16px;
+            border:1px solid #E6DFE4;
+            background:#FFF;
+            box-shadow:0 7px 20px rgba(36,54,74,.06);
+        }
+        .template-gallery-preview {
+            display:block;
+            width:100%;
+            aspect-ratio:16/9;
+            overflow:hidden;
+            border:0;
+            background:#EEF1E8;
+        }
+        .template-gallery-preview img {
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            display:block;
+            transition:transform .22s ease;
+        }
+        .template-gallery-card:hover .template-gallery-preview img {
+            transform:scale(1.025);
+        }
+        .template-gallery-card-body {
+            padding:12px;
+        }
+        .template-gallery-card-top {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:8px;
+        }
+        .template-gallery-card-top strong {
+            color:#24364A;
+            font-size:.9rem;
+            font-weight:900;
+        }
+        .template-gallery-card-top span {
+            flex:0 0 auto;
+            padding:4px 7px;
+            border-radius:999px;
+            background:#EEF1E8;
+            color:#626753;
+            font-size:.64rem;
+            font-weight:900;
+        }
+        .template-gallery-card-body p {
+            min-height:37px;
+            margin:6px 0 10px;
+            color:#6C7782;
+            font-size:.73rem;
+            line-height:1.45;
+        }
+        .template-gallery-choose {
+            width:100%;
+            min-height:36px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:6px;
+            border-radius:10px;
+            background:#F4EAF1;
+            color:#7A2E6E;
+            border:1px solid #E1CADB;
+            font-size:.74rem;
+            font-weight:900;
+        }
+        .template-gallery-loading,
+        .template-gallery-empty {
+            grid-column:1/-1;
+            min-height:180px;
+            display:grid;
+            place-items:center;
+            color:#66717B;
+            font-size:.9rem;
+            font-weight:800;
+            text-align:center;
+        }
+
+        @media(max-width:900px){
+            .template-gallery-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+        }
+        @media(max-width:600px){
+            .template-entry-wrap {
+                width:100%;
+                flex-direction:column;
+                gap:7px;
+            }
+            .template-entry-btn { width:100%; }
+            .editor-image-actions {
+                grid-template-columns:1fr 1fr;
+            }
+            .editor-image-actions .all-questions-btn {
+                grid-column:1/-1;
+            }
+            .template-gallery-grid {
+                grid-template-columns:1fr;
+                padding:10px;
+            }
+            .template-gallery-shell {
+                width:100%;
+                max-height:94vh;
+                border-radius:18px;
+            }
+            .template-gallery-head { padding:16px; }
+        }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -5490,6 +5720,13 @@
                         <h3 class="text-xl font-bold text-slate-700">בחרו את תמונת הבסיס לפעילות</h3>
                         <p class="text-slate-500">צילום, מפה, תרשים, יצירת אמנות או מודל · לחצו כאן או גררו קובץ</p>
                     </div>
+                    <div class="template-entry-wrap">
+                        <span>או</span>
+                        <button type="button" id="open-template-gallery-btn" class="template-entry-btn">
+                            <i data-lucide="images" class="w-5 h-5"></i>
+                            בחירה מגלריית MAPI
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -5520,6 +5757,10 @@
                         <button type="button" id="all-questions-btn" class="all-questions-btn">
                             <i data-lucide="list-checks" class="w-4 h-4"></i>
                             כל השאלות
+                        </button>
+                        <button type="button" id="template-gallery-editor-btn" class="template-gallery-editor-btn">
+                            <i data-lucide="images" class="w-4 h-4"></i>
+                            גלריית תמונות
                         </button>
                         <button type="button" id="replace-image-btn" class="replace-image-btn">
                             <i data-lucide="image-plus" class="w-4 h-4"></i>
@@ -5665,6 +5906,25 @@
                     <button onclick="closeSettings()" class="flex-grow bg-slate-100 text-slate-700 py-3 rounded-xl font-bold">ביטול</button>
                     <button id="project-settings-apply-btn" onclick="applySettings()" class="flex-grow bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-indigo-200 shadow-lg">אישור</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="template-gallery-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="template-gallery-shell">
+            <div class="template-gallery-head">
+                <div>
+                    <span>גלריית MAPI</span>
+                    <h3>בחרו תמונת בסיס</h3>
+                    <p>תמונות 16:9 ללא תוכן קבוע — אתם מוסיפים את נקודות הלמידה.</p>
+                </div>
+                <button type="button" id="template-gallery-close" class="template-gallery-close" aria-label="סגירה">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div id="template-gallery-filters" class="template-gallery-filters"></div>
+            <div id="template-gallery-grid" class="template-gallery-grid">
+                <div class="template-gallery-loading">טוען את הגלריה...</div>
             </div>
         </div>
     </div>
@@ -7484,7 +7744,158 @@
             }
         };
 
-        uploadZone.onclick = () => fileInput.click();
+        uploadZone.onclick = (event) => {
+            if (event.target.closest('#open-template-gallery-btn')) return;
+            fileInput.click();
+        };
+
+        const templateGalleryModal = document.getElementById('template-gallery-modal');
+        const templateGalleryGrid = document.getElementById('template-gallery-grid');
+        const templateGalleryFilters = document.getElementById('template-gallery-filters');
+        let templateGalleryItems = [];
+        let templateGalleryLoaded = false;
+        let templateGallerySubject = 'הכול';
+
+        const applyTemplateImage = (template) => {
+            if (!template?.image_data) return;
+            const replacingExistingImage = !!currentProject.image;
+            currentProject.image = template.image_data;
+            mainImage.src = template.image_data;
+            imageNeedsSave = true;
+            markProjectDirty();
+            uploadZone.classList.add('hidden');
+            document.getElementById('canvas-area').classList.remove('hidden');
+            updateWorkflowUI();
+            templateGalleryModal.classList.add('hidden');
+            showToast(
+                replacingExistingImage
+                    ? `התמונה הוחלפה ל„${template.name}” — יש לשמור את הפעילות`
+                    : `נבחרה התבנית „${template.name}”`,
+                2200
+            );
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        const renderTemplateGallery = () => {
+            const subjects = ['הכול', ...new Set(templateGalleryItems.map(item => item.subject).filter(Boolean))];
+            templateGalleryFilters.innerHTML = '';
+            subjects.forEach(subject => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = `template-filter-btn ${subject === templateGallerySubject ? 'active' : ''}`;
+                button.textContent = subject;
+                button.addEventListener('click', () => {
+                    templateGallerySubject = subject;
+                    renderTemplateGallery();
+                });
+                templateGalleryFilters.appendChild(button);
+            });
+
+            const visible = templateGallerySubject === 'הכול'
+                ? templateGalleryItems
+                : templateGalleryItems.filter(item => item.subject === templateGallerySubject);
+
+            templateGalleryGrid.innerHTML = '';
+            if (!visible.length) {
+                templateGalleryGrid.innerHTML = '<div class="template-gallery-empty">עדיין אין תמונות בתחום הזה.</div>';
+                return;
+            }
+
+            visible.forEach(template => {
+                const card = document.createElement('article');
+                card.className = 'template-gallery-card';
+
+                const preview = document.createElement('button');
+                preview.type = 'button';
+                preview.className = 'template-gallery-preview';
+                preview.setAttribute('aria-label', `בחרו ${template.name}`);
+
+                const img = document.createElement('img');
+                img.src = template.image_data;
+                img.alt = template.name;
+                img.loading = 'lazy';
+                preview.appendChild(img);
+                preview.addEventListener('click', () => applyTemplateImage(template));
+
+                const body = document.createElement('div');
+                body.className = 'template-gallery-card-body';
+
+                const top = document.createElement('div');
+                top.className = 'template-gallery-card-top';
+                const title = document.createElement('strong');
+                title.textContent = template.name;
+                const subject = document.createElement('span');
+                subject.textContent = template.subject;
+                top.appendChild(title);
+                top.appendChild(subject);
+
+                const description = document.createElement('p');
+                description.textContent = template.description || '';
+
+                const choose = document.createElement('button');
+                choose.type = 'button';
+                choose.className = 'template-gallery-choose';
+                choose.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i><span>השתמשו בתמונה</span>';
+                choose.addEventListener('click', () => applyTemplateImage(template));
+
+                body.appendChild(top);
+                body.appendChild(description);
+                body.appendChild(choose);
+                card.appendChild(preview);
+                card.appendChild(body);
+                templateGalleryGrid.appendChild(card);
+            });
+
+            lucide.createIcons();
+        };
+
+        const loadTemplateGallery = async () => {
+            if (templateGalleryLoaded) {
+                renderTemplateGallery();
+                return;
+            }
+
+            templateGalleryGrid.innerHTML = '<div class="template-gallery-loading">טוען את הגלריה...</div>';
+
+            if (!hasSupabaseConfig) {
+                templateGalleryGrid.innerHTML = '<div class="template-gallery-empty">הגלריה אינה זמינה כרגע.</div>';
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from('mapi_templates')
+                .select('id,name,subject,description,image_data,aspect_ratio,sort_order')
+                .eq('is_active', true)
+                .order('sort_order', { ascending: true });
+
+            if (error) {
+                console.error('Template gallery load error:', error);
+                templateGalleryGrid.innerHTML = '<div class="template-gallery-empty">לא הצלחתי לטעון את הגלריה. נסו שוב.</div>';
+                return;
+            }
+
+            templateGalleryItems = Array.isArray(data) ? data : [];
+            templateGalleryLoaded = true;
+            renderTemplateGallery();
+        };
+
+        const openTemplateGallery = async () => {
+            if (isReadOnlyStudentLink || currentProject.mode !== 'edit') return;
+            templateGalleryModal.classList.remove('hidden');
+            await loadTemplateGallery();
+        };
+
+        const closeTemplateGallery = () => templateGalleryModal.classList.add('hidden');
+
+        document.getElementById('open-template-gallery-btn')?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            openTemplateGallery();
+        });
+        document.getElementById('template-gallery-editor-btn')?.addEventListener('click', openTemplateGallery);
+        document.getElementById('template-gallery-close')?.addEventListener('click', closeTemplateGallery);
+        templateGalleryModal?.addEventListener('click', (event) => {
+            if (event.target === templateGalleryModal) closeTemplateGallery();
+        });
 
         document.getElementById('replace-image-btn')?.addEventListener('click', () => {
             if (isReadOnlyStudentLink || currentProject.mode !== 'edit') return;
