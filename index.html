@@ -5382,12 +5382,12 @@
 
                 <button id="mode-toggle" class="mapi-toolbar-btn" title="תצוגת תלמיד" aria-label="תצוגת תלמיד">
                     <i data-lucide="eye" id="mode-icon" class="w-4 h-4"></i>
-                    <span id="mode-text">תצוגת תלמיד</span>
+                    <span id="mode-text">צפה כתלמיד</span>
                 </button>
 
                 <button id="share-student-btn" class="mapi-toolbar-btn mapi-share-btn" title="שיתוף לתלמידים" aria-label="שיתוף לתלמידים">
                     <i data-lucide="share-2" class="w-4 h-4"></i>
-                    <span>שיתוף לתלמידים</span>
+                    <span>העתק קישור תלמיד</span>
                 </button>
 
                 <div id="toolbar-more-wrap" class="mapi-more-wrap">
@@ -5474,12 +5474,12 @@
                 <div class="teacher-actions-card">
                     <button id="new-project-btn" class="teacher-action-btn primary" type="button">
                         <span class="teacher-action-icon"><i data-lucide="plus-circle" class="w-5 h-5"></i></span>
-                        <span class="teacher-action-copy"><strong>יצירת פעילות חדשה</strong><small>התחלה מתמונה, תרשים, מפה או מודל</small></span>
+                        <span class="teacher-action-copy"><strong>צור פעילות חדשה</strong><small>התחלה מתמונה, תרשים, מפה או מודל</small></span>
                         <i data-lucide="chevron-left" class="w-4 h-4 teacher-action-arrow"></i>
                     </button>
                     <button id="dashboard-projects-btn" class="teacher-action-btn" type="button">
                         <span class="teacher-action-icon"><i data-lucide="folder-open" class="w-5 h-5"></i></span>
-                        <span class="teacher-action-copy"><strong>הפעילויות שלי</strong><small>פתיחה, עריכה ושיתוף של פעילויות שמורות</small></span>
+                        <span class="teacher-action-copy"><strong>טען פעילות קיימת</strong><small>פתיחה, עריכה ושיתוף של פעילויות שמורות</small></span>
                         <i data-lucide="chevron-left" class="w-4 h-4 teacher-action-arrow"></i>
                     </button>
                     <button id="dashboard-help-btn" class="teacher-action-btn" type="button">
@@ -5627,26 +5627,26 @@
                         חזרה לסביבת המורה
                     </button>
                     <div class="new-setup-eyebrow">פעילות חדשה</div>
-                    <h2>מתחילים בכמה פרטים</h2>
-                    <p>הגדירו את הפעילות לפני בחירת התמונה. אפשר לשנות את הפרטים גם בהמשך.</p>
+                    <h2>פרטי הפעילות</h2>
+                    <p>מקצוע, נושא וכיתה — ואז ממשיכים לבחירת התמונה.</p>
                 </div>
 
                 <div class="new-setup-form">
                     <div class="new-setup-field">
-                        <label for="new-project-name-input">שם הפעילות</label>
-                        <input type="text" id="new-project-name-input" placeholder="למשל: הכרת מפת ישראל">
+                        <label for="new-project-subject-input">מקצוע</label>
+                        <select id="new-project-subject-input">
+                            <option value="">בחרו מקצוע</option>
+                            <option>אני ישראלי</option><option>מתמטיקה</option><option>עברית</option><option>אנגלית</option>
+                            <option>מדעים</option><option>ביולוגיה</option><option>ביוטכנולוגיה</option>
+                            <option>כימיה</option><option>פיזיקה</option><option>היסטוריה</option>
+                            <option>אזרחות</option><option>תנ״ך</option><option>ספרות</option>
+                            <option>גאוגרפיה</option><option>מחשבים</option><option>אמנות</option><option>מוזיקה</option>
+                        </select>
                     </div>
 
                     <div class="new-setup-field">
-                        <label for="new-project-subject-input">מקצוע</label>
-                        <input type="text" id="new-project-subject-input" list="mapi-subject-options" placeholder="בחרו מקצוע או הקלידו אחר">
-                        <datalist id="mapi-subject-options">
-                            <option value="מתמטיקה"></option><option value="עברית"></option><option value="אנגלית"></option>
-                            <option value="מדעים"></option><option value="ביולוגיה"></option><option value="ביוטכנולוגיה"></option>
-                            <option value="כימיה"></option><option value="פיזיקה"></option><option value="היסטוריה"></option>
-                            <option value="אזרחות"></option><option value="תנ״ך"></option><option value="ספרות"></option>
-                            <option value="גאוגרפיה"></option><option value="מחשבים"></option><option value="אמנות"></option><option value="מוזיקה"></option>
-                        </datalist>
+                        <label for="new-project-name-input">נושא</label>
+                        <input type="text" id="new-project-name-input" placeholder="לדוגמה: מערכת הנשימה">
                     </div>
 
                     <div class="new-setup-field">
@@ -5659,29 +5659,8 @@
                         </select>
                     </div>
 
-                    <div class="new-setup-field">
-                        <label for="new-creator-name-input">שם המורה</label>
-                        <input type="text" id="new-creator-name-input" placeholder="למשל: רינה לוי">
-                    </div>
-
-                    <div class="new-setup-field">
-                        <label for="new-creator-school-input">בית ספר</label>
-                        <input type="text" id="new-creator-school-input" placeholder="למשל: נופים">
-                    </div>
-
                     <div class="new-setup-field new-setup-wide">
-                        <label for="new-student-instruction-input">הנחיית פתיחה לתלמידים</label>
-                        <textarea id="new-student-instruction-input" rows="3" placeholder="כתבו כאן הנחיה קצרה לתלמידים..."></textarea>
-                        <small>ההנחיה תופיע לתלמידים בתחילת הפעילות.</small>
-                    </div>
-
-                    <div class="new-setup-field new-setup-wide">
-                        <label for="new-submission-instruction-input">הנחיות הגשה <span style="font-weight:500;color:#8B9198;">(אופציונלי)</span></label>
-                        <textarea id="new-submission-instruction-input" rows="2" placeholder="למשל: הורידו את ה-PDF והעלו למודל / שלחו לכתובת המייל..."></textarea>
-                        <small>יוצג לתלמיד בסיום הפעילות, לצד הורדת דף התשובות.</small>
-                    </div>
-
-                    <div class="new-setup-field new-setup-wide">
+                        <div class="text-sm font-extrabold text-slate-700 mb-2">הגדרות פעילות</div>
                         <div id="chosen-logic-badge" class="chosen-logic-badge">
                             <i data-lucide="map" class="w-4 h-4"></i>
                             <span>מסלול שנבחר: פעילות רגילה</span>
@@ -5693,6 +5672,11 @@
                         <input type="text" id="new-escape-code" placeholder="למשל: GEO-7A">
                         <small>אפשר להשתמש באותיות ובמספרים.</small>
                     </div>
+
+                    <input type="hidden" id="new-creator-name-input">
+                    <input type="hidden" id="new-creator-school-input">
+                    <textarea id="new-student-instruction-input" class="hidden" aria-hidden="true"></textarea>
+                    <textarea id="new-submission-instruction-input" class="hidden" aria-hidden="true"></textarea>
                 </div>
 
                 <div class="new-setup-actions">
@@ -7241,7 +7225,7 @@
             saveAsNewBtn.classList.toggle('hidden', !hasExistingProject);
 
             const dirtySavedProject = hasExistingProject && hasUnsavedChanges;
-            saveProjectLabel.innerText = dirtySavedProject ? 'שמירת שינויים' : 'שמירה';
+            saveProjectLabel.innerText = !hasExistingProject ? 'העבר לארכיון' : dirtySavedProject ? 'שמור שינויים' : 'נשמר';
 
             const saveTitle = !hasExistingProject
                 ? 'שמירת הפעילות בפעם הראשונה'
@@ -8074,12 +8058,12 @@
             const subject = normalizeOptionalText(document.getElementById('new-project-subject-input').value);
             const grade = Number(document.getElementById('new-project-grade-select').value);
             if (!activityName) {
-                showToast("יש להזין שם פעילות.", 1500);
+                showToast("יש להזין נושא.", 1500);
                 document.getElementById('new-project-name-input').focus();
                 return;
             }
             if (!subject) {
-                showToast("יש לבחור או להקליד מקצוע.", 1500);
+                showToast("יש לבחור מקצוע.", 1500);
                 document.getElementById('new-project-subject-input').focus();
                 return;
             }
@@ -8685,7 +8669,7 @@
                 !normalizeOptionalText(currentProject.subject) ||
                 !(Number(currentProject.grade) >= 1 && Number(currentProject.grade) <= 12)) {
                 openProjectSettingsModal('classify');
-                showToast("השלימו את שם הפעילות, המקצוע והכיתה לפני השמירה.", 1800);
+                showToast("השלימו מקצוע, נושא וכיתה לפני השמירה.", 1800);
                 return;
             }
             await persistCurrentProject({
