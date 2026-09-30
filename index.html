@@ -5477,6 +5477,11 @@
                         <span class="teacher-action-copy"><strong>צור פעילות חדשה</strong><small>התחלה מתמונה, תרשים, מפה או מודל</small></span>
                         <i data-lucide="chevron-left" class="w-4 h-4 teacher-action-arrow"></i>
                     </button>
+                    <button id="continue-draft-btn" class="teacher-action-btn hidden" type="button">
+                        <span class="teacher-action-icon"><i data-lucide="history" class="w-5 h-5"></i></span>
+                        <span class="teacher-action-copy"><strong>המשך טיוטה</strong><small>חזרה לעבודה האחרונה שלא הועברה לארכיון</small></span>
+                        <i data-lucide="chevron-left" class="w-4 h-4 teacher-action-arrow"></i>
+                    </button>
                     <button id="dashboard-projects-btn" class="teacher-action-btn" type="button">
                         <span class="teacher-action-icon"><i data-lucide="folder-open" class="w-5 h-5"></i></span>
                         <span class="teacher-action-copy"><strong>טען פעילות קיימת</strong><small>פתיחה, עריכה ושיתוף של פעילויות שמורות</small></span>
@@ -6217,6 +6222,84 @@
             schoolName: teacherProfile.schoolName
         });
         let currentProject = createEmptyProject();
+        const MAPI_DRAFT_DB = 'mapi-teacher-drafts-v1';
+        const MAPI_DRAFT_STORE = 'drafts';
+        let draftSaveTimer = null;
+        let restoredTeacherDraft = null;
+
+        const getTeacherDraftKey = () => `draft:${coreUser?.id || teacherId || 'local'}`;
+        const openDraftDb = () => new Promise((resolve, reject) => {
+            const request = indexedDB.open(MAPI_DRAFT_DB, 1);
+            request.onupgradeneeded = () => {
+                const db = request.result;
+                if (!db.objectStoreNames.contains(MAPI_DRAFT_STORE)) db.createObjectStore(MAPI_DRAFT_STORE);
+            };
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+        const writeTeacherDraft = async () => {
+            if (isReadOnlyStudentLink || currentProject.mode !== 'edit') return;
+            try {
+                const db = await openDraftDb();
+                const snapshot = {
+                    project: {
+                        ...currentProject,
+                        studentProgress: {},
+                        studentAnswers: {},
+                        mode: 'edit'
+                    },
+                    imageNeedsSave,
+                    hasUnsavedChanges: true,
+                    savedAt: Date.now()
+                };
+                await new Promise((resolve, reject) => {
+                    const tx = db.transaction(MAPI_DRAFT_STORE, 'readwrite');
+                    tx.objectStore(MAPI_DRAFT_STORE).put(snapshot, getTeacherDraftKey());
+                    tx.oncomplete = resolve;
+                    tx.onerror = () => reject(tx.error);
+                });
+                db.close();
+            } catch (err) {
+                console.warn('MAPI draft save failed:', err);
+            }
+        };
+        const scheduleTeacherDraftSave = () => {
+            if (draftSaveTimer) clearTimeout(draftSaveTimer);
+            draftSaveTimer = setTimeout(() => { writeTeacherDraft(); }, 450);
+        };
+        const readTeacherDraft = async () => {
+            try {
+                const db = await openDraftDb();
+                const value = await new Promise((resolve, reject) => {
+                    const tx = db.transaction(MAPI_DRAFT_STORE, 'readonly');
+                    const req = tx.objectStore(MAPI_DRAFT_STORE).get(getTeacherDraftKey());
+                    req.onsuccess = () => resolve(req.result || null);
+                    req.onerror = () => reject(req.error);
+                });
+                db.close();
+                return value;
+            } catch (err) {
+                console.warn('MAPI draft read failed:', err);
+                return null;
+            }
+        };
+        const clearTeacherDraft = async () => {
+            try {
+                const db = await openDraftDb();
+                await new Promise((resolve, reject) => {
+                    const tx = db.transaction(MAPI_DRAFT_STORE, 'readwrite');
+                    tx.objectStore(MAPI_DRAFT_STORE).delete(getTeacherDraftKey());
+                    tx.oncomplete = resolve;
+                    tx.onerror = () => reject(tx.error);
+                });
+                db.close();
+            } catch (err) {
+                console.warn('MAPI draft clear failed:', err);
+            }
+            restoredTeacherDraft = null;
+            document.getElementById('continue-draft-btn')?.classList.add('hidden');
+        };
+
         let currentEditingPinId = null;
         let currentPinType = 'info';
         let settingsEscapeMode = false;
@@ -7250,14 +7333,15 @@
 
         const markProjectDirty = () => {
             if (isReadOnlyStudentLink || currentProject.mode !== 'edit') return;
-            if (!currentProject.id) return;
             hasUnsavedChanges = true;
+            scheduleTeacherDraftSave();
             updateSaveActionsUI();
             updateWorkflowUI();
         };
 
         const markProjectClean = () => {
             hasUnsavedChanges = false;
+            clearTeacherDraft();
             updateSaveActionsUI();
         };
 
@@ -7930,6 +8014,8 @@
                 hideLanding();
                 setView('dashboard');
                 await fetchProjects();
+                restoredTeacherDraft = await readTeacherDraft();
+                document.getElementById('continue-draft-btn')?.classList.toggle('hidden', !restoredTeacherDraft?.project);
 
                 if (requestedEditProjectId) {
                     const requestedProject = projects.find(
@@ -8051,7 +8137,45 @@
             lucide.createIcons();
         };
 
-        document.getElementById('new-project-btn').onclick = () => {
+        document.getElementById('continue-draft-btn')?.addEventListener('click', async () => {
+            const draft = restoredTeacherDraft || await readTeacherDraft();
+            if (!draft?.project) {
+                showToast("לא נמצאה טיוטה לשחזור.", 1300);
+                document.getElementById('continue-draft-btn')?.classList.add('hidden');
+                return;
+            }
+            currentProject = {
+                ...createEmptyProject(),
+                ...draft.project,
+                pins: normalizeProjectPins(draft.project.pins),
+                mode: 'edit',
+                studentProgress: {},
+                studentAnswers: {}
+            };
+            hasUnsavedChanges = true;
+            imageNeedsSave = !!draft.imageNeedsSave;
+            isReadOnlyStudentLink = false;
+            restoreEditorToolbarUI();
+            updateSaveActionsUI();
+            syncModeUI();
+            if (currentProject.image) {
+                mainImage.src = currentProject.image;
+                uploadZone.classList.add('hidden');
+                document.getElementById('canvas-area').classList.remove('hidden');
+                renderPins();
+                setView('editor');
+                updateWorkflowUI();
+            } else {
+                populateNewSetup();
+                setView('new-setup');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showToast("הטיוטה שוחזרה ✓", 1300);
+        });
+
+        document.getElementById('new-project-btn').onclick = async () => {
+            if (restoredTeacherDraft?.project && !confirm("לפתוח פעילות חדשה? הטיוטה הקיימת תוחלף.")) return;
+            await clearTeacherDraft();
             isReadOnlyStudentLink = false;
             restoreEditorToolbarUI();
             currentProject = createEmptyProject();
