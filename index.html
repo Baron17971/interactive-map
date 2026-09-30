@@ -5377,7 +5377,7 @@
 
                 <button id="save-project-btn" class="mapi-toolbar-btn mapi-save-main" title="שמירת הפעילות" aria-label="שמירת הפעילות">
                     <i data-lucide="save" class="w-4 h-4"></i>
-                    <span id="save-project-label">שמירה</span>
+                    <span id="save-project-label">העבר לארכיון</span>
                 </button>
 
                 <button id="mode-toggle" class="mapi-toolbar-btn" title="תצוגת תלמיד" aria-label="תצוגת תלמיד">
@@ -7474,6 +7474,61 @@
             return `${baseUrl}?${params.toString()}`;
         };
 
+        const ensureStudentShareUrl = async () => {
+            if (!currentProject.id) {
+                showToast("קודם מעבירים את הפעילות לארכיון.");
+                return '';
+            }
+
+            if (currentProject.storageSource === 'core') {
+                if (!coreSupabase || !coreUser) {
+                    showToast("צריך להתחבר ל־MyXsite כדי לפתוח תצוגת תלמיד.");
+                    await loginWithCoreGoogle();
+                    return '';
+                }
+
+                let shareToken = currentProject.shareToken || null;
+                if (!currentProject.isPublished || !shareToken) {
+                    const { data, error } = await coreSupabase
+                        .from('teacher_projects')
+                        .update({ is_published: true })
+                        .eq('id', currentProject.id)
+                        .eq('app_id', coreAppId)
+                        .eq('teacher_id', coreUser.id)
+                        .select('share_token,is_published')
+                        .single();
+
+                    if (error) {
+                        console.error("MyXsite publish error:", error);
+                        showToast("לא הצלחנו להכין תצוגת תלמיד.");
+                        return '';
+                    }
+
+                    shareToken = data?.share_token || null;
+                    currentProject.shareToken = shareToken;
+                    currentProject.isPublished = !!data?.is_published;
+                    const archiveProject = projects.find((project) => project.id === currentProject.id);
+                    if (archiveProject) {
+                        archiveProject.shareToken = shareToken;
+                        archiveProject.isPublished = currentProject.isPublished;
+                    }
+                }
+
+                if (!shareToken) {
+                    showToast("לא הצלחנו ליצור קישור לתלמיד.");
+                    return '';
+                }
+                return buildStudentShareUrl(currentProject);
+            }
+
+            if (!teacherId) {
+                openTeacherModal(false);
+                showToast("צריך לבחור מזהה מורה ישן לפני פתיחת תצוגת תלמיד.");
+                return '';
+            }
+            return buildStudentShareUrl(currentProject);
+        };
+
         const copyToClipboard = async (text) => {
             if (navigator.clipboard && window.isSecureContext) {
                 await navigator.clipboard.writeText(text);
@@ -8692,70 +8747,14 @@
         };
 
         shareStudentBtn.onclick = async () => {
-            if (!currentProject.id) {
-                showToast("קודם שומרים את הפעילות בספרייה ואז משתפים קישור.");
-                openProjectSettingsModal('saveAs');
+            if (hasUnsavedChanges) {
+                showToast("יש שינויים שלא נשמרו. שמרו אותם לפני העתקת הקישור.", 1700);
                 return;
             }
-
-            if (currentProject.storageSource === 'core') {
-                if (!coreSupabase || !coreUser) {
-                    showToast("צריך להתחבר ל־MyXsite כדי ליצור קישור.");
-                    await loginWithCoreGoogle();
-                    return;
-                }
-
-                let shareToken = currentProject.shareToken || null;
-                if (!currentProject.isPublished || !shareToken) {
-                    const { data, error } = await coreSupabase
-                        .from('teacher_projects')
-                        .update({ is_published: true })
-                        .eq('id', currentProject.id)
-                        .eq('app_id', coreAppId)
-                        .eq('teacher_id', coreUser.id)
-                        .select('share_token,is_published')
-                        .single();
-
-                    if (error) {
-                        console.error("MyXsite publish error:", error);
-                        showToast("לא הצלחנו להכין קישור לתלמידים.");
-                        return;
-                    }
-
-                    shareToken = data?.share_token || null;
-                    currentProject.shareToken = shareToken;
-                    currentProject.isPublished = !!data?.is_published;
-                    const archiveProject = projects.find((project) => project.id === currentProject.id);
-                    if (archiveProject) {
-                        archiveProject.shareToken = shareToken;
-                        archiveProject.isPublished = currentProject.isPublished;
-                    }
-                }
-
-                if (!shareToken) {
-                    showToast("לא הצלחנו ליצור קישור לתלמידים.");
-                    return;
-                }
-
-                const shareUrl = buildStudentShareUrl(currentProject);
-                const copied = await copyToClipboard(shareUrl);
-                showToast(copied ? "קישור תלמיד הועתק ללוח." : "לא הצלחנו להעתיק אוטומטית.");
-                return;
-            }
-
-            if (!teacherId) {
-                openTeacherModal(false);
-                showToast("צריך לבחור מזהה מורה ישן לפני יצירת קישור.");
-                return;
-            }
-
-            const shareUrl = buildStudentShareUrl(currentProject);
+            const shareUrl = await ensureStudentShareUrl();
+            if (!shareUrl) return;
             const copied = await copyToClipboard(shareUrl);
-            if (copied) {
-                showToast(hasSupabaseConfig ? "קישור תלמיד הועתק ללוח." : "הקישור הועתק. במצב מקומי הוא יעבוד רק בדפדפן זה.");
-            } else {
-                showToast("לא הצלחנו להעתיק אוטומטית.");
-            }
+            showToast(copied ? "הועתק ✓" : "לא הצלחנו להעתיק אוטומטית.");
         };
 
         document.getElementById('student-final-lock-btn')?.addEventListener('click', () => {
@@ -10443,31 +10442,18 @@
 
         document.getElementById('teacher-preview-return-btn')?.addEventListener('click', returnToTeacherEdit);
 
-        modeToggle.onclick = () => {
+        modeToggle.onclick = async () => {
             if (isReadOnlyStudentLink) {
                 showToast("זהו קישור צפייה בלבד לתלמיד.");
                 return;
             }
-
-            if (currentProject.mode === 'student') {
-                returnToTeacherEdit();
+            if (hasUnsavedChanges) {
+                showToast("יש שינויים שלא נשמרו. שמרו אותם לפני תצוגת תלמיד.", 1700);
                 return;
             }
-
-            currentProject.mode = 'student';
-            currentProject.studentProgress = {};
-            currentProject.studentAnswers = {};
-            if (!isSharedStudentRequest) {
-                history.replaceState(
-                    { ...(history.state || {}), mapiView: 'editor', mapiPreview: 'student' },
-                    '',
-                    window.location.href
-                );
-            }
-            syncModeUI();
-            renderPins();
-            updateWorkflowUI();
-            closeStudentInstructionModal();
+            const previewUrl = await ensureStudentShareUrl();
+            if (!previewUrl) return;
+            window.open(previewUrl, '_blank', 'noopener');
         };
 
         document.getElementById('export-btn').onclick = () => {
