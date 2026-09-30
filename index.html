@@ -8119,7 +8119,8 @@
         };
 
         const populateNewSetup = () => {
-            document.getElementById('new-project-name-input').value = '';
+            document.getElementById('new-project-name-input').value =
+                currentProject.name && currentProject.name !== 'פעילות חדשה' ? currentProject.name : '';
             document.getElementById('new-project-subject-input').value = normalizeOptionalText(currentProject.subject);
             document.getElementById('new-project-grade-select').value = currentProject.grade ? String(currentProject.grade) : '';
             document.getElementById('new-creator-name-input').value = normalizeOptionalText(teacherProfile.teacherName);
@@ -8174,7 +8175,9 @@
         });
 
         document.getElementById('new-project-btn').onclick = async () => {
-            if (restoredTeacherDraft?.project && !confirm("לפתוח פעילות חדשה? הטיוטה הקיימת תוחלף.")) return;
+            const hasCurrentDraft = hasUnsavedChanges || !!currentProject.image || (currentProject.pins || []).length > 0 ||
+                (currentProject.name && currentProject.name !== 'פעילות חדשה');
+            if ((restoredTeacherDraft?.project || hasCurrentDraft) && !confirm("לפתוח פעילות חדשה? הטיוטה הקיימת תוחלף.")) return;
             await clearTeacherDraft();
             isReadOnlyStudentLink = false;
             restoreEditorToolbarUI();
@@ -8982,6 +8985,10 @@
         });
 
         document.getElementById('exit-editor').onclick = () => {
+            if (hasUnsavedChanges && !isReadOnlyStudentLink) {
+                scheduleTeacherDraftSave();
+                document.getElementById('continue-draft-btn')?.classList.remove('hidden');
+            }
             closeStudentInstructionModal();
             closeStudentExportMetaModal(null);
             if (!isSharedStudentRequest && history.state?.mapiView === 'editor') {
