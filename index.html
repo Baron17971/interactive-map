@@ -6438,19 +6438,13 @@
                 showToast("החיבור ל־MyXsite אינו זמין כרגע.");
                 return;
             }
-            const { error } = await coreSupabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: requestedEditProjectId
-                        ? `https://mapi-interactive.vercel.app/?edit=${encodeURIComponent(requestedEditProjectId)}`
-                        : 'https://mapi-interactive.vercel.app/',
-                    queryParams: { access_type: 'offline', prompt: 'select_account' }
-                }
-            });
-            if (error) {
-                console.error("MyXsite Google login error:", error);
-                showToast("לא הצלחנו לפתוח את ההתחברות ל־Google.");
-            }
+            const target = requestedEditProjectId
+                ? `https://mapi-interactive.vercel.app/?edit=${encodeURIComponent(requestedEditProjectId)}`
+                : 'https://mapi-interactive.vercel.app/';
+            const bridge = new URL('https://xsite-live.vercel.app/');
+            bridge.searchParams.set('auth_for', 'mapi');
+            bridge.searchParams.set('next', target);
+            window.location.assign(bridge.toString());
         };
 
         const openTeacherEntry = () => {
